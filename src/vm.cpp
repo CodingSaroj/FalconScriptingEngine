@@ -603,7 +603,7 @@ void Falcon::VM::pushInt(int64_t data)
     _push64(*(uint64_t *)&data);
 }
 
-void Falcon::VM::pushFloat(_Float64 data)
+void Falcon::VM::pushFloat(double data)
 {
     _push64(*(uint64_t *)&data);
 }
@@ -626,10 +626,10 @@ int64_t Falcon::VM::popInt()
     return *(int64_t *)&this->stack[this->stack_pointer];
 }
 
-_Float64 Falcon::VM::popFloat()
+double Falcon::VM::popFloat()
 {
     this->stack_pointer -= 8;
-    return *(_Float64 *)&this->stack[this->stack_pointer];
+    return *(double *)&this->stack[this->stack_pointer];
 }
 
 void Falcon::VM::run(std::string function)

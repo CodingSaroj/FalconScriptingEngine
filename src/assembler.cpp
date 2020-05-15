@@ -210,7 +210,7 @@ Falcon::Assembler::ExprAtom::ExprAtom(AtomType __type, int64_t __int)
 {
 }
 
-Falcon::Assembler::ExprAtom::ExprAtom(AtomType __type, _Float64 __float)
+Falcon::Assembler::ExprAtom::ExprAtom(AtomType __type, double __float)
     : type(__type), f(__float)
 {
 }

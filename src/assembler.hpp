@@ -33,7 +33,7 @@ namespace Falcon
                 char        c;
                 uint64_t    u;
                 int64_t     l;
-                _Float64    f;
+                double    f;
             } value;
             std::string name;
         };
@@ -77,18 +77,15 @@ namespace Falcon
                 {
                     uint64_t    u;
                     int64_t     l;
-                    _Float64    f;
+                    double    f;
                 };
-
-                struct
-                {
-                    Token   reg;
-                    uint8_t regOffset;
-                };
+                
+                Token   reg;
+                uint8_t regOffset;
 
                 ExprAtom(AtomType __type, uint64_t __uint);
                 ExprAtom(AtomType __type, int64_t __int);
-                ExprAtom(AtomType __type, _Float64 __float);
+                ExprAtom(AtomType __type, double __float);
                 ExprAtom(AtomType __type, Token __reg, uint8_t __offset);
         };
 

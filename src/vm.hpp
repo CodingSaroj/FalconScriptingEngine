@@ -9,8 +9,6 @@
 #include <cstdint>
 #include <cstring>
 
-#include <bits/floatn.h>
-
 namespace Falcon
 {
     enum InstructionType : uint8_t
@@ -114,7 +112,7 @@ namespace Falcon
                 char        c;
                 uint64_t    u;
                 int64_t     l;
-                _Float64    f;
+                double    f;
             };
             
             RegisterType    type;
@@ -219,11 +217,11 @@ namespace Falcon
             void        pushChar(char data);
             void        pushUint(uint64_t data);
             void        pushInt(int64_t data);
-            void        pushFloat(_Float64 data);
+            void        pushFloat(double data);
             char        popChar();
             uint64_t    popUint();
             int64_t     popInt();
-            _Float64    popFloat();
+            double    popFloat();
 
             /*
              * Call a function
