@@ -14,7 +14,7 @@
     <ul>
       <li>FalconScript: A language exclusive to the Falcon Scripting Engine.
       <li>Compilers for Lua, Python, Ruby and Javascript.
-      <li>JIT x86 (JIT x64 will come after x86 works)
+      <li>JIT x86 (JIT x64 will come after x86 works).
     </ul>
     <br>
     <h2>Getting Started</h2>
