@@ -137,6 +137,29 @@ namespace Falcon
 
                 ExprAST * process();
         };
+
+        class Generator
+        {
+            private:
+                const ExprAST * ast;
+
+            public:
+                enum class Error
+                {
+                    NONE,
+                    INVALID_OPERATION,
+                    INVALID_OPERAND,
+                    EXPECTED_COLON,
+                    UNDEFINED_ROUTINE,
+                    UNDEFINED_LABEL,
+                    MULTIPLE_DEFINITION_ROUTINE,
+                    MULTIPLE_DEFINITION_LABEL
+                };
+
+                Generator(ExprAST * ast);
+
+                Error process(std::ostream & out);
+        };
     }
 }
 
