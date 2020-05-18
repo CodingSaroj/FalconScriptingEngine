@@ -2,6 +2,7 @@
 #define FALCON_VM_HPP
 
 #include <iostream>
+#include <stack>
 #include <unordered_map>
 #include <vector>
 
@@ -47,21 +48,15 @@ namespace Falcon
         INSTRUCTION_CAND,
         INSTRUCTION_COR,
 
-        INSTRUCTION_PUSHC,
-        INSTRUCTION_PUSHU,
-        INSTRUCTION_PUSHL,
-        INSTRUCTION_PUSHF,
+        INSTRUCTION_PUSH,
         INSTRUCTION_POP,
-        INSTRUCTION_MOVC,
-        INSTRUCTION_MOVU,
-        INSTRUCTION_MOVL,
-        INSTRUCTION_MOVF,
+        INSTRUCTION_MOV,
+        INSTRUCTION_MOVR,
         INSTRUCTION_CALL,
         INSTRUCTION_JMP,
         INSTRUCTION_SYMBOL,
         INSTRUCTION_EXTERN,
         INSTRUCTION_START,
-        INSTRUCTION_LABEL,
         INSTRUCTION_END
     };
 
@@ -83,6 +78,7 @@ namespace Falcon
         REGISTER_F1,
         REGISTER_F2,
         REGISTER_F3,
+        REGISTER_CSP,
         REGISTER_USP,
         REGISTER_LSP,
         REGISTER_FSP,
@@ -100,7 +96,9 @@ namespace Falcon
             union
             {
                 uint8_t     arg2_offset;
-                uint64_t    value;
+                uint64_t    u;
+                int64_t     l;
+                double      f;
             } extra;
             std::string     symbol;
         };
@@ -112,7 +110,7 @@ namespace Falcon
                 char        c;
                 uint64_t    u;
                 int64_t     l;
-                double    f;
+                double      f;
             };
             
             RegisterType    type;
@@ -135,19 +133,24 @@ namespace Falcon
              * Bytecode related
              */
             std::vector<Internal::Instruction>  instructions;
-            Internal::Instruction               currenInstruction;
+            Internal::Instruction               currentInstruction;
             uint64_t                            instructionPtr;
+
+            /*
+             * StackFrame
+             */
+            std::stack<uint64_t> stackFrame;
 
             /*
              * Registers
              */
-            Internal::Register registers[20];
+            Internal::Register  registers[17];
 
             /*
              * Stack
              */
-            uint8_t     stack[128];
-            uint64_t    stack_pointer;
+            Internal::Register  stack[8192];
+            uint16_t            stack_pointer;
 
             /*
              * Operators
@@ -171,7 +174,6 @@ namespace Falcon
             std::unordered_map<std::string, std::pair<bool, uint64_t>> functions;
 
             void compile(std::string __bytecode);
-            void _push64(uint64_t data);
 
             inline void advance()
             {
@@ -179,10 +181,10 @@ namespace Falcon
                 {
                     this->instructionPtr = this->instructions.size();
                     Internal::Instruction i;
-                    this->currenInstruction = i;
+                    this->currentInstruction = i;
                     return;
                 }
-                this->currenInstruction = this->instructions[this->instructionPtr++];
+                this->currentInstruction = this->instructions[this->instructionPtr++];
             }
 
         public:
@@ -199,9 +201,9 @@ namespace Falcon
             Internal::Instruction &     getCurrentInstruction();
 
             /*
-             * Register getters
+             * Register getter
              */
-            Internal::Register & getRegister(RegisterType type);
+            Internal::Register & getRegister(RegisterType type, uint8_t offset);
             
             /*
              * Function adding functions
@@ -221,12 +223,13 @@ namespace Falcon
             char        popChar();
             uint64_t    popUint();
             int64_t     popInt();
-            double    popFloat();
+            double      popFloat();
 
             /*
              * Call a function
              */
             void        run(std::string function);
+            void        gotoFunction(std::string function);
     };
 }
 

@@ -5,7 +5,9 @@ static std::vector<std::string> registers
     "c0", "c1", "c2", "c3",
     "u0", "u1", "u2", "u3",
     "l0", "l1", "l2", "l3",
-    "f0", "f1", "f2", "f3"
+    "f0", "f1", "f2", "f3",
+    "csp", "usp", "lsp", "fsp",
+    "null"
 };
 
 static std::vector<std::string> instructions
@@ -15,12 +17,14 @@ static std::vector<std::string> instructions
     "if", "else", "grt0", "grt1", "greq0", "greq1", "less0", "less1",
     "lseq0", "lseq1", "iseq0", "iseq1", "neq0", "neq1", "not0", "not1",
     "cand", "cor",
+    "push", "pop",
+    "mov", "movr",
     "call", "jmp"
 };
 
 std::vector<std::string> unaryInstructions
 {
-    "inc", "dec", "cmpl", "not0", "not1", "cand", "cor",
+    "inc", "dec", "cmpl", "not0", "not1", "cand", "cor", "push", "pop"
 };
 
 std::vector<std::string> binaryInstructions
@@ -29,9 +33,10 @@ std::vector<std::string> binaryInstructions
     "lshft", "rshft", "and", "or", "xor",
     "grt0", "grt1", "greq0", "greq1", "less0", "less1",
     "lseq0", "lseq1", "iseq0", "iseq1", "neq0", "neq1",
+    "mov", "movr"
 };
 
-std::unordered_map<std::string, Falcon::InstructionType> instructionMap =
+std::unordered_map<std::string, Falcon::InstructionType> instructionMap
 {
     {"add"      ,   Falcon::INSTRUCTION_ADD},
     {"sub"      ,   Falcon::INSTRUCTION_SUB},
@@ -62,9 +67,102 @@ std::unordered_map<std::string, Falcon::InstructionType> instructionMap =
     {"neq1"     ,   Falcon::INSTRUCTION_NEQ1},
     {"not0"     ,   Falcon::INSTRUCTION_NOT0},
     {"not1"     ,   Falcon::INSTRUCTION_NOT1},
+    {"push"      ,   Falcon::INSTRUCTION_PUSH},
+    {"pop"     ,   Falcon::INSTRUCTION_POP},
+    {"mov"      ,   Falcon::INSTRUCTION_MOV},
+    {"movr"     ,   Falcon::INSTRUCTION_MOVR},
     {"call"     ,   Falcon::INSTRUCTION_CALL},
     {"jmp"      ,   Falcon::INSTRUCTION_JMP},
 };
+
+static inline Falcon::RegisterType getRegisterType(std::string type)
+{
+    
+    if (type == "c0")
+    {
+        return Falcon::REGISTER_C0;
+    }
+    else if (type == "c1")
+    {
+        return Falcon::REGISTER_C1;
+    }
+    else if (type == "c2")
+    {
+        return Falcon::REGISTER_C2;
+    }
+    else if (type == "c3")
+    {
+        return Falcon::REGISTER_C3;
+    }
+    else if (type == "u0")
+    {
+        return Falcon::REGISTER_U0;
+    }
+    else if (type == "u1")
+    {
+        return Falcon::REGISTER_U1;
+    }
+    else if (type == "u2")
+    {
+        return Falcon::REGISTER_U2;
+    }
+    else if (type == "u3")
+    {
+        return Falcon::REGISTER_U3;
+    }
+    else if (type == "l0")
+    {
+        return Falcon::REGISTER_L0;
+    }
+    else if (type == "l1")
+    {
+        return Falcon::REGISTER_L1;
+    }
+    else if (type == "l2")
+    {
+        return Falcon::REGISTER_L2;
+    }
+    else if (type == "l3")
+    {
+        return Falcon::REGISTER_L3;
+    }
+    else if (type == "f0")
+    {
+        return Falcon::REGISTER_F0;
+    }
+    else if (type == "f1")
+    {
+        return Falcon::REGISTER_F1;
+    }
+    else if (type == "f2")
+    {
+        return Falcon::REGISTER_F2;
+    }
+    else if (type == "f3")
+    {
+        return Falcon::REGISTER_F3;
+    }
+    else if (type == "csp")
+    {
+        return Falcon::REGISTER_CSP;
+    }
+    else if (type == "usp")
+    {
+        return Falcon::REGISTER_USP;
+    }
+    else if (type == "lsp")
+    {
+        return Falcon::REGISTER_LSP;
+    }
+    else if (type == "fsp")
+    {
+        return Falcon::REGISTER_FSP;
+    }
+    else if (type == "null")
+    {
+        return Falcon::REGISTER_NULL;
+    }
+}
 
 Falcon::Assembler::Lexer::Lexer(std::string __text)
     : text(__text), currentChar(__text[0]), cursor(0)
@@ -120,7 +218,7 @@ std::string Falcon::Assembler::Lexer::makeStr()
 
     while(this->cursor < this->text.size() && (std::isalpha(this->currentChar) == 0 || this->currentChar == '_' || std::isdigit(this->currentChar) == 0))
     {
-        if (this->currentChar == ':' || this->currentChar == ' ' || this->currentChar == '\n' || this->currentChar == '\t')
+        if (this->currentChar == ':' || this->currentChar == ' ' || this->currentChar == '\n' || this->currentChar == '\t' || this->currentChar == '(')
         {
             break;
         }
@@ -164,9 +262,39 @@ std::vector<Falcon::Assembler::Token> Falcon::Assembler::Lexer::process()
             token.type = Token::COLON;
             tokens.push_back(token);
         }
+        else if (this->currentChar == '(')
+        {
+            this->advance();
+
+            std::string str;
+
+            while (this->currentChar != ')')
+            {
+                str.push_back(this->currentChar);
+                this->advance();
+            }
+
+            Token token;
+            token.type = Token::FUNCTION;
+            token.name = str;
+            tokens.push_back(token);
+
+            this->advance();
+        }
         else if (std::isdigit(this->currentChar))
         {
             this->makeNum(tokens);
+        }
+        else if (this->currentChar == '\'')
+        {
+            this->advance();
+
+            Token token;
+            token.type = Token::CHAR;
+            token.value.c = this->currentChar;
+            tokens.push_back(token);
+
+            this->advance();
         }
         else if (std::isalpha(this->currentChar))
         {
@@ -176,6 +304,26 @@ std::vector<Falcon::Assembler::Token> Falcon::Assembler::Lexer::process()
                 Token token;
                 token.type = Token::REGISTER;
                 token.name = str;
+                this->advance();
+                if (this->currentChar == '(')
+                {
+                    this->advance();
+
+                    std::string number;
+
+                    while (this->currentChar != ')')
+                    {
+                        number.push_back(this->currentChar);
+                        this->advance();
+                    }
+
+                    token.value.c = std::strtol(number.c_str(), NULL, 10);
+                }
+                else
+                {
+                    this->cursor -= 2;
+                    this->advance();
+                }
                 tokens.push_back(token);
             }
             else if (std::find(instructions.begin(), instructions.end(), str) != instructions.end())
@@ -185,18 +333,26 @@ std::vector<Falcon::Assembler::Token> Falcon::Assembler::Lexer::process()
                 token.name = str;
                 tokens.push_back(token);
             }
+            else if (str == "end")
+            {
+                Token token;
+                token.type = Token::END;
+                tokens.push_back(token);
+            }
         }
 
         this->advance();
     }
-    Token token;
-    token.type = Token::END;
-    tokens.push_back(token);
 
     return tokens;
 }
 
 Falcon::Assembler::ExprAST::~ExprAST()
+{
+}
+
+Falcon::Assembler::ExprAtom::ExprAtom(AtomType __type, char __char)
+    : type(__type), c(__char)
 {
 }
 
@@ -220,14 +376,144 @@ Falcon::Assembler::ExprAtom::ExprAtom(AtomType __type, Token __reg, uint8_t __of
 {
 }
 
+void Falcon::Assembler::ExprAtom::codeGen(std::ostream & out)
+{
+}
+
 Falcon::Assembler::ExprStatement::ExprStatement(Token __instruction, bool __atom2Used, ExprAtom __atom0, ExprAtom __atom1)
     : instruction(__instruction), atom2Used(__atom2Used), atoms{__atom0, __atom1}
 {
 }
 
-Falcon::Assembler::ExprFunction::ExprFunction(Token __identifier)
-    : identifier(__identifier)
+void Falcon::Assembler::ExprStatement::codeGen(std::ostream & out)
 {
+    if (this->instruction.name == "call" || this->instruction.name == "jmp" || this->instruction.name == "if" || this->instruction.name == "else")
+    {
+        InstructionType inst;
+
+        if (this->instruction.name == "call")
+        {
+            inst = INSTRUCTION_CALL;
+        }
+        else if (this->instruction.name == "jmp")
+        {
+            inst = INSTRUCTION_JMP;
+        }
+        else if (this->instruction.name == "if")
+        {
+            inst = INSTRUCTION_IF;
+        }
+        else if (this->instruction.name == "else")
+        {
+            inst = INSTRUCTION_ELSE;
+        }
+
+        inst = (InstructionType)((inst & 0b00111111) << 2);
+        
+        int8_t bytes[] =
+        {
+            this->atoms[0].c,
+            this->atoms[1].c
+        };
+
+        out.write((char *)&inst, 1);
+        out.write((char *)bytes, 2);
+    }
+    else if (this->instruction.type == Token::END)
+    {
+        InstructionType end = INSTRUCTION_END;
+        end = (InstructionType)((end & 0b00111111) << 2);
+        out.write((char *)&end, 1);
+    }
+    else if (this->instruction.name == "mov")
+    {
+        RegisterType type = getRegisterType(this->atoms[0].reg.name);
+
+        if (type >= REGISTER_C0 && type <= REGISTER_C3)
+        {
+            uint8_t bytes[4];
+
+            bytes[0] = (0b00111111 & instructionMap[this->instruction.name]) << 2;
+            bytes[0] = bytes[0] | (0b00000011 & (getRegisterType(this->atoms[0].reg.name) >> 3));
+            bytes[1] = (0b11100000 & (getRegisterType(this->atoms[0].reg.name) << 5));
+            bytes[1] = bytes[1] | (0b00011111 & (this->atoms[0].regOffset >> 3));
+            bytes[2] = (0b11100000 & (this->atoms[0].regOffset << 5));
+            bytes[2] = bytes[2] | (0b00011111 & (getRegisterType(this->atoms[1].reg.name)));
+            bytes[3] = this->atoms[1].c;
+
+            out.write((char *)bytes, 4);
+        }
+        else
+        {
+            uint8_t bytes[11];
+
+            bytes[0]    = (0b00111111 & instructionMap[this->instruction.name]) << 2;
+            bytes[0]    = bytes[0] | (0b00000011 & (getRegisterType(this->atoms[0].reg.name) >> 3));
+            bytes[1]    = (0b11100000 & (getRegisterType(this->atoms[0].reg.name) << 5));
+            bytes[1]    = bytes[1] | (0b00011111 & (this->atoms[0].regOffset >> 3));
+            bytes[2]    = (0b11100000 & (this->atoms[0].regOffset << 5));
+            bytes[2]    = bytes[2] | (0b00011111 & (getRegisterType(this->atoms[1].reg.name)));
+
+            bytes[3]    = ((uint8_t *)&this->atoms[1].u)[0];
+            bytes[4]    = ((uint8_t *)&this->atoms[1].u)[1];
+            bytes[5]    = ((uint8_t *)&this->atoms[1].u)[2];
+            bytes[6]    = ((uint8_t *)&this->atoms[1].u)[3];
+            bytes[7]    = ((uint8_t *)&this->atoms[1].u)[4];
+            bytes[8]    = ((uint8_t *)&this->atoms[1].u)[5];
+            bytes[9]    = ((uint8_t *)&this->atoms[1].u)[6];
+            bytes[10]   = ((uint8_t *)&this->atoms[1].u)[7];
+
+            out.write((char *)bytes, 11);
+        }
+    }
+    else if (this->instruction.name == "push" || this->instruction.name == "pop")
+    {
+        RegisterType type = getRegisterType(this->atoms[0].reg.name);
+        
+        uint8_t bytes[3];
+
+        bytes[0] = (0b00111111 & instructionMap[this->instruction.name]) << 2;
+        bytes[0] = bytes[0] | (0b00000011 & (getRegisterType(this->atoms[0].reg.name) >> 3));
+        bytes[1] = (0b11100000 & (getRegisterType(this->atoms[0].reg.name) << 5));
+        bytes[1] = bytes[1] | (0b00011111 & (this->atoms[0].regOffset >> 3));
+        bytes[2] = (0b11100000 & (this->atoms[0].regOffset << 5));
+        bytes[2] = bytes[2] | (0b00011111 & (getRegisterType(this->atoms[1].reg.name)));
+
+        out.write((char *)bytes, 3);
+    }
+    else
+    {
+        uint8_t bytes[4];
+
+        bytes[0] = (0b00111111 & instructionMap[this->instruction.name]) << 2;
+        bytes[0] = bytes[0] | (0b00000011 & (getRegisterType(this->atoms[0].reg.name) >> 3));
+        bytes[1] = (0b11100000 & (getRegisterType(this->atoms[0].reg.name) << 5));
+        bytes[1] = bytes[1] | (0b00011111 & (this->atoms[0].regOffset >> 3));
+        bytes[2] = (0b11100000 & (this->atoms[0].regOffset << 5));
+        bytes[2] = bytes[2] | (0b00011111 & (getRegisterType(this->atoms[1].reg.name)));
+        bytes[3] = this->atoms[1].regOffset;
+
+        out.write((char *)bytes, 4);
+    }
+}
+
+Falcon::Assembler::ExprFunction::ExprFunction(uint16_t __id)
+    : id(__id)
+{
+}
+
+void Falcon::Assembler::ExprFunction::codeGen(std::ostream & out)
+{
+    InstructionType start = INSTRUCTION_START;
+    start = (InstructionType)((start & 0b00111111) << 2);
+
+    out.write((char *)&start, 1);
+    out.write((char *)&this->id, 2);
+
+    for (ExprStatement & statement : this->statements)
+    {
+        statement.codeGen(out);
+    }
 }
 
 Falcon::Assembler::ExprExtern::ExprExtern(Token __identifier)
@@ -235,8 +521,13 @@ Falcon::Assembler::ExprExtern::ExprExtern(Token __identifier)
 {
 }
 
+void Falcon::Assembler::ExprExtern::codeGen(std::ostream & out)
+{
+    //TODO
+}
+
 Falcon::Assembler::Parser::Parser(std::vector<Token> __tokens)
-    : tokens(__tokens), currentToken(__tokens[0]), cursor(0)
+    : tokens(__tokens), symbolID(0), currentToken(__tokens[0]), cursor(0)
 {
 }
 
@@ -254,7 +545,11 @@ void Falcon::Assembler::Parser::advance()
 
 void Falcon::Assembler::Parser::atom(ExprAST ** ast)
 {
-    if (this->currentToken.type == Token::P_INT)
+    if (this->currentToken.type == Token::CHAR)
+    {
+        *ast = new ExprAtom(ExprAtom::CHAR, this->currentToken.value.c);
+    }
+    else if (this->currentToken.type == Token::P_INT)
     {
         *ast = new ExprAtom(ExprAtom::UINT, this->currentToken.value.u);
     }
@@ -268,7 +563,7 @@ void Falcon::Assembler::Parser::atom(ExprAST ** ast)
     }
     else if (this->currentToken.type == Token::REGISTER)
     {
-        *ast = new ExprAtom(ExprAtom::REGISTER, this->currentToken, 0);
+        *ast = new ExprAtom(ExprAtom::REGISTER, this->currentToken, this->currentToken.value.c);
     }
 
     this->advance();
@@ -292,38 +587,153 @@ void Falcon::Assembler::Parser::statement(ExprAST ** ast)
 
         *ast = new ExprStatement(token, true, *atoms[0], *atoms[1]);
     }
+    else if (std::find(unaryInstructions.begin(), unaryInstructions.end(), this->currentToken.name) != unaryInstructions.end())
+    {
+        Token token = this->currentToken;
+
+        ExprAtom * atom = nullptr;
+
+        this->advance();
+        this->atom((ExprAST **)&atom);
+
+        *ast = new ExprStatement(token, false, *atom, *atom);
+    }
+    else if (this->currentToken.name == "call" || this->currentToken.name == "jmp" || this->currentToken.name == "if" || this->currentToken.name == "else")
+    {
+        Token token = this->currentToken;
+
+        this->advance();
+        
+        if (this->currentToken.name != "jmp"){
+            if (this->symbolTable.count(this->currentToken.name) == 0)
+            {
+                this->symbolTable.insert(std::pair<std::string, uint16_t>(this->currentToken.name, this->symbolID++));
+            }
+
+            uint16_t symbol = this->symbolTable[this->currentToken.name];
+
+            *ast = new ExprStatement(token, true, ExprAtom(ExprAtom::CHAR, ((char *)&symbol)[0]), ExprAtom(ExprAtom::CHAR, ((char *)&symbol)[1]));
+        }
+        else
+        {
+            *ast = new ExprStatement(token, true, ExprAtom(ExprAtom::CHAR, ((char)this->currentToken.value.u)), ExprAtom(ExprAtom::CHAR, '\0'));
+        }
+    }
+    else if (this->currentToken.type == Token::END)
+    {
+        *ast = new ExprStatement(this->currentToken, false, ExprAtom(ExprAtom::UINT, (uint64_t)0), ExprAtom(ExprAtom::UINT, (uint64_t)0)); 
+    }
 }
 
-void Falcon::Assembler::Parser::function(ExprAST ** ast)
+void Falcon::Assembler::Parser::function(ExprAST ** ast, std::vector<ExprAST *> & functions)
 {
-    *ast = new ExprFunction(this->currentToken);
+    if (this->symbolTable.count(this->currentToken.name) == 0)
+    {
+        *ast = new ExprFunction(this->symbolID++);
+
+        ExprFunction * function = (ExprFunction *)*ast;
+
+        this->symbolTable.insert(std::pair<std::string, uint16_t>(this->currentToken.name, function->id));
+    }
+    else
+    {
+        *ast = new ExprFunction(this->symbolTable[this->currentToken.name]);
+    }
+
+    ExprFunction * function = (ExprFunction *)*ast;
+
     this->advance();
     this->advance();
     this->advance();
+
     while (this->cursor < this->tokens.size() && this->currentToken.type != Token::END)
     {
         if (this->currentToken.type == Token::INSTRUCTION)
         {
             ExprStatement * statement = nullptr;
             this->statement((ExprAST **)&statement);
-            ((ExprFunction *)*ast)->statements.push_back(*statement);
+            function->statements.push_back(*statement);
+        }
+        else if (this->currentToken.type == Token::FUNCTION)
+        {
+            ExprAST * subAST = nullptr;
+            this->function(&subAST, functions);
+            functions.emplace_back(subAST);
         }
         this->advance();
     }
+
+    ExprStatement * statement = nullptr;
+    this->statement((ExprAST **)&statement);
+    function->statements.push_back(*statement);
 }
 
-Falcon::Assembler::ExprAST * Falcon::Assembler::Parser::process()
+std::pair<std::vector<Falcon::Assembler::ExprAST *>, std::unordered_map<std::string, uint16_t>> Falcon::Assembler::Parser::process()
 {
-    ExprAST * ast = nullptr;
+    std::vector<ExprAST *> functions{nullptr};
 
     while (this->cursor < this->tokens.size())
     {
         if (this->currentToken.type == Token::FUNCTION)
         {
-            this->function(&ast);
+            this->function(&functions[0], functions);
         }
         this->advance();
     }
 
-    return ast;
+    return std::pair<std::vector<ExprAST *>, std::unordered_map<std::string, uint16_t>>(functions, this->symbolTable);
+}
+
+Falcon::Assembler::Generator::Error::Error(ErrorType __type, std::string __data)
+    : type(__type), data(__data)
+{
+}
+
+Falcon::Assembler::Generator::Generator(std::vector<ExprAST *> __ast, std::unordered_map<std::string, uint16_t> & __symbolTable)
+    : ast(__ast), symbolTable(__symbolTable)
+{
+}
+
+Falcon::Assembler::Generator::Error Falcon::Assembler::Generator::process(std::ostream & out)
+{
+    {
+        InstructionType symbol = INSTRUCTION_SYMBOL;
+        symbol = (InstructionType)((symbol & 0b00111111) << 2);
+
+        for (std::pair<std::string, uint16_t> sym : this->symbolTable)
+        {
+            out.write((char *)&symbol, 1);
+            out.write((char *)&sym.second, 2);
+            out.write(sym.first.c_str(), sym.first.size() + 1);
+        }
+    }
+
+    for (ExprAST * func : this->ast)
+    {
+        if (dynamic_cast<ExprAtom *>(func))
+        {
+            ExprAtom * atom = dynamic_cast<ExprAtom *>(func);
+            if (scope != Scope::STATEMENT)
+            {
+                if (atom->type == ExprAtom::REGISTER)
+                {
+                    return Error(Error::UNEXPECTED_REGISTER, atom->reg.name);
+                }
+                else
+                {
+                    return Error(Error::UNEXPECTED_NUMBER);
+                }
+            }
+        }
+        else if (dynamic_cast<ExprStatement *>(func))
+        {        
+            return Error(Error::UNEXPECTED_STATEMENT);
+        }
+        else if (dynamic_cast<ExprFunction *>(func))
+        {
+            ((ExprFunction *)func)->codeGen(out);
+        }
+    }
+
+    return Error(Error::NONE);
 }

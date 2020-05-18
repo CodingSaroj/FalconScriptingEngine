@@ -16,6 +16,7 @@ workspace "Falcon"
     project "Falcon"
         kind "StaticLib"
         language "C++"
+        cppdialect "C++17"
         toolset "gcc"
         targetdir "lib/%{cfg.buildcfg}/%{cfg.system}/%{cfg.architecture}"
 

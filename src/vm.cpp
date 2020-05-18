@@ -1,332 +1,672 @@
 #include "vm.hpp"
 
-#define OP_BIN_FUNC(name, sign) \
-static void op_##name(Falcon::VM & vm)\
-{\
-    Falcon::Internal::Instruction inst = vm.getCurrentInstruction();\
-\
-    Falcon::Internal::Register & arg1 = vm.getRegister(inst.arg1);\
-    Falcon::Internal::Register & arg2 = vm.getRegister(inst.arg2);\
-\
-    if (arg1.type >= Falcon::REGISTER_C0 && arg1.type <= Falcon::REGISTER_C3)\
-    {\
-        if (arg2.type >= Falcon::REGISTER_C0 && arg2.type <= Falcon::REGISTER_C3)\
-        {\
-            arg1.value.c = arg1.value.c sign arg2.value.c;\
-        }\
-        else if (arg2.type >= Falcon::REGISTER_U0 && arg2.type <= Falcon::REGISTER_U3)\
-        {\
-            arg1.value.c = arg1.value.c sign arg2.value.u;\
-        }\
-        else if (arg2.type >= Falcon::REGISTER_L0 && arg2.type <= Falcon::REGISTER_L3)\
-        {\
-            arg1.value.c = arg1.value.c sign arg2.value.l;\
-        }\
-        else if (arg2.type >= Falcon::REGISTER_F0 && arg2.type <= Falcon::REGISTER_F3)\
-        {\
-            arg1.value.c = arg1.value.c sign arg2.value.f;\
-        }\
-    }\
-    else if (arg1.type >= Falcon::REGISTER_U0 && arg1.type <= Falcon::REGISTER_U3)\
-    {\
-        if (arg2.type >= Falcon::REGISTER_C0 && arg2.type <= Falcon::REGISTER_C3)\
-        {\
-            arg1.value.u = arg1.value.u sign arg2.value.c;\
-        }\
-        else if (arg2.type >= Falcon::REGISTER_U0 && arg2.type <= Falcon::REGISTER_U3)\
-        {\
-            arg1.value.u = arg1.value.u sign arg2.value.u;\
-        }\
-        else if (arg2.type >= Falcon::REGISTER_L0 && arg2.type <= Falcon::REGISTER_L3)\
-        {\
-            arg1.value.u = arg1.value.u sign arg2.value.l;\
-        }\
-        else if (arg2.type >= Falcon::REGISTER_F0 && arg2.type <= Falcon::REGISTER_F3)\
-        {\
-            arg1.value.u = arg1.value.u sign arg2.value.f;\
-        }\
-    }\
-    else if (arg1.type >= Falcon::REGISTER_L0 && arg1.type <= Falcon::REGISTER_L3)\
-    {\
-        if (arg2.type >= Falcon::REGISTER_C0 && arg2.type <= Falcon::REGISTER_C3)\
-        {\
-            arg1.value.l = arg1.value.l sign arg2.value.c;\
-        }\
-        else if (arg2.type >= Falcon::REGISTER_U0 && arg2.type <= Falcon::REGISTER_U3)\
-        {\
-            arg1.value.l = arg1.value.l sign arg2.value.u;\
-        }\
-        else if (arg2.type >= Falcon::REGISTER_L0 && arg2.type <= Falcon::REGISTER_L3)\
-        {\
-            arg1.value.l = arg1.value.l sign arg2.value.l;\
-        }\
-        else if (arg2.type >= Falcon::REGISTER_F0 && arg2.type <= Falcon::REGISTER_F3)\
-        {\
-            arg1.value.l = arg1.value.l sign arg2.value.f;\
-        }\
-    }\
-    else if (arg1.type >= Falcon::REGISTER_F0 && arg1.type <= Falcon::REGISTER_F3)\
-    {\
-        if (arg2.type >= Falcon::REGISTER_C0 && arg2.type <= Falcon::REGISTER_C3)\
-        {\
-            arg1.value.f = arg1.value.f sign arg2.value.c;\
-        }\
-        else if (arg2.type >= Falcon::REGISTER_U0 && arg2.type <= Falcon::REGISTER_U3)\
-        {\
-            arg1.value.f = arg1.value.f sign arg2.value.u;\
-        }\
-        else if (arg2.type >= Falcon::REGISTER_L0 && arg2.type <= Falcon::REGISTER_L3)\
-        {\
-            arg1.value.f = arg1.value.f sign arg2.value.l;\
-        }\
-        else if (arg2.type >= Falcon::REGISTER_F0 && arg2.type <= Falcon::REGISTER_F3)\
-        {\
-            arg1.value.f = arg1.value.f sign arg2.value.f;\
-        }\
-    }\
-}\
+static void op_add(Falcon::VM & vm)
+{
+    Falcon::Internal::Instruction inst = vm.getCurrentInstruction();
 
-#define OP_BIN_FUNC_NO_FLOAT(name, sign) \
-static void op_##name(Falcon::VM & vm)\
-{\
-    Falcon::Internal::Instruction inst = vm.getCurrentInstruction();\
-\
-    Falcon::Internal::Register & arg1 = vm.getRegister(inst.arg1);\
-    Falcon::Internal::Register & arg2 = vm.getRegister(inst.arg2);\
-\
-    if (arg1.type >= Falcon::REGISTER_C0 && arg1.type <= Falcon::REGISTER_C3)\
-    {\
-        if (arg2.type >= Falcon::REGISTER_C0 && arg2.type <= Falcon::REGISTER_C3)\
-        {\
-            arg1.value.c = arg1.value.c sign arg2.value.c;\
-        }\
-        else if (arg2.type >= Falcon::REGISTER_U0 && arg2.type <= Falcon::REGISTER_U3)\
-        {\
-            arg1.value.c = arg1.value.c sign arg2.value.u;\
-        }\
-        else if (arg2.type >= Falcon::REGISTER_L0 && arg2.type <= Falcon::REGISTER_L3)\
-        {\
-            arg1.value.c = arg1.value.c sign arg2.value.l;\
-        }\
-    }\
-    else if (arg1.type >= Falcon::REGISTER_U0 && arg1.type <= Falcon::REGISTER_U3)\
-    {\
-        if (arg2.type >= Falcon::REGISTER_C0 && arg2.type <= Falcon::REGISTER_C3)\
-        {\
-            arg1.value.u = arg1.value.u sign arg2.value.c;\
-        }\
-        else if (arg2.type >= Falcon::REGISTER_U0 && arg2.type <= Falcon::REGISTER_U3)\
-        {\
-            arg1.value.u = arg1.value.u sign arg2.value.u;\
-        }\
-        else if (arg2.type >= Falcon::REGISTER_L0 && arg2.type <= Falcon::REGISTER_L3)\
-        {\
-            arg1.value.u = arg1.value.u sign arg2.value.l;\
-        }\
-    }\
-    else if (arg1.type >= Falcon::REGISTER_L0 && arg1.type <= Falcon::REGISTER_L3)\
-    {\
-        if (arg2.type >= Falcon::REGISTER_C0 && arg2.type <= Falcon::REGISTER_C3)\
-        {\
-            arg1.value.l = arg1.value.l sign arg2.value.c;\
-        }\
-        else if (arg2.type >= Falcon::REGISTER_U0 && arg2.type <= Falcon::REGISTER_U3)\
-        {\
-            arg1.value.l = arg1.value.l sign arg2.value.u;\
-        }\
-        else if (arg2.type >= Falcon::REGISTER_L0 && arg2.type <= Falcon::REGISTER_L3)\
-        {\
-            arg1.value.l = arg1.value.l sign arg2.value.l;\
-        }\
-    }\
-}\
+    Falcon::Internal::Register & arg1 = vm.getRegister(inst.arg1, inst.arg1_offset);
+    Falcon::Internal::Register & arg2 = vm.getRegister(inst.arg2, inst.extra.arg2_offset);
 
-#define OP_UN_FUNC(name, sign) \
-static void op_##name(Falcon::VM & vm)\
-{\
-    Falcon::Internal::Instruction inst = vm.getCurrentInstruction();\
-\
-    Falcon::Internal::Register & arg1 = vm.getRegister(inst.arg1);\
-\
-    if (arg1.type >= Falcon::REGISTER_C0 && arg1.type <= Falcon::REGISTER_C3)\
-    {\
-        arg1.value.c = sign arg1.value.c;\
-    }\
-    else if (arg1.type >= Falcon::REGISTER_U0 && arg1.type <= Falcon::REGISTER_U3)\
-    {\
-        arg1.value.u = sign arg1.value.u;\
-    }\
-    else if (arg1.type >= Falcon::REGISTER_L0 && arg1.type <= Falcon::REGISTER_L3)\
-    {\
-        arg1.value.l = sign arg1.value.l;\
-    }\
-    else if (arg1.type >= Falcon::REGISTER_F0 && arg1.type <= Falcon::REGISTER_F3)\
-    {\
-        arg1.value.f = sign arg1.value.f;\
-    }\
-}\
+    if ((arg1.type >= Falcon::REGISTER_C0 && arg1.type <= Falcon::REGISTER_C3) || arg1.type == Falcon::REGISTER_CSP)
+    {
+        arg1.value.c = arg1.value.c + arg2.value.c;
+    }
+    else if ((arg1.type >= Falcon::REGISTER_U0 && arg1.type <= Falcon::REGISTER_U3) || arg1.type == Falcon::REGISTER_USP)
+    {
+        arg1.value.u = arg1.value.u + arg2.value.u;
+    }
+    else if ((arg1.type >= Falcon::REGISTER_L0 && arg1.type <= Falcon::REGISTER_L3) || arg1.type == Falcon::REGISTER_LSP)
+    {
+        arg1.value.l = arg1.value.l + arg2.value.l;
+    }
+    else if ((arg1.type >= Falcon::REGISTER_F0 && arg1.type <= Falcon::REGISTER_F3) || arg1.type == Falcon::REGISTER_FSP)
+    {
+        arg1.value.f = arg1.value.f + arg2.value.f;
+    }
+}
 
-#define OP_UN_FUNC_NO_FLOAT(name, sign) \
-static void op_##name(Falcon::VM & vm)\
-{\
-    Falcon::Internal::Instruction inst = vm.getCurrentInstruction();\
-\
-    Falcon::Internal::Register & arg1 = vm.getRegister(inst.arg1);\
-\
-    if (arg1.type >= Falcon::REGISTER_C0 && arg1.type <= Falcon::REGISTER_C3)\
-    {\
-        arg1.value.c = sign arg1.value.c;\
-    }\
-    else if (arg1.type >= Falcon::REGISTER_U0 && arg1.type <= Falcon::REGISTER_U3)\
-    {\
-        arg1.value.u = sign arg1.value.u;\
-    }\
-    else if (arg1.type >= Falcon::REGISTER_L0 && arg1.type <= Falcon::REGISTER_L3)\
-    {\
-        arg1.value.l = sign arg1.value.l;\
-    }\
-}\
 
-#define OP_BIN_C_FUNC(name, sign, id) \
-static void op_##name(Falcon::VM & vm)\
-{\
-    Falcon::Internal::Instruction inst = vm.getCurrentInstruction();\
-\
-    Falcon::Internal::Register & arg1 = vm.getRegister(inst.arg1);\
-    Falcon::Internal::Register & arg2 = vm.getRegister(inst.arg2);\
-\
-    if (arg1.type >= Falcon::REGISTER_C0 && arg1.type <= Falcon::REGISTER_C3)\
-    {\
-        if (arg2.type >= Falcon::REGISTER_C0 && arg2.type <= Falcon::REGISTER_C3)\
-        {\
-            vm.setCmpResult(id, arg1.value.c sign arg2.value.c);\
-        }\
-        else if (arg2.type >= Falcon::REGISTER_U0 && arg2.type <= Falcon::REGISTER_U3)\
-        {\
-            vm.setCmpResult(id, arg1.value.c sign arg2.value.u);\
-        }\
-        else if (arg2.type >= Falcon::REGISTER_L0 && arg2.type <= Falcon::REGISTER_L3)\
-        {\
-            vm.setCmpResult(id, arg1.value.c sign arg2.value.l);\
-        }\
-        else if (arg2.type >= Falcon::REGISTER_F0 && arg2.type <= Falcon::REGISTER_F3)\
-        {\
-            vm.setCmpResult(id, arg1.value.c sign arg2.value.f);\
-        }\
-    }\
-    else if (arg1.type >= Falcon::REGISTER_U0 && arg1.type <= Falcon::REGISTER_U3)\
-    {\
-        if (arg2.type >= Falcon::REGISTER_C0 && arg2.type <= Falcon::REGISTER_C3)\
-        {\
-            vm.setCmpResult(id, arg1.value.u sign arg2.value.c);\
-        }\
-        else if (arg2.type >= Falcon::REGISTER_U0 && arg2.type <= Falcon::REGISTER_U3)\
-        {\
-            vm.setCmpResult(id, arg1.value.u sign arg2.value.u);\
-        }\
-        else if (arg2.type >= Falcon::REGISTER_L0 && arg2.type <= Falcon::REGISTER_L3)\
-        {\
-            vm.setCmpResult(id, arg1.value.u sign arg2.value.l);\
-        }\
-        else if (arg2.type >= Falcon::REGISTER_F0 && arg2.type <= Falcon::REGISTER_F3)\
-        {\
-            vm.setCmpResult(id, arg1.value.u sign arg2.value.f);\
-        }\
-    }\
-    else if (arg1.type >= Falcon::REGISTER_L0 && arg1.type <= Falcon::REGISTER_L3)\
-    {\
-        if (arg2.type >= Falcon::REGISTER_C0 && arg2.type <= Falcon::REGISTER_C3)\
-        {\
-            vm.setCmpResult(id, arg1.value.l sign arg2.value.c);\
-        }\
-        else if (arg2.type >= Falcon::REGISTER_U0 && arg2.type <= Falcon::REGISTER_U3)\
-        {\
-            vm.setCmpResult(id, arg1.value.l sign arg2.value.u);\
-        }\
-        else if (arg2.type >= Falcon::REGISTER_L0 && arg2.type <= Falcon::REGISTER_L3)\
-        {\
-            vm.setCmpResult(id, arg1.value.l sign arg2.value.l);\
-        }\
-        else if (arg2.type >= Falcon::REGISTER_F0 && arg2.type <= Falcon::REGISTER_F3)\
-        {\
-            vm.setCmpResult(id, arg1.value.l sign arg2.value.f);\
-        }\
-    }\
-    else if (arg1.type >= Falcon::REGISTER_F0 && arg1.type <= Falcon::REGISTER_F3)\
-    {\
-        if (arg2.type >= Falcon::REGISTER_C0 && arg2.type <= Falcon::REGISTER_C3)\
-        {\
-            vm.setCmpResult(id, arg1.value.f sign arg2.value.c);\
-        }\
-        else if (arg2.type >= Falcon::REGISTER_U0 && arg2.type <= Falcon::REGISTER_U3)\
-        {\
-            vm.setCmpResult(id, arg1.value.f sign arg2.value.u);\
-        }\
-        else if (arg2.type >= Falcon::REGISTER_L0 && arg2.type <= Falcon::REGISTER_L3)\
-        {\
-            vm.setCmpResult(id, arg1.value.f sign arg2.value.l);\
-        }\
-        else if (arg2.type >= Falcon::REGISTER_F0 && arg2.type <= Falcon::REGISTER_F3)\
-        {\
-            vm.setCmpResult(id, arg1.value.f sign arg2.value.f);\
-        }\
-    }\
-}\
+static void op_sub(Falcon::VM & vm)
+{
+    Falcon::Internal::Instruction inst = vm.getCurrentInstruction();
 
-#define OP_UN_C_FUNC(name, sign, id) \
-static void op_##name(Falcon::VM & vm)\
-{\
-    Falcon::Internal::Instruction inst = vm.getCurrentInstruction();\
-\
-    Falcon::Internal::Register & arg1 = vm.getRegister(inst.arg1);\
-\
-    if (arg1.type >= Falcon::REGISTER_C0 && arg1.type <= Falcon::REGISTER_C3)\
-    {\
-        vm.setCmpResult(id, sign arg1.value.c);\
-    }\
-    else if (arg1.type >= Falcon::REGISTER_U0 && arg1.type <= Falcon::REGISTER_U3)\
-    {\
-        vm.setCmpResult(id, sign arg1.value.u);\
-    }\
-    else if (arg1.type >= Falcon::REGISTER_L0 && arg1.type <= Falcon::REGISTER_L3)\
-    {\
-        vm.setCmpResult(id, sign arg1.value.l);\
-    }\
-    else if (arg1.type >= Falcon::REGISTER_F0 && arg1.type <= Falcon::REGISTER_F3)\
-    {\
-        vm.setCmpResult(id, sign arg1.value.f);\
-    }\
-}\
+    Falcon::Internal::Register & arg1 = vm.getRegister(inst.arg1, inst.arg1_offset);
+    Falcon::Internal::Register & arg2 = vm.getRegister(inst.arg2, inst.extra.arg2_offset);
 
-OP_BIN_FUNC(add, +)
-OP_BIN_FUNC(sub, -)
-OP_BIN_FUNC(mul, *)
-OP_BIN_FUNC(div, /)
-OP_BIN_FUNC_NO_FLOAT(mod, %)
-OP_UN_FUNC(inc, ++)
-OP_UN_FUNC(dec, --)
+    if ((arg1.type >= Falcon::REGISTER_C0 && arg1.type <= Falcon::REGISTER_C3) || arg1.type == Falcon::REGISTER_CSP)
+    {
+        arg1.value.c = arg1.value.c - arg2.value.c;
+    }
+    else if ((arg1.type >= Falcon::REGISTER_U0 && arg1.type <= Falcon::REGISTER_U3) || arg1.type == Falcon::REGISTER_USP)
+    {
+        arg1.value.u = arg1.value.u - arg2.value.u;
+    }
+    else if ((arg1.type >= Falcon::REGISTER_L0 && arg1.type <= Falcon::REGISTER_L3) || arg1.type == Falcon::REGISTER_LSP)
+    {
+        arg1.value.l = arg1.value.l - arg2.value.l;
+    }
+    else if ((arg1.type >= Falcon::REGISTER_F0 && arg1.type <= Falcon::REGISTER_F3) || arg1.type == Falcon::REGISTER_FSP)
+    {
+        arg1.value.f = arg1.value.f - arg2.value.f;
+    }
+}
 
-OP_BIN_FUNC_NO_FLOAT(lshft, <<)
-OP_BIN_FUNC_NO_FLOAT(rshft, >>)
-OP_BIN_FUNC_NO_FLOAT(and, &)
-OP_BIN_FUNC_NO_FLOAT(or, |)
-OP_BIN_FUNC_NO_FLOAT(xor, ^)
-OP_UN_FUNC_NO_FLOAT(cmpl, ~)
 
-OP_BIN_C_FUNC(grt0, >, 0)
-OP_BIN_C_FUNC(grt1, >, 1)
-OP_BIN_C_FUNC(greq0, >=, 0)
-OP_BIN_C_FUNC(greq1, >=, 1)
-OP_BIN_C_FUNC(less0, <, 0)
-OP_BIN_C_FUNC(less1, <, 1)
-OP_BIN_C_FUNC(lseq0, <=, 0)
-OP_BIN_C_FUNC(lseq1, <=, 1)
-OP_BIN_C_FUNC(iseq0, ==, 0)
-OP_BIN_C_FUNC(iseq1, ==, 1)
-OP_BIN_C_FUNC(neq0, !=, 0)
-OP_BIN_C_FUNC(neq1, !=, 1)
-OP_UN_C_FUNC(not0, !, 0)
-OP_UN_C_FUNC(not1, !, 1)
+static void op_mul(Falcon::VM & vm)
+{
+    Falcon::Internal::Instruction inst = vm.getCurrentInstruction();
+
+    Falcon::Internal::Register & arg1 = vm.getRegister(inst.arg1, inst.arg1_offset);
+    Falcon::Internal::Register & arg2 = vm.getRegister(inst.arg2, inst.extra.arg2_offset);
+
+    if ((arg1.type >= Falcon::REGISTER_C0 && arg1.type <= Falcon::REGISTER_C3) || arg1.type == Falcon::REGISTER_CSP)
+    {
+        arg1.value.c = arg1.value.c * arg2.value.c;
+    }
+    else if ((arg1.type >= Falcon::REGISTER_U0 && arg1.type <= Falcon::REGISTER_U3) || arg1.type == Falcon::REGISTER_USP)
+    {
+        arg1.value.u = arg1.value.u * arg2.value.u;
+    }
+    else if ((arg1.type >= Falcon::REGISTER_L0 && arg1.type <= Falcon::REGISTER_L3) || arg1.type == Falcon::REGISTER_LSP)
+    {
+        arg1.value.l = arg1.value.l * arg2.value.l;
+    }
+    else if ((arg1.type >= Falcon::REGISTER_F0 && arg1.type <= Falcon::REGISTER_F3) || arg1.type == Falcon::REGISTER_FSP)
+    {
+        arg1.value.f = arg1.value.f * arg2.value.f;
+    }
+}
+
+
+static void op_div(Falcon::VM & vm)
+{
+    Falcon::Internal::Instruction inst = vm.getCurrentInstruction();
+
+    Falcon::Internal::Register & arg1 = vm.getRegister(inst.arg1, inst.arg1_offset);
+    Falcon::Internal::Register & arg2 = vm.getRegister(inst.arg2, inst.extra.arg2_offset);
+
+    if ((arg1.type >= Falcon::REGISTER_C0 && arg1.type <= Falcon::REGISTER_C3) || arg1.type == Falcon::REGISTER_CSP)
+    {
+        arg1.value.c = arg1.value.c / arg2.value.c;
+    }
+    else if ((arg1.type >= Falcon::REGISTER_U0 && arg1.type <= Falcon::REGISTER_U3) || arg1.type == Falcon::REGISTER_USP)
+    {
+        arg1.value.u = arg1.value.u / arg2.value.u;
+    }
+    else if ((arg1.type >= Falcon::REGISTER_L0 && arg1.type <= Falcon::REGISTER_L3) || arg1.type == Falcon::REGISTER_LSP)
+    {
+        arg1.value.l = arg1.value.l / arg2.value.l;
+    }
+    else if ((arg1.type >= Falcon::REGISTER_F0 && arg1.type <= Falcon::REGISTER_F3) || arg1.type == Falcon::REGISTER_FSP)
+    {
+        arg1.value.f = arg1.value.f / arg2.value.f;
+    }
+}
+
+
+static void op_mod(Falcon::VM & vm)
+{
+    Falcon::Internal::Instruction inst = vm.getCurrentInstruction();
+
+    Falcon::Internal::Register & arg1 = vm.getRegister(inst.arg1, inst.arg1_offset);
+    Falcon::Internal::Register & arg2 = vm.getRegister(inst.arg2, inst.extra.arg2_offset);
+
+    if ((arg1.type >= Falcon::REGISTER_C0 && arg1.type <= Falcon::REGISTER_C3) || arg1.type == Falcon::REGISTER_CSP)
+    {
+        arg1.value.c = arg1.value.c % arg2.value.c;
+    }
+    else if ((arg1.type >= Falcon::REGISTER_U0 && arg1.type <= Falcon::REGISTER_U3) || arg1.type == Falcon::REGISTER_USP)
+    {
+        arg1.value.u = arg1.value.u % arg2.value.u;
+    }
+    else if ((arg1.type >= Falcon::REGISTER_L0 && arg1.type <= Falcon::REGISTER_L3) || arg1.type == Falcon::REGISTER_LSP)
+    {
+        arg1.value.l = arg1.value.l % arg2.value.l;
+    }
+}
+
+
+static void op_inc(Falcon::VM & vm)
+{
+    Falcon::Internal::Instruction inst = vm.getCurrentInstruction();
+
+    Falcon::Internal::Register & arg1 = vm.getRegister(inst.arg1, inst.arg1_offset);
+
+    if ((arg1.type >= Falcon::REGISTER_C0 && arg1.type <= Falcon::REGISTER_C3) || arg1.type == Falcon::REGISTER_CSP)
+    {
+        arg1.value.c = ++ arg1.value.c;
+    }
+    else if ((arg1.type >= Falcon::REGISTER_U0 && arg1.type <= Falcon::REGISTER_U3) || arg1.type == Falcon::REGISTER_USP)
+    {
+        arg1.value.u = ++ arg1.value.u;
+    }
+    else if ((arg1.type >= Falcon::REGISTER_L0 && arg1.type <= Falcon::REGISTER_L3) || arg1.type == Falcon::REGISTER_LSP)
+    {
+        arg1.value.l = ++ arg1.value.l;
+    }
+    else if ((arg1.type >= Falcon::REGISTER_F0 && arg1.type <= Falcon::REGISTER_F3) || arg1.type == Falcon::REGISTER_FSP)
+    {
+        arg1.value.f = ++ arg1.value.f;
+    }
+}
+
+
+static void op_dec(Falcon::VM & vm)
+{
+    Falcon::Internal::Instruction inst = vm.getCurrentInstruction();
+
+    Falcon::Internal::Register & arg1 = vm.getRegister(inst.arg1, inst.arg1_offset);
+
+    if ((arg1.type >= Falcon::REGISTER_C0 && arg1.type <= Falcon::REGISTER_C3) || arg1.type == Falcon::REGISTER_CSP)
+    {
+        arg1.value.c = -- arg1.value.c;
+    }
+    else if ((arg1.type >= Falcon::REGISTER_U0 && arg1.type <= Falcon::REGISTER_U3) || arg1.type == Falcon::REGISTER_USP)
+    {
+        arg1.value.u = -- arg1.value.u;
+    }
+    else if ((arg1.type >= Falcon::REGISTER_L0 && arg1.type <= Falcon::REGISTER_L3) || arg1.type == Falcon::REGISTER_LSP)
+    {
+        arg1.value.l = -- arg1.value.l;
+    }
+    else if ((arg1.type >= Falcon::REGISTER_F0 && arg1.type <= Falcon::REGISTER_F3) || arg1.type == Falcon::REGISTER_FSP)
+    {
+        arg1.value.f = -- arg1.value.f;
+    }
+}
+
+
+
+static void op_lshft(Falcon::VM & vm)
+{
+    Falcon::Internal::Instruction inst = vm.getCurrentInstruction();
+
+    Falcon::Internal::Register & arg1 = vm.getRegister(inst.arg1, inst.arg1_offset);
+    Falcon::Internal::Register & arg2 = vm.getRegister(inst.arg2, inst.extra.arg2_offset);
+
+    if ((arg1.type >= Falcon::REGISTER_C0 && arg1.type <= Falcon::REGISTER_C3) || arg1.type == Falcon::REGISTER_CSP)
+    {
+        arg1.value.c = arg1.value.c << arg2.value.c;
+    }
+    else if ((arg1.type >= Falcon::REGISTER_U0 && arg1.type <= Falcon::REGISTER_U3) || arg1.type == Falcon::REGISTER_USP)
+    {
+        arg1.value.u = arg1.value.u << arg2.value.u;
+    }
+    else if ((arg1.type >= Falcon::REGISTER_L0 && arg1.type <= Falcon::REGISTER_L3) || arg1.type == Falcon::REGISTER_LSP)
+    {
+        arg1.value.l = arg1.value.l << arg2.value.l;
+    }
+}
+
+
+static void op_rshft(Falcon::VM & vm)
+{
+    Falcon::Internal::Instruction inst = vm.getCurrentInstruction();
+
+    Falcon::Internal::Register & arg1 = vm.getRegister(inst.arg1, inst.arg1_offset);
+    Falcon::Internal::Register & arg2 = vm.getRegister(inst.arg2, inst.extra.arg2_offset);
+
+    if ((arg1.type >= Falcon::REGISTER_C0 && arg1.type <= Falcon::REGISTER_C3) || arg1.type == Falcon::REGISTER_CSP)
+    {
+        arg1.value.c = arg1.value.c >> arg2.value.c;
+    }
+    else if ((arg1.type >= Falcon::REGISTER_U0 && arg1.type <= Falcon::REGISTER_U3) || arg1.type == Falcon::REGISTER_USP)
+    {
+        arg1.value.u = arg1.value.u >> arg2.value.u;
+    }
+    else if ((arg1.type >= Falcon::REGISTER_L0 && arg1.type <= Falcon::REGISTER_L3) || arg1.type == Falcon::REGISTER_LSP)
+    {
+        arg1.value.l = arg1.value.l >> arg2.value.l;
+    }
+}
+
+
+static void op_and(Falcon::VM & vm)
+{
+    Falcon::Internal::Instruction inst = vm.getCurrentInstruction();
+
+    Falcon::Internal::Register & arg1 = vm.getRegister(inst.arg1, inst.arg1_offset);
+    Falcon::Internal::Register & arg2 = vm.getRegister(inst.arg2, inst.extra.arg2_offset);
+
+    if ((arg1.type >= Falcon::REGISTER_C0 && arg1.type <= Falcon::REGISTER_C3) || arg1.type == Falcon::REGISTER_CSP)
+    {
+        arg1.value.c = arg1.value.c & arg2.value.c;
+    }
+    else if ((arg1.type >= Falcon::REGISTER_U0 && arg1.type <= Falcon::REGISTER_U3) || arg1.type == Falcon::REGISTER_USP)
+    {
+        arg1.value.u = arg1.value.u & arg2.value.u;
+    }
+    else if ((arg1.type >= Falcon::REGISTER_L0 && arg1.type <= Falcon::REGISTER_L3) || arg1.type == Falcon::REGISTER_LSP)
+    {
+        arg1.value.l = arg1.value.l & arg2.value.l;
+    }
+}
+
+
+static void op_or(Falcon::VM & vm)
+{
+    Falcon::Internal::Instruction inst = vm.getCurrentInstruction();
+
+    Falcon::Internal::Register & arg1 = vm.getRegister(inst.arg1, inst.arg1_offset);
+    Falcon::Internal::Register & arg2 = vm.getRegister(inst.arg2, inst.extra.arg2_offset);
+
+    if ((arg1.type >= Falcon::REGISTER_C0 && arg1.type <= Falcon::REGISTER_C3) || arg1.type == Falcon::REGISTER_CSP)
+    {
+        arg1.value.c = arg1.value.c | arg2.value.c;
+    }
+    else if ((arg1.type >= Falcon::REGISTER_U0 && arg1.type <= Falcon::REGISTER_U3) || arg1.type == Falcon::REGISTER_USP)
+    {
+        arg1.value.u = arg1.value.u | arg2.value.u;
+    }
+    else if ((arg1.type >= Falcon::REGISTER_L0 && arg1.type <= Falcon::REGISTER_L3) || arg1.type == Falcon::REGISTER_LSP)
+    {
+        arg1.value.l = arg1.value.l | arg2.value.l;
+    }
+}
+
+
+static void op_xor(Falcon::VM & vm)
+{
+    Falcon::Internal::Instruction inst = vm.getCurrentInstruction();
+
+    Falcon::Internal::Register & arg1 = vm.getRegister(inst.arg1, inst.arg1_offset);
+    Falcon::Internal::Register & arg2 = vm.getRegister(inst.arg2, inst.extra.arg2_offset);
+
+    if ((arg1.type >= Falcon::REGISTER_C0 && arg1.type <= Falcon::REGISTER_C3) || arg1.type == Falcon::REGISTER_CSP)
+    {
+        arg1.value.c = arg1.value.c ^ arg2.value.c;
+    }
+    else if ((arg1.type >= Falcon::REGISTER_U0 && arg1.type <= Falcon::REGISTER_U3) || arg1.type == Falcon::REGISTER_USP)
+    {
+        arg1.value.u = arg1.value.u ^ arg2.value.u;
+    }
+    else if ((arg1.type >= Falcon::REGISTER_L0 && arg1.type <= Falcon::REGISTER_L3) || arg1.type == Falcon::REGISTER_LSP)
+    {
+        arg1.value.l = arg1.value.l ^ arg2.value.l;
+    }
+}
+
+
+static void op_cmpl(Falcon::VM & vm)
+{
+  Falcon::Internal::Instruction inst = vm.getCurrentInstruction();
+
+  Falcon::Internal::Register & arg1 = vm.getRegister(inst.arg1, inst.arg1_offset);
+
+  if ((arg1.type >= Falcon::REGISTER_C0 && arg1.type <= Falcon::REGISTER_C3) || arg1.type == Falcon::REGISTER_CSP)
+  {
+      arg1.value.c = ~ arg1.value.c;
+  }
+  else if ((arg1.type >= Falcon::REGISTER_U0 && arg1.type <= Falcon::REGISTER_U3) || arg1.type == Falcon::REGISTER_USP)
+  {
+      arg1.value.u = ~ arg1.value.u;
+  }
+  else if ((arg1.type >= Falcon::REGISTER_L0 && arg1.type <= Falcon::REGISTER_L3) || arg1.type == Falcon::REGISTER_LSP)
+  {
+      arg1.value.l = ~ arg1.value.l;
+  }
+}
+
+
+
+static void op_grt0(Falcon::VM & vm)
+{
+    Falcon::Internal::Instruction inst = vm.getCurrentInstruction();
+
+    Falcon::Internal::Register & arg1 = vm.getRegister(inst.arg1, inst.arg1_offset);
+    Falcon::Internal::Register & arg2 = vm.getRegister(inst.arg2, inst.extra.arg2_offset);
+
+    if ((arg1.type >= Falcon::REGISTER_C0 && arg1.type <= Falcon::REGISTER_C3) || arg1.type == Falcon::REGISTER_CSP)
+    {
+        vm.setCmpResult(0, arg1.value.c > arg2.value.c);
+    }
+    else if ((arg1.type >= Falcon::REGISTER_U0 && arg1.type <= Falcon::REGISTER_U3) || arg1.type == Falcon::REGISTER_USP)
+    {
+        vm.setCmpResult(0, arg1.value.u > arg2.value.u);
+    }
+    else if ((arg1.type >= Falcon::REGISTER_L0 && arg1.type <= Falcon::REGISTER_L3) || arg1.type == Falcon::REGISTER_LSP)
+    {
+        vm.setCmpResult(0, arg1.value.l > arg2.value.l);
+    }
+    else if ((arg1.type >= Falcon::REGISTER_F0 && arg1.type <= Falcon::REGISTER_F3) || arg1.type == Falcon::REGISTER_FSP)
+    {
+        vm.setCmpResult(0, arg1.value.f > arg2.value.f);
+    }
+}
+
+
+static void op_grt1(Falcon::VM & vm)
+{
+    Falcon::Internal::Instruction inst = vm.getCurrentInstruction();
+
+    Falcon::Internal::Register & arg1 = vm.getRegister(inst.arg1, inst.arg1_offset);
+    Falcon::Internal::Register & arg2 = vm.getRegister(inst.arg2, inst.extra.arg2_offset);
+
+    if ((arg1.type >= Falcon::REGISTER_C0 && arg1.type <= Falcon::REGISTER_C3) || arg1.type == Falcon::REGISTER_CSP)
+    {
+        vm.setCmpResult(1, arg1.value.c > arg2.value.c);
+    }
+    else if ((arg1.type >= Falcon::REGISTER_U0 && arg1.type <= Falcon::REGISTER_U3) || arg1.type == Falcon::REGISTER_USP)
+    {
+        vm.setCmpResult(1, arg1.value.u > arg2.value.u);
+    }
+    else if ((arg1.type >= Falcon::REGISTER_L0 && arg1.type <= Falcon::REGISTER_L3) || arg1.type == Falcon::REGISTER_LSP)
+    {
+        vm.setCmpResult(1, arg1.value.l > arg2.value.l);
+    }
+    else if ((arg1.type >= Falcon::REGISTER_F0 && arg1.type <= Falcon::REGISTER_F3) || arg1.type == Falcon::REGISTER_FSP)
+    {
+        vm.setCmpResult(1, arg1.value.f > arg2.value.f);
+    }
+}
+
+
+static void op_greq0(Falcon::VM & vm)
+{
+    Falcon::Internal::Instruction inst = vm.getCurrentInstruction();
+
+    Falcon::Internal::Register & arg1 = vm.getRegister(inst.arg1, inst.arg1_offset);
+    Falcon::Internal::Register & arg2 = vm.getRegister(inst.arg2, inst.extra.arg2_offset);
+
+    if ((arg1.type >= Falcon::REGISTER_C0 && arg1.type <= Falcon::REGISTER_C3) || arg1.type == Falcon::REGISTER_CSP)
+    {
+        vm.setCmpResult(0, arg1.value.c >= arg2.value.c);
+    }
+    else if ((arg1.type >= Falcon::REGISTER_U0 && arg1.type <= Falcon::REGISTER_U3) || arg1.type == Falcon::REGISTER_USP)
+    {
+        vm.setCmpResult(0, arg1.value.u >= arg2.value.u);
+    }
+    else if ((arg1.type >= Falcon::REGISTER_L0 && arg1.type <= Falcon::REGISTER_L3) || arg1.type == Falcon::REGISTER_LSP)
+    {
+        vm.setCmpResult(0, arg1.value.l >= arg2.value.l);
+    }
+    else if ((arg1.type >= Falcon::REGISTER_F0 && arg1.type <= Falcon::REGISTER_F3) || arg1.type == Falcon::REGISTER_FSP)
+    {
+        vm.setCmpResult(0, arg1.value.f >= arg2.value.f);
+    }
+}
+
+
+static void op_greq1(Falcon::VM & vm)
+{
+    Falcon::Internal::Instruction inst = vm.getCurrentInstruction();
+
+    Falcon::Internal::Register & arg1 = vm.getRegister(inst.arg1, inst.arg1_offset);
+    Falcon::Internal::Register & arg2 = vm.getRegister(inst.arg2, inst.extra.arg2_offset);
+
+    if ((arg1.type >= Falcon::REGISTER_C0 && arg1.type <= Falcon::REGISTER_C3) || arg1.type == Falcon::REGISTER_CSP)
+    {
+        vm.setCmpResult(1, arg1.value.c >= arg2.value.c);
+    }
+    else if ((arg1.type >= Falcon::REGISTER_U0 && arg1.type <= Falcon::REGISTER_U3) || arg1.type == Falcon::REGISTER_USP)
+    {
+        vm.setCmpResult(1, arg1.value.u >= arg2.value.u);
+    }
+    else if ((arg1.type >= Falcon::REGISTER_L0 && arg1.type <= Falcon::REGISTER_L3) || arg1.type == Falcon::REGISTER_LSP)
+    {
+        vm.setCmpResult(1, arg1.value.l >= arg2.value.l);
+    }
+    else if ((arg1.type >= Falcon::REGISTER_F0 && arg1.type <= Falcon::REGISTER_F3) || arg1.type == Falcon::REGISTER_FSP)
+    {
+        vm.setCmpResult(1, arg1.value.f >= arg2.value.f);
+    }
+}
+
+
+static void op_less0(Falcon::VM & vm)
+{
+    Falcon::Internal::Instruction inst = vm.getCurrentInstruction();
+
+    Falcon::Internal::Register & arg1 = vm.getRegister(inst.arg1, inst.arg1_offset);
+    Falcon::Internal::Register & arg2 = vm.getRegister(inst.arg2, inst.extra.arg2_offset);
+
+    if ((arg1.type >= Falcon::REGISTER_C0 && arg1.type <= Falcon::REGISTER_C3) || arg1.type == Falcon::REGISTER_CSP)
+    {
+        vm.setCmpResult(0, arg1.value.c < arg2.value.c);
+    }
+    else if ((arg1.type >= Falcon::REGISTER_U0 && arg1.type <= Falcon::REGISTER_U3) || arg1.type == Falcon::REGISTER_USP)
+    {
+        vm.setCmpResult(0, arg1.value.u < arg2.value.u);
+    }
+    else if ((arg1.type >= Falcon::REGISTER_L0 && arg1.type <= Falcon::REGISTER_L3) || arg1.type == Falcon::REGISTER_LSP)
+    {
+        vm.setCmpResult(0, arg1.value.l < arg2.value.l);
+    }
+    else if ((arg1.type >= Falcon::REGISTER_F0 && arg1.type <= Falcon::REGISTER_F3) || arg1.type == Falcon::REGISTER_FSP)
+    {
+        vm.setCmpResult(0, arg1.value.f < arg2.value.f);
+    }
+}
+
+
+static void op_less1(Falcon::VM & vm)
+{
+    Falcon::Internal::Instruction inst = vm.getCurrentInstruction();
+
+    Falcon::Internal::Register & arg1 = vm.getRegister(inst.arg1, inst.arg1_offset);
+    Falcon::Internal::Register & arg2 = vm.getRegister(inst.arg2, inst.extra.arg2_offset);
+
+    if ((arg1.type >= Falcon::REGISTER_C0 && arg1.type <= Falcon::REGISTER_C3) || arg1.type == Falcon::REGISTER_CSP)
+    {
+        vm.setCmpResult(1, arg1.value.c < arg2.value.c);
+    }
+    else if ((arg1.type >= Falcon::REGISTER_U0 && arg1.type <= Falcon::REGISTER_U3) || arg1.type == Falcon::REGISTER_USP)
+    {
+        vm.setCmpResult(1, arg1.value.u < arg2.value.u);
+    }
+    else if ((arg1.type >= Falcon::REGISTER_L0 && arg1.type <= Falcon::REGISTER_L3) || arg1.type == Falcon::REGISTER_LSP)
+    {
+        vm.setCmpResult(1, arg1.value.l < arg2.value.l);
+    }
+    else if ((arg1.type >= Falcon::REGISTER_F0 && arg1.type <= Falcon::REGISTER_F3) || arg1.type == Falcon::REGISTER_FSP)
+    {
+        vm.setCmpResult(1, arg1.value.f < arg2.value.f);
+    }
+}
+
+
+static void op_lseq0(Falcon::VM & vm)
+{
+    Falcon::Internal::Instruction inst = vm.getCurrentInstruction();
+
+    Falcon::Internal::Register & arg1 = vm.getRegister(inst.arg1, inst.arg1_offset);
+    Falcon::Internal::Register & arg2 = vm.getRegister(inst.arg2, inst.extra.arg2_offset);
+
+    if ((arg1.type >= Falcon::REGISTER_C0 && arg1.type <= Falcon::REGISTER_C3) || arg1.type == Falcon::REGISTER_CSP)
+    {
+        vm.setCmpResult(0, arg1.value.c <= arg2.value.c);
+    }
+    else if ((arg1.type >= Falcon::REGISTER_U0 && arg1.type <= Falcon::REGISTER_U3) || arg1.type == Falcon::REGISTER_USP)
+    {
+        vm.setCmpResult(0, arg1.value.u <= arg2.value.u);
+    }
+    else if ((arg1.type >= Falcon::REGISTER_L0 && arg1.type <= Falcon::REGISTER_L3) || arg1.type == Falcon::REGISTER_LSP)
+    {
+        vm.setCmpResult(0, arg1.value.l <= arg2.value.l);
+    }
+    else if ((arg1.type >= Falcon::REGISTER_F0 && arg1.type <= Falcon::REGISTER_F3) || arg1.type == Falcon::REGISTER_FSP)
+    {
+        vm.setCmpResult(0, arg1.value.f <= arg2.value.f);
+    }
+}
+
+
+static void op_lseq1(Falcon::VM & vm)
+{
+    Falcon::Internal::Instruction inst = vm.getCurrentInstruction();
+
+    Falcon::Internal::Register & arg1 = vm.getRegister(inst.arg1, inst.arg1_offset);
+    Falcon::Internal::Register & arg2 = vm.getRegister(inst.arg2, inst.extra.arg2_offset);
+
+    if ((arg1.type >= Falcon::REGISTER_C0 && arg1.type <= Falcon::REGISTER_C3) || arg1.type == Falcon::REGISTER_CSP)
+    {
+        vm.setCmpResult(1, arg1.value.c <= arg2.value.c);
+    }
+    else if ((arg1.type >= Falcon::REGISTER_U0 && arg1.type <= Falcon::REGISTER_U3) || arg1.type == Falcon::REGISTER_USP)
+    {
+        vm.setCmpResult(1, arg1.value.u <= arg2.value.u);
+    }
+    else if ((arg1.type >= Falcon::REGISTER_L0 && arg1.type <= Falcon::REGISTER_L3) || arg1.type == Falcon::REGISTER_LSP)
+    {
+        vm.setCmpResult(1, arg1.value.l <= arg2.value.l);
+    }
+    else if ((arg1.type >= Falcon::REGISTER_F0 && arg1.type <= Falcon::REGISTER_F3) || arg1.type == Falcon::REGISTER_FSP)
+    {
+        vm.setCmpResult(1, arg1.value.f <= arg2.value.f);
+    }
+}
+
+
+static void op_iseq0(Falcon::VM & vm)
+{
+    Falcon::Internal::Instruction inst = vm.getCurrentInstruction();
+
+    Falcon::Internal::Register & arg1 = vm.getRegister(inst.arg1, inst.arg1_offset);
+    Falcon::Internal::Register & arg2 = vm.getRegister(inst.arg2, inst.extra.arg2_offset);
+
+    if ((arg1.type >= Falcon::REGISTER_C0 && arg1.type <= Falcon::REGISTER_C3) || arg1.type == Falcon::REGISTER_CSP)
+    {
+        vm.setCmpResult(0, arg1.value.c == arg2.value.c);
+    }
+    else if ((arg1.type >= Falcon::REGISTER_U0 && arg1.type <= Falcon::REGISTER_U3) || arg1.type == Falcon::REGISTER_USP)
+    {
+        vm.setCmpResult(0, arg1.value.u == arg2.value.u);
+    }
+    else if ((arg1.type >= Falcon::REGISTER_L0 && arg1.type <= Falcon::REGISTER_L3) || arg1.type == Falcon::REGISTER_LSP)
+    {
+        vm.setCmpResult(0, arg1.value.l == arg2.value.l);
+    }
+    else if ((arg1.type >= Falcon::REGISTER_F0 && arg1.type <= Falcon::REGISTER_F3) || arg1.type == Falcon::REGISTER_FSP)
+    {
+        vm.setCmpResult(0, arg1.value.f == arg2.value.f);
+    }
+}
+
+
+static void op_iseq1(Falcon::VM & vm)
+{
+    Falcon::Internal::Instruction inst = vm.getCurrentInstruction();
+
+    Falcon::Internal::Register & arg1 = vm.getRegister(inst.arg1, inst.arg1_offset);
+    Falcon::Internal::Register & arg2 = vm.getRegister(inst.arg2, inst.extra.arg2_offset);
+
+    if ((arg1.type >= Falcon::REGISTER_C0 && arg1.type <= Falcon::REGISTER_C3) || arg1.type == Falcon::REGISTER_CSP)
+    {
+        vm.setCmpResult(1, arg1.value.c == arg2.value.c);
+    }
+    else if ((arg1.type >= Falcon::REGISTER_U0 && arg1.type <= Falcon::REGISTER_U3) || arg1.type == Falcon::REGISTER_USP)
+    {
+        vm.setCmpResult(1, arg1.value.u == arg2.value.u);
+    }
+    else if ((arg1.type >= Falcon::REGISTER_L0 && arg1.type <= Falcon::REGISTER_L3) || arg1.type == Falcon::REGISTER_LSP)
+    {
+        vm.setCmpResult(1, arg1.value.l == arg2.value.l);
+    }
+    else if ((arg1.type >= Falcon::REGISTER_F0 && arg1.type <= Falcon::REGISTER_F3) || arg1.type == Falcon::REGISTER_FSP)
+    {
+        vm.setCmpResult(1, arg1.value.f == arg2.value.f);
+    }
+}
+
+
+static void op_neq0(Falcon::VM & vm)
+{
+    Falcon::Internal::Instruction inst = vm.getCurrentInstruction();
+
+    Falcon::Internal::Register & arg1 = vm.getRegister(inst.arg1, inst.arg1_offset);
+    Falcon::Internal::Register & arg2 = vm.getRegister(inst.arg2, inst.extra.arg2_offset);
+
+    if ((arg1.type >= Falcon::REGISTER_C0 && arg1.type <= Falcon::REGISTER_C3) || arg1.type == Falcon::REGISTER_CSP)
+    {
+        vm.setCmpResult(0, arg1.value.c != arg2.value.c);
+    }
+    else if ((arg1.type >= Falcon::REGISTER_U0 && arg1.type <= Falcon::REGISTER_U3) || arg1.type == Falcon::REGISTER_USP)
+    {
+        vm.setCmpResult(0, arg1.value.u != arg2.value.u);
+    }
+    else if ((arg1.type >= Falcon::REGISTER_L0 && arg1.type <= Falcon::REGISTER_L3) || arg1.type == Falcon::REGISTER_LSP)
+    {
+        vm.setCmpResult(0, arg1.value.l != arg2.value.l);
+    }
+    else if ((arg1.type >= Falcon::REGISTER_F0 && arg1.type <= Falcon::REGISTER_F3) || arg1.type == Falcon::REGISTER_FSP)
+    {
+        vm.setCmpResult(0, arg1.value.f != arg2.value.f);
+    }
+}
+
+
+static void op_neq1(Falcon::VM & vm)
+{
+    Falcon::Internal::Instruction inst = vm.getCurrentInstruction();
+
+    Falcon::Internal::Register & arg1 = vm.getRegister(inst.arg1, inst.arg1_offset);
+    Falcon::Internal::Register & arg2 = vm.getRegister(inst.arg2, inst.extra.arg2_offset);
+
+    if ((arg1.type >= Falcon::REGISTER_C0 && arg1.type <= Falcon::REGISTER_C3) || arg1.type == Falcon::REGISTER_CSP)
+    {
+        vm.setCmpResult(1, arg1.value.c != arg2.value.c);
+    }
+    else if ((arg1.type >= Falcon::REGISTER_U0 && arg1.type <= Falcon::REGISTER_U3) || arg1.type == Falcon::REGISTER_USP)
+    {
+        vm.setCmpResult(1, arg1.value.u != arg2.value.u);
+    }
+    else if ((arg1.type >= Falcon::REGISTER_L0 && arg1.type <= Falcon::REGISTER_L3) || arg1.type == Falcon::REGISTER_LSP)
+    {
+        vm.setCmpResult(1, arg1.value.l != arg2.value.l);
+    }
+    else if ((arg1.type >= Falcon::REGISTER_F0 && arg1.type <= Falcon::REGISTER_F3) || arg1.type == Falcon::REGISTER_FSP)
+    {
+        vm.setCmpResult(1, arg1.value.f != arg2.value.f);
+    }
+}
+
+static void op_not0(Falcon::VM & vm)
+{
+    Falcon::Internal::Instruction inst = vm.getCurrentInstruction();
+
+    Falcon::Internal::Register & arg1 = vm.getRegister(inst.arg1, inst.arg1_offset);
+
+    if ((arg1.type >= Falcon::REGISTER_C0 && arg1.type <= Falcon::REGISTER_C3) || arg1.type == Falcon::REGISTER_CSP)
+    {
+        vm.setCmpResult(0, ! arg1.value.c);
+    }
+    else if ((arg1.type >= Falcon::REGISTER_U0 && arg1.type <= Falcon::REGISTER_U3) || arg1.type == Falcon::REGISTER_USP)
+    {
+        vm.setCmpResult(0, ! arg1.value.u);
+    }
+    else if ((arg1.type >= Falcon::REGISTER_L0 && arg1.type <= Falcon::REGISTER_L3) || arg1.type == Falcon::REGISTER_LSP)
+    {
+        vm.setCmpResult(0, ! arg1.value.l);
+    }
+    else if ((arg1.type >= Falcon::REGISTER_F0 && arg1.type <= Falcon::REGISTER_F3) || arg1.type == Falcon::REGISTER_FSP)
+    {
+        vm.setCmpResult(0, ! arg1.value.f);
+    }
+}
+
+static void op_not1(Falcon::VM & vm)
+{
+    Falcon::Internal::Instruction inst = vm.getCurrentInstruction();
+
+    Falcon::Internal::Register & arg1 = vm.getRegister(inst.arg1, inst.arg1_offset);
+
+    if ((arg1.type >= Falcon::REGISTER_C0 && arg1.type <= Falcon::REGISTER_C3) || arg1.type == Falcon::REGISTER_CSP)
+    {
+        vm.setCmpResult(1, ! arg1.value.c);
+    }
+    else if ((arg1.type >= Falcon::REGISTER_U0 && arg1.type <= Falcon::REGISTER_U3) || arg1.type == Falcon::REGISTER_USP)
+    {
+        vm.setCmpResult(1, ! arg1.value.u);
+    }
+    else if ((arg1.type >= Falcon::REGISTER_L0 && arg1.type <= Falcon::REGISTER_L3) || arg1.type == Falcon::REGISTER_LSP)
+    {
+        vm.setCmpResult(1, ! arg1.value.l);
+    }
+    else if ((arg1.type >= Falcon::REGISTER_F0 && arg1.type <= Falcon::REGISTER_F3) || arg1.type == Falcon::REGISTER_FSP)
+    {
+        vm.setCmpResult(1, ! arg1.value.f);
+    }
+}
 
 static void op_cand(Falcon::VM & vm)
 {
@@ -350,7 +690,7 @@ static void op_if(Falcon::VM & vm)
             inst.extra.arg2_offset
         };
 
-        vm.run(vm.getSymbol(*(uint16_t *)bytes));
+        vm.gotoFunction(vm.getSymbol(*(uint16_t *)bytes));
     }
 }
 
@@ -366,7 +706,108 @@ static void op_else(Falcon::VM & vm)
             inst.extra.arg2_offset
         };
 
-        vm.run(vm.getSymbol(*(uint16_t *)bytes));
+        vm.gotoFunction(vm.getSymbol(*(uint16_t *)bytes));
+    }
+}
+
+static void op_push(Falcon::VM & vm)
+{
+    Falcon::Internal::Instruction inst = vm.getCurrentInstruction();
+
+    Falcon::Internal::Register & reg = vm.getRegister(inst.arg1, inst.arg1_offset);
+
+    if ((reg.type >= Falcon::REGISTER_C0 && reg.type <= Falcon::REGISTER_C3) || reg.type == Falcon::REGISTER_CSP)
+    {
+        vm.pushChar(reg.value.c);
+    }
+    else if ((reg.type >= Falcon::REGISTER_U0 && reg.type <= Falcon::REGISTER_U3) || reg.type == Falcon::REGISTER_USP)
+    {
+        vm.pushUint(reg.value.u);
+    }
+    else if ((reg.type >= Falcon::REGISTER_L0 && reg.type <= Falcon::REGISTER_L3) || reg.type == Falcon::REGISTER_LSP)
+    {
+        vm.pushChar(reg.value.l);
+    }
+    else if ((reg.type >= Falcon::REGISTER_F0 && reg.type <= Falcon::REGISTER_F3) || reg.type == Falcon::REGISTER_FSP)
+    {
+        vm.pushChar(reg.value.f);
+    }
+}
+
+static void op_pop(Falcon::VM & vm)
+{
+    Falcon::Internal::Instruction inst = vm.getCurrentInstruction();
+
+    Falcon::Internal::Register & reg = vm.getRegister(inst.arg1, inst.arg1_offset);
+
+    if ((reg.type >= Falcon::REGISTER_C0 && reg.type <= Falcon::REGISTER_C3) || reg.type == Falcon::REGISTER_CSP)
+    {
+        reg.value.c = vm.popChar();
+    }
+    else if ((reg.type >= Falcon::REGISTER_U0 && reg.type <= Falcon::REGISTER_U3) || reg.type == Falcon::REGISTER_USP)
+    {
+        reg.value.u = vm.popUint();
+    }
+    else if ((reg.type >= Falcon::REGISTER_L0 && reg.type <= Falcon::REGISTER_L3) || reg.type == Falcon::REGISTER_LSP)
+    {
+        reg.value.l = vm.popInt();
+    }
+    else if ((reg.type >= Falcon::REGISTER_F0 && reg.type <= Falcon::REGISTER_F3) || reg.type == Falcon::REGISTER_FSP)
+    {
+        reg.value.f = vm.popFloat();
+    }
+    else if (reg.type == Falcon::REGISTER_NULL)
+    {
+        vm.popUint();
+    }
+}
+
+static void op_mov(Falcon::VM & vm)
+{
+    Falcon::Internal::Instruction inst = vm.getCurrentInstruction();
+
+    Falcon::Internal::Register & reg = vm.getRegister(inst.arg1, inst.arg1_offset);
+    
+    if ((reg.type >= Falcon::REGISTER_C0 && reg.type <= Falcon::REGISTER_C3) || reg.type == Falcon::REGISTER_USP)
+    {
+        reg.value.c = inst.extra.arg2_offset;
+    }
+    else if ((reg.type >= Falcon::REGISTER_U0 && reg.type <= Falcon::REGISTER_U3) || reg.type == Falcon::REGISTER_USP)
+    {
+        reg.value.u = inst.extra.u;
+    }
+    else if ((reg.type >= Falcon::REGISTER_L0 && reg.type <= Falcon::REGISTER_L3) || reg.type == Falcon::REGISTER_USP)
+    {
+        reg.value.l = inst.extra.l;
+    }
+    else if ((reg.type >= Falcon::REGISTER_F0 && reg.type <= Falcon::REGISTER_F3) || reg.type == Falcon::REGISTER_USP)
+    {
+        reg.value.f = inst.extra.f;
+    }
+}
+
+static void op_movr(Falcon::VM & vm)
+{
+    Falcon::Internal::Instruction inst = vm.getCurrentInstruction();
+
+    Falcon::Internal::Register & reg0 = vm.getRegister(inst.arg1, inst.arg1_offset);
+    Falcon::Internal::Register & reg1 = vm.getRegister(inst.arg1, inst.arg1_offset);
+
+    if ((reg0.type >= Falcon::REGISTER_C0 && reg0.type <= Falcon::REGISTER_C3) || reg0.type == Falcon::REGISTER_USP)
+    {
+        reg0.value.c = reg1.value.c;
+    }
+    else if ((reg0.type >= Falcon::REGISTER_U0 && reg0.type <= Falcon::REGISTER_U3) || reg0.type == Falcon::REGISTER_USP)
+    {
+        reg0.value.u = reg1.value.u;
+    }
+    else if ((reg0.type >= Falcon::REGISTER_L0 && reg0.type <= Falcon::REGISTER_L3) || reg0.type == Falcon::REGISTER_USP)
+    {
+        reg0.value.l = reg1.value.l;
+    }
+    else if ((reg0.type >= Falcon::REGISTER_F0 && reg0.type <= Falcon::REGISTER_F3) || reg0.type == Falcon::REGISTER_USP)
+    {
+        reg0.value.f = reg1.value.f;
     }
 }
 
@@ -380,7 +821,7 @@ static void op_call(Falcon::VM & vm)
         inst.extra.arg2_offset
     };
 
-    vm.run(vm.getSymbol(*(uint16_t *)bytes));
+    vm.gotoFunction(vm.getSymbol(*(uint16_t *)bytes));
 }
 
 static void op_jmp(Falcon::VM & vm)
@@ -393,12 +834,12 @@ static void op_jmp(Falcon::VM & vm)
 Falcon::VM::VM(const std::string & __bytecode)
     : instructionPtr(0), stack_pointer(0), advanceOnly(false), jmpStart(false), jmpEnd(false)
 {
-    for (int i = 0; i < 128; i++)
+    for (int i = 0; i < 8192; i++)
     {
-        this->stack[i] = 0;
+        this->stack[i].value.u = 0;
     }
     
-    for (int i = 0; i < 20; i++)
+    for (int i = 0; i < 17; i++)
     {
         if (i < 2)
         {
@@ -446,6 +887,12 @@ Falcon::VM::VM(const std::string & __bytecode)
     this->operators[INSTRUCTION_NOT1]   = op_not1;
     this->operators[INSTRUCTION_CAND]   = op_cand;
     this->operators[INSTRUCTION_COR]    = op_cor;
+
+    this->operators[INSTRUCTION_PUSH]   = op_push;
+    this->operators[INSTRUCTION_POP]    = op_pop;
+
+    this->operators[INSTRUCTION_MOV]    = op_mov;
+    this->operators[INSTRUCTION_MOVR]   = op_movr;
 
     this->operators[INSTRUCTION_CALL]   = op_call;
     this->operators[INSTRUCTION_JMP]    = op_jmp;
@@ -504,10 +951,39 @@ void Falcon::VM::compile(std::string __bytecode)
         {
             i -= 3;
         }
+        else if (inst.type == INSTRUCTION_PUSH || inst.type == INSTRUCTION_POP)
+        {
+            inst.arg1               = (RegisterType)(((__bytecode[i] & 0b00000011) << 3) | ((__bytecode[i + 1] & 0b11100000) >> 5));
+            inst.arg1_offset        = ((__bytecode[i + 1] & 0b00011111) << 3) | ((__bytecode[i + 2] & 0b11100000) >> 5);
+            inst.arg2               = (RegisterType)((__bytecode[i + 2] & 0b00011111));
+            
+            i -= 1;
+        }
+        else if (inst.type == INSTRUCTION_MOV)
+        {
+            inst.arg1               = (RegisterType)(((__bytecode[i] & 0b00000011) << 3) | ((__bytecode[i + 1] & 0b11100000) >> 5));
+            inst.arg1_offset        = ((__bytecode[i + 1] & 0b00011111) << 3) | ((__bytecode[i + 2] & 0b11100000) >> 5);
+            inst.arg2               = (RegisterType)((__bytecode[i + 2] & 0b00011111));
+
+            if (inst.arg1 >= REGISTER_C0 && inst.arg1 <= REGISTER_C3)
+            {
+                inst.extra.arg2_offset = __bytecode[i + 3];
+            }
+            else
+            {
+                uint8_t bytes[] =
+                {
+                    __bytecode[i + 3], __bytecode[i + 4], __bytecode[i + 5], __bytecode[i + 6],
+                    __bytecode[i + 7], __bytecode[i + 8], __bytecode[i + 9], __bytecode[i + 10]
+                };
+                inst.extra.u = *(uint64_t *)bytes;
+                i += 7;
+            }
+        }
         else
         {
             inst.arg1               = (RegisterType)(((__bytecode[i] & 0b00000011) << 3) | ((__bytecode[i + 1] & 0b11100000) >> 5));
-            inst.arg1_offset        = (__bytecode[i + 1] & 0b00011111) | ((__bytecode[i + 2] & 0b11100000));
+            inst.arg1_offset        = ((__bytecode[i + 1] & 0b00011111) << 3) | ((__bytecode[i + 2] & 0b11100000) >> 5);
             inst.arg2               = (RegisterType)((__bytecode[i + 2] & 0b00011111));
             inst.extra.arg2_offset  = __bytecode[i + 3];
         }
@@ -550,10 +1026,19 @@ void Falcon::VM::setJmp(bool start)
     }
 }
 
-Falcon::Internal::Register & Falcon::VM::getRegister(RegisterType id)
+Falcon::Internal::Register & Falcon::VM::getRegister(RegisterType id, uint8_t offset)
 {
-    assert(id < 20);
-    return this->registers[id];
+    assert(id < 21);
+    if (id > REGISTER_CSP && id < REGISTER_FSP)
+    {
+        Internal::Register & reg = this->stack[this->stack_pointer - offset];
+        reg.type = id;
+        return reg;
+    }
+    else
+    {
+        return this->registers[id];
+    }
 }
 
 void Falcon::VM::registerSymbol(uint16_t id, std::string name)
@@ -576,65 +1061,53 @@ void Falcon::VM::externalFunction(std::string name, void( * function)(VM & vm))
     this->functions.insert(std::pair<std::string, std::pair<bool, uint64_t>>(name, std::pair<bool, uint64_t>(true, (uint64_t)function)));
 }
 
-void Falcon::VM::_push64(uint64_t data)
-{
-    this->stack[this->stack_pointer++] = ((uint8_t *)&data)[0];
-    this->stack[this->stack_pointer++] = ((uint8_t *)&data)[1];
-    this->stack[this->stack_pointer++] = ((uint8_t *)&data)[2];
-    this->stack[this->stack_pointer++] = ((uint8_t *)&data)[3];
-    this->stack[this->stack_pointer++] = ((uint8_t *)&data)[4];
-    this->stack[this->stack_pointer++] = ((uint8_t *)&data)[5];
-    this->stack[this->stack_pointer++] = ((uint8_t *)&data)[6];
-    this->stack[this->stack_pointer++] = ((uint8_t *)&data)[7];
-}
-
 void Falcon::VM::pushChar(char data)
 {
-    this->stack[this->stack_pointer++] = (uint8_t)data;
+    this->stack[this->stack_pointer++].value.c = (uint8_t)data;
 }
 
 void Falcon::VM::pushUint(uint64_t data)
 {
-    _push64(data);
+    this->stack[this->stack_pointer++].value.u = data;
 }
 
 void Falcon::VM::pushInt(int64_t data)
 {
-    _push64(*(uint64_t *)&data);
+    this->stack[this->stack_pointer++].value.l = data;
 }
 
 void Falcon::VM::pushFloat(double data)
 {
-    _push64(*(uint64_t *)&data);
+    this->stack[this->stack_pointer++].value.f = data;
 }
 
 char Falcon::VM::popChar()
 {
     this->stack_pointer--;
-    return *(char *)&this->stack[this->stack_pointer];
+    return this->stack[this->stack_pointer].value.c;
 }
 
 uint64_t Falcon::VM::popUint()
 {
-    this->stack_pointer -= 8;
-    return *(uint64_t *)&this->stack[this->stack_pointer];
+    this->stack_pointer--;
+    return this->stack[this->stack_pointer].value.u;
 }
 
 int64_t Falcon::VM::popInt()
 {
-    this->stack_pointer -= 8;
-    return *(int64_t *)&this->stack[this->stack_pointer];
+    this->stack_pointer--;
+    return this->stack[this->stack_pointer].value.l;
 }
 
 double Falcon::VM::popFloat()
 {
-    this->stack_pointer -= 8;
-    return *(double *)&this->stack[this->stack_pointer];
+    this->stack_pointer--;
+    return this->stack[this->stack_pointer].value.f;
 }
 
 void Falcon::VM::run(std::string function)
 {
-    uint64_t crsr = this->instructionPtr;
+    this->stackFrame.push(this->instructionPtr);
     std::pair<bool, uint64_t> & data = this->functions[function];
     if (data.first)
     {
@@ -649,23 +1122,46 @@ void Falcon::VM::run(std::string function)
     {
         if (this->jmpStart)
         {
-            this->instructionPtr = crsr;
+            this->instructionPtr = this->stackFrame.top();
             continue;
         }
         else if (this->jmpEnd)
         {
-            this->instructionPtr = crsr;
-            return;
+            this->stackFrame.pop();
+            this->instructionPtr = this->stackFrame.top();
         }
         this->advance();
-        if (this->currenInstruction.type == INSTRUCTION_END)
+        if (this->currentInstruction.type == INSTRUCTION_END)
         {
-            break;
+            if (this->stackFrame.size() == 1)
+            {
+                break;
+            }
+            else
+            {
+                this->instructionPtr = this->stackFrame.top();
+                this->stackFrame.pop();
+            }
         }
-        if (this->operators[this->currenInstruction.type])
+        if (this->operators[this->currentInstruction.type])
         {
-            this->operators[this->currenInstruction.type](*this);
+            this->operators[this->currentInstruction.type](*this);
         }
     }
-    this->instructionPtr = crsr;
+    this->instructionPtr = this->stackFrame.top();
+    this->stackFrame.pop();
+}
+
+void Falcon::VM::gotoFunction(std::string function)
+{
+    std::pair<bool, uint64_t> func = this->functions[function];
+    if (!func.first)
+    {
+        this->stackFrame.push(this->instructionPtr);
+        this->instructionPtr = func.second;
+    }
+    else
+    {
+        ((void( * )(VM &))func.second)(*this);
+    }
 }
