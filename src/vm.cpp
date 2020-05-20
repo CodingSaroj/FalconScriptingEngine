@@ -1,5 +1,23 @@
 #include "vm.hpp"
 
+#define RESET   "\033[0m"
+#define BLACK   "\033[30m"
+#define RED     "\033[31m"
+#define GREEN   "\033[32m"
+#define YELLOW  "\033[33m"
+#define BLUE    "\033[34m"
+#define MAGENTA "\033[35m"
+#define CYAN    "\033[36m"
+#define WHITE   "\033[37m"
+#define BOLDBLACK   "\033[1m\033[30m"
+#define BOLDRED     "\033[1m\033[31m"
+#define BOLDGREEN   "\033[1m\033[32m"
+#define BOLDYELLOW  "\033[1m\033[33m"
+#define BOLDBLUE    "\033[1m\033[34m"
+#define BOLDMAGENTA "\033[1m\033[35m"
+#define BOLDCYAN    "\033[1m\033[36m"
+#define BOLDWHITE   "\033[1m\033[37m"
+
 static void op_add(Falcon::VM & vm)
 {
     Falcon::Internal::Instruction inst = vm.getCurrentInstruction();
@@ -931,16 +949,23 @@ static void op_raise(Falcon::VM & vm)
     Falcon::Internal::RuntimeError(errType, description, vm.getCurrentFunction(), vm.getInstructionPtr(), vm.getStackTrace());
 }
 
-Falcon::Internal::CompileTimeError::CompileTimeError(std::string name, std::string description, std::string filename, uint64_t location)
+Falcon::Internal::CompileTimeError::CompileTimeError(std::string name, std::string description, uint64_t location, std::string filename)
 {
-    std::cout<<"CompileTimeError::"<<name<<": "<<description<<".\n";
-    std::cout<<"\t\t\tIn file "<<filename<<" at "<<location<<"\n";
+    std::cout<<RED<<"CompileTimeError::"<<name<<RESET<<": "<<description<<".\n";
+    if (filename != "")
+    {
+        std::cout<<"\t\t\tIn file "<<filename<<" at line "<<location<<"\n";
+    }
+    else
+    {
+        std::cout<<"\t\t\tAt line "<<location<<"\n";
+    }
     exit(SIGABRT);
 }
 
 Falcon::Internal::RuntimeError::RuntimeError(std::string name, std::string description, std::string function, uint64_t location, std::stack<std::pair<std::string, uint64_t>> stackTrace)
 {
-    std::cout<<"RuntimeError::"<<name<<": "<<description<<".\n";
+    std::cout<<RED<<"RuntimeError::"<<name<<RESET<<": "<<description<<".\n";
     std::cout<<"\t\t\tIn function    "<<function<<" : "<<location<<"\n";
 
     while (stackTrace.size() > 1)

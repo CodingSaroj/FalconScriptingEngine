@@ -38,6 +38,8 @@ namespace Falcon
                 double    f;
             } value;
             std::string name;
+
+            uint64_t line;
         };
 
         class Lexer
@@ -49,7 +51,7 @@ namespace Falcon
 
                 void        advance();
 
-                void        makeNum(std::vector<Token> & tokens);
+                void        makeNum(std::vector<Token> & tokens, uint64_t line);
                 std::string makeStr();
 
             public:

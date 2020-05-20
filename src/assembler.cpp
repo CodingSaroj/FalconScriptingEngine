@@ -183,7 +183,7 @@ void Falcon::Assembler::Lexer::advance()
     this->currentChar = this->text[++this->cursor];
 }
 
-void Falcon::Assembler::Lexer::makeNum(std::vector<Token> & tokens)
+void Falcon::Assembler::Lexer::makeNum(std::vector<Token> & tokens, uint64_t line)
 {
     std::string num;
     bool fraction = false;
@@ -202,6 +202,7 @@ void Falcon::Assembler::Lexer::makeNum(std::vector<Token> & tokens)
     this->advance();
 
     Token token;
+    token.line = line;
     if (fraction)
     {
         token.type      = Token::FLOAT;
@@ -239,6 +240,7 @@ std::string Falcon::Assembler::Lexer::makeStr()
 std::vector<Falcon::Assembler::Token> Falcon::Assembler::Lexer::process()
 {
     std::vector<Token> tokens;
+    uint64_t line = 1;
 
     while (this->cursor < this->text.size())
     {
@@ -250,7 +252,9 @@ std::vector<Falcon::Assembler::Token> Falcon::Assembler::Lexer::process()
         {
             Token token;
             token.type = Token::ENDL;
+            token.line = line;
             tokens.push_back(token);
+            line++;
         }
         else if (this->currentChar == '.')
         {
@@ -258,6 +262,7 @@ std::vector<Falcon::Assembler::Token> Falcon::Assembler::Lexer::process()
             Token token;
             token.type = Token::FUNCTION;
             token.name = this->makeStr();
+            token.line = line;
             tokens.push_back(token);
         }
         else if (this->currentChar == '%')
@@ -266,12 +271,14 @@ std::vector<Falcon::Assembler::Token> Falcon::Assembler::Lexer::process()
             Token token;
             token.type = Token::EXTERN;
             token.name = this->makeStr();
+            token.line = line;
             tokens.push_back(token);
         }
         else if (this->currentChar == ':')
         {
             Token token;
             token.type = Token::COLON;
+            token.line = line;
             tokens.push_back(token);
         }
         else if (this->currentChar == '(')
@@ -289,13 +296,14 @@ std::vector<Falcon::Assembler::Token> Falcon::Assembler::Lexer::process()
             Token token;
             token.type = Token::FUNCTION;
             token.name = str;
+            token.line = line;
             tokens.push_back(token);
 
             this->advance();
         }
         else if (std::isdigit(this->currentChar))
         {
-            this->makeNum(tokens);
+            this->makeNum(tokens, line);
         }
         else if (this->currentChar == '\'')
         {
@@ -304,6 +312,7 @@ std::vector<Falcon::Assembler::Token> Falcon::Assembler::Lexer::process()
             Token token;
             token.type = Token::CHAR;
             token.value.c = this->currentChar;
+            token.line = line;
             tokens.push_back(token);
 
             this->advance();
@@ -316,6 +325,7 @@ std::vector<Falcon::Assembler::Token> Falcon::Assembler::Lexer::process()
                 Token token;
                 token.type = Token::REGISTER;
                 token.name = str;
+                token.line = line;
                 this->advance();
                 if (this->currentChar == '(')
                 {
@@ -343,13 +353,19 @@ std::vector<Falcon::Assembler::Token> Falcon::Assembler::Lexer::process()
                 Token token;
                 token.type = Token::INSTRUCTION;
                 token.name = str;
+                token.line = line;
                 tokens.push_back(token);
             }
             else if (str == "end")
             {
                 Token token;
                 token.type = Token::END;
+                token.line = line;
                 tokens.push_back(token);
+            }
+            else
+            {
+                Internal::CompileTimeError("InvalidToken", std::string("Invalid token \'") + str + "\'", line);
             }
         }
 
@@ -395,6 +411,17 @@ void Falcon::Assembler::ExprAtom::codeGen(std::ostream & out)
 Falcon::Assembler::ExprStatement::ExprStatement(Token __instruction, bool __atom2Used, ExprAtom __atom0, ExprAtom __atom1)
     : instruction(__instruction), atom2Used(__atom2Used), atoms{__atom0, __atom1}
 {
+    if (this->instruction.name != "pop")
+    {
+        if (this->atoms[0].type == ExprAtom::REGISTER && this->atoms[0].reg.name == "null")
+        {
+            Internal::CompileTimeError("Reading/WritingNullRegister", "Reading from or writing to null register", this->instruction.line);
+        }
+        else if (this->atoms[1].type == ExprAtom::REGISTER && this->atoms[1].reg.name == "null")
+        {
+            Internal::CompileTimeError("ReadingNullRegister", "Reading from null register", this->instruction.line);
+        }
+    }
 }
 
 void Falcon::Assembler::ExprStatement::codeGen(std::ostream & out)
@@ -671,11 +698,31 @@ void Falcon::Assembler::Parser::function(ExprAST ** ast, std::vector<ExprAST *> 
             this->function(&subAST, functions);
             functions.emplace_back(subAST);
         }
+        else if (this->currentToken.type == Token::REGISTER)
+        {
+            Internal::CompileTimeError("InvalidRegisterExpectedFunction", std::string("Invalid register \'") + this->currentToken.name + "\', expected a function", this->currentToken.line);
+        }
+        else if (this->currentToken.type == Token::P_INT || this->currentToken.type == Token::N_INT || this->currentToken.type == Token::FLOAT)
+        {
+            Internal::CompileTimeError("InvalidNumberExpectedFunction", "Invalid number, expected a function", this->currentToken.line);
+        }
+
         this->advance();
     }
 
     ExprStatement * statement = nullptr;
-    this->statement((ExprAST **)&statement);
+
+    if (this->currentToken.type == Token::END)
+    {
+        this->statement((ExprAST **)&statement);    
+    }
+    else
+    {
+        this->cursor -= 2;
+        this->advance();
+        Internal::CompileTimeError("ExpectedEnd", "Expected \'end\'", this->currentToken.line);
+    }
+
     function->statements.push_back(*statement);
 }
 
@@ -693,15 +740,26 @@ std::pair<std::vector<Falcon::Assembler::ExprAST *>, std::unordered_map<std::str
         {
             this->symbolTable.insert(std::pair<std::string, uint16_t>(this->currentToken.name, this->symbolID++));
         }
+        else if (this->currentToken.type == Token::INSTRUCTION)
+        {
+            Internal::CompileTimeError("InvalidInstructionExpectedFunction", std::string("Invalid instruction \'") + this->currentToken.name + "\', expected a function", this->currentToken.line);
+        }
+        else if (this->currentToken.type == Token::REGISTER)
+        {
+            Internal::CompileTimeError("InvalidRegisterExpectedFunction", std::string("Invalid register \'") + this->currentToken.name + "\', expected a function", this->currentToken.line);
+        }
+        else if (this->currentToken.type == Token::P_INT || this->currentToken.type == Token::N_INT || this->currentToken.type == Token::FLOAT)
+        {
+            Internal::CompileTimeError("InvalidNumberExpectedFunction", "Invalid number, expected a function", this->currentToken.line);
+        }
+        else if (this->currentToken.type == Token::END)
+        {
+            Internal::CompileTimeError("UnexpectedEnd", "Unexpected \'end\'", this->currentToken.line);
+        }
         this->advance();
     }
 
     return std::pair<std::vector<ExprAST *>, std::unordered_map<std::string, uint16_t>>(functions, this->symbolTable);
-}
-
-Falcon::Assembler::Generator::Error::Error(ErrorType __type, std::string __data)
-    : type(__type), data(__data)
-{
 }
 
 Falcon::Assembler::Generator::Generator(std::vector<ExprAST *> __ast, std::unordered_map<std::string, uint16_t> & __symbolTable)
@@ -725,26 +783,7 @@ void Falcon::Assembler::Generator::process(std::ostream & out)
 
     for (ExprAST * func : this->ast)
     {
-        if (dynamic_cast<ExprAtom *>(func))
-        {
-            ExprAtom * atom = dynamic_cast<ExprAtom *>(func);
-            if (scope != Scope::STATEMENT)
-            {
-                if (atom->type == ExprAtom::REGISTER)
-                {
-                    Internal::CompileTimeError("UnexpectedRegister", std::string("Expected a function") + std::to_string(tom->reg.name));
-                }
-                else
-                {
-                    Internal::CompileTimeError("UnexpectedNumber", "Expected a function");
-                }
-            }
-        }
-        else if (dynamic_cast<ExprStatement *>(func))
-        {        
-            Internal::CompileTimeError("UnexpectedStatement", "Expected a function");
-        }
-        else if (dynamic_cast<ExprFunction *>(func))
+        if (dynamic_cast<ExprFunction *>(func))
         {
             ((ExprFunction *)func)->codeGen(out);
         }

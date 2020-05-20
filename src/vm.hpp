@@ -127,7 +127,7 @@ namespace Falcon
         class CompileTimeError
         {
             public:
-                CompileTimeError(std::string name, std::string description, std::string filename, uint64_t location);
+                CompileTimeError(std::string name, std::string description, uint64_t location, std::string filename = "");
         };
 
         class RuntimeError
