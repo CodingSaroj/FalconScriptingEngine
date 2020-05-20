@@ -19,12 +19,13 @@ static std::vector<std::string> instructions
     "cand", "cor",
     "push", "pop",
     "mov", "movr",
+    "cast", "raise",
     "call", "jmp"
 };
 
 std::vector<std::string> unaryInstructions
 {
-    "inc", "dec", "cmpl", "not0", "not1", "cand", "cor", "push", "pop"
+    "inc", "dec", "cmpl", "not0", "not1", "cand", "cor", "push", "pop", "raise"
 };
 
 std::vector<std::string> binaryInstructions
@@ -33,7 +34,8 @@ std::vector<std::string> binaryInstructions
     "lshft", "rshft", "and", "or", "xor",
     "grt0", "grt1", "greq0", "greq1", "less0", "less1",
     "lseq0", "lseq1", "iseq0", "iseq1", "neq0", "neq1",
-    "mov", "movr"
+    "mov", "movr",
+    "cast"
 };
 
 std::unordered_map<std::string, Falcon::InstructionType> instructionMap
@@ -67,12 +69,14 @@ std::unordered_map<std::string, Falcon::InstructionType> instructionMap
     {"neq1"     ,   Falcon::INSTRUCTION_NEQ1},
     {"not0"     ,   Falcon::INSTRUCTION_NOT0},
     {"not1"     ,   Falcon::INSTRUCTION_NOT1},
-    {"push"      ,   Falcon::INSTRUCTION_PUSH},
-    {"pop"     ,   Falcon::INSTRUCTION_POP},
+    {"push"     ,   Falcon::INSTRUCTION_PUSH},
+    {"pop"      ,   Falcon::INSTRUCTION_POP},
     {"mov"      ,   Falcon::INSTRUCTION_MOV},
     {"movr"     ,   Falcon::INSTRUCTION_MOVR},
+    {"cast"     ,   Falcon::INSTRUCTION_CAST},
     {"call"     ,   Falcon::INSTRUCTION_CALL},
     {"jmp"      ,   Falcon::INSTRUCTION_JMP},
+    {"raise"    ,   Falcon::INSTRUCTION_RAISE}
 };
 
 static inline Falcon::RegisterType getRegisterType(std::string type)
@@ -253,6 +257,14 @@ std::vector<Falcon::Assembler::Token> Falcon::Assembler::Lexer::process()
             this->advance();
             Token token;
             token.type = Token::FUNCTION;
+            token.name = this->makeStr();
+            tokens.push_back(token);
+        }
+        else if (this->currentChar == '%')
+        {
+            this->advance();
+            Token token;
+            token.type = Token::EXTERN;
             token.name = this->makeStr();
             tokens.push_back(token);
         }
@@ -523,7 +535,6 @@ Falcon::Assembler::ExprExtern::ExprExtern(Token __identifier)
 
 void Falcon::Assembler::ExprExtern::codeGen(std::ostream & out)
 {
-    //TODO
 }
 
 Falcon::Assembler::Parser::Parser(std::vector<Token> __tokens)
@@ -678,6 +689,10 @@ std::pair<std::vector<Falcon::Assembler::ExprAST *>, std::unordered_map<std::str
         {
             this->function(&functions[0], functions);
         }
+        else if (this->currentToken.type == Token::EXTERN)
+        {
+            this->symbolTable.insert(std::pair<std::string, uint16_t>(this->currentToken.name, this->symbolID++));
+        }
         this->advance();
     }
 
@@ -694,7 +709,7 @@ Falcon::Assembler::Generator::Generator(std::vector<ExprAST *> __ast, std::unord
 {
 }
 
-Falcon::Assembler::Generator::Error Falcon::Assembler::Generator::process(std::ostream & out)
+void Falcon::Assembler::Generator::process(std::ostream & out)
 {
     {
         InstructionType symbol = INSTRUCTION_SYMBOL;
@@ -717,23 +732,21 @@ Falcon::Assembler::Generator::Error Falcon::Assembler::Generator::process(std::o
             {
                 if (atom->type == ExprAtom::REGISTER)
                 {
-                    return Error(Error::UNEXPECTED_REGISTER, atom->reg.name);
+                    Internal::CompileTimeError("UnexpectedRegister", std::string("Expected a function") + std::to_string(tom->reg.name));
                 }
                 else
                 {
-                    return Error(Error::UNEXPECTED_NUMBER);
+                    Internal::CompileTimeError("UnexpectedNumber", "Expected a function");
                 }
             }
         }
         else if (dynamic_cast<ExprStatement *>(func))
         {        
-            return Error(Error::UNEXPECTED_STATEMENT);
+            Internal::CompileTimeError("UnexpectedStatement", "Expected a function");
         }
         else if (dynamic_cast<ExprFunction *>(func))
         {
             ((ExprFunction *)func)->codeGen(out);
         }
     }
-
-    return Error(Error::NONE);
 }

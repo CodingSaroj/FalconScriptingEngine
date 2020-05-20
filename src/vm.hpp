@@ -7,8 +7,13 @@
 #include <vector>
 
 #include <cassert>
+#include <csignal>
 #include <cstdint>
 #include <cstring>
+
+#ifndef FALCON_VM_STACK_SIZE
+    #define FALCON_VM_STACK_SIZE 8192
+#endif
 
 namespace Falcon
 {
@@ -52,8 +57,10 @@ namespace Falcon
         INSTRUCTION_POP,
         INSTRUCTION_MOV,
         INSTRUCTION_MOVR,
+        INSTRUCTION_CAST,
         INSTRUCTION_CALL,
         INSTRUCTION_JMP,
+        INSTRUCTION_RAISE,
         INSTRUCTION_SYMBOL,
         INSTRUCTION_EXTERN,
         INSTRUCTION_START,
@@ -116,6 +123,18 @@ namespace Falcon
             RegisterType    type;
             Value           value;
         };
+        
+        class CompileTimeError
+        {
+            public:
+                CompileTimeError(std::string name, std::string description, std::string filename, uint64_t location);
+        };
+
+        class RuntimeError
+        {
+            public:
+                RuntimeError(std::string name, std::string description, std::string function, uint64_t location, std::stack<std::pair<std::string, uint64_t>> stackTrace);
+        };
     }
 
     class VM
@@ -137,9 +156,10 @@ namespace Falcon
             uint64_t                            instructionPtr;
 
             /*
-             * StackFrame
+             * State
              */
-            std::stack<uint64_t> stackFrame;
+            std::stack<std::pair<std::string, uint64_t>>    stackFrame;
+            std::string                                     currentFunction;
 
             /*
              * Registers
@@ -149,8 +169,8 @@ namespace Falcon
             /*
              * Stack
              */
-            Internal::Register  stack[8192];
-            uint16_t            stack_pointer;
+            Internal::Register  stack[FALCON_VM_STACK_SIZE];
+            uint16_t            stackPtr;
 
             /*
              * Operators
@@ -199,6 +219,9 @@ namespace Falcon
 
             uint64_t                    getInstructionPtr();
             Internal::Instruction &     getCurrentInstruction();
+
+            std::string                                     getCurrentFunction();
+            std::stack<std::pair<std::string, uint64_t>>    getStackTrace();
 
             /*
              * Register getter

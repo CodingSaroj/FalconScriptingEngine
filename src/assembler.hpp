@@ -22,6 +22,7 @@ namespace Falcon
                 N_INT,
                 FLOAT,
                 COLON,
+                EXTERN,
                 FUNCTION,
                 INSTRUCTION,
                 REGISTER,
@@ -166,32 +167,9 @@ namespace Falcon
                 } scope;
 
             public:
-                class Error
-                {
-                    public:
-                        enum ErrorType : uint8_t
-                        {
-                            NONE,
-                            UNEXPECTED_NUMBER,
-                            UNEXPECTED_REGISTER,
-                            UNEXPECTED_STATEMENT,
-                            INVALID_OPERATION,
-                            INVALID_OPERAND,
-                            EXPECTED_COLON,
-                            UNDEFINED_ROUTINE,
-                            UNDEFINED_LABEL,
-                            MULTIPLE_DEFINITION_ROUTINE,
-                            MULTIPLE_DEFINITION_LABEL
-                        } type;
-
-                        std::string data;
-
-                        Error(ErrorType __type, std::string __data = "");
-                };
-
                 Generator(std::vector<ExprAST *> __ast, std::unordered_map<std::string, uint16_t> & __symbolTable);
 
-                Error process(std::ostream & out);
+                void process(std::ostream & out);
         };
     }
 }

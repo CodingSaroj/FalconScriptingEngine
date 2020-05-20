@@ -768,7 +768,7 @@ static void op_mov(Falcon::VM & vm)
 
     Falcon::Internal::Register & reg = vm.getRegister(inst.arg1, inst.arg1_offset);
     
-    if ((reg.type >= Falcon::REGISTER_C0 && reg.type <= Falcon::REGISTER_C3) || reg.type == Falcon::REGISTER_USP)
+    if ((reg.type >= Falcon::REGISTER_C0 && reg.type <= Falcon::REGISTER_C3) || reg.type == Falcon::REGISTER_CSP)
     {
         reg.value.c = inst.extra.arg2_offset;
     }
@@ -776,11 +776,11 @@ static void op_mov(Falcon::VM & vm)
     {
         reg.value.u = inst.extra.u;
     }
-    else if ((reg.type >= Falcon::REGISTER_L0 && reg.type <= Falcon::REGISTER_L3) || reg.type == Falcon::REGISTER_USP)
+    else if ((reg.type >= Falcon::REGISTER_L0 && reg.type <= Falcon::REGISTER_L3) || reg.type == Falcon::REGISTER_LSP)
     {
         reg.value.l = inst.extra.l;
     }
-    else if ((reg.type >= Falcon::REGISTER_F0 && reg.type <= Falcon::REGISTER_F3) || reg.type == Falcon::REGISTER_USP)
+    else if ((reg.type >= Falcon::REGISTER_F0 && reg.type <= Falcon::REGISTER_F3) || reg.type == Falcon::REGISTER_FSP)
     {
         reg.value.f = inst.extra.f;
     }
@@ -791,13 +791,13 @@ static void op_movr(Falcon::VM & vm)
     Falcon::Internal::Instruction inst = vm.getCurrentInstruction();
 
     Falcon::Internal::Register & reg0 = vm.getRegister(inst.arg1, inst.arg1_offset);
-    Falcon::Internal::Register & reg1 = vm.getRegister(inst.arg1, inst.arg1_offset);
+    Falcon::Internal::Register & reg1 = vm.getRegister(inst.arg2, inst.extra.arg2_offset);
 
-    if ((reg0.type >= Falcon::REGISTER_C0 && reg0.type <= Falcon::REGISTER_C3) || reg0.type == Falcon::REGISTER_USP)
+    if ((reg0.type >= Falcon::REGISTER_C0 && reg0.type <= Falcon::REGISTER_C3) || reg0.type == Falcon::REGISTER_CSP)
     {
         reg0.value.c = reg1.value.c;
     }
-    else if ((reg0.type >= Falcon::REGISTER_U0 && reg0.type <= Falcon::REGISTER_U3) || reg0.type == Falcon::REGISTER_USP)
+    else if ((reg0.type >= Falcon::REGISTER_U0 && reg0.type <= Falcon::REGISTER_U3) || reg0.type == Falcon::REGISTER_LSP)
     {
         reg0.value.u = reg1.value.u;
     }
@@ -805,9 +805,79 @@ static void op_movr(Falcon::VM & vm)
     {
         reg0.value.l = reg1.value.l;
     }
-    else if ((reg0.type >= Falcon::REGISTER_F0 && reg0.type <= Falcon::REGISTER_F3) || reg0.type == Falcon::REGISTER_USP)
+    else if ((reg0.type >= Falcon::REGISTER_F0 && reg0.type <= Falcon::REGISTER_F3) || reg0.type == Falcon::REGISTER_FSP)
     {
         reg0.value.f = reg1.value.f;
+    }
+}
+
+static void op_cast(Falcon::VM & vm)
+{
+    Falcon::Internal::Instruction inst = vm.getCurrentInstruction();
+
+    Falcon::Internal::Register & reg0 = vm.getRegister(inst.arg1, inst.arg1_offset);
+    Falcon::Internal::Register & reg1 = vm.getRegister(inst.arg2, inst.extra.arg2_offset);
+
+    if ((reg0.type >= Falcon::REGISTER_C0 && reg0.type <= Falcon::REGISTER_C3) || reg0.type == Falcon::REGISTER_CSP)
+    {
+        if ((reg1.type >= Falcon::REGISTER_U0 && reg1.type <= Falcon::REGISTER_U3) || reg1.type == Falcon::REGISTER_USP)
+        {
+            reg0.value.c = reg1.value.u;
+        }
+        else if ((reg1.type >= Falcon::REGISTER_L0 && reg1.type <= Falcon::REGISTER_L3) || reg1.type == Falcon::REGISTER_LSP)
+        {
+            reg0.value.c = reg1.value.l;
+        }
+        else if ((reg1.type >= Falcon::REGISTER_F0 && reg1.type <= Falcon::REGISTER_F3) || reg1.type == Falcon::REGISTER_FSP)
+        {
+            reg0.value.c = reg1.value.f;
+        }
+        
+    }
+    else if ((reg0.type >= Falcon::REGISTER_U0 && reg0.type <= Falcon::REGISTER_U3) || reg0.type == Falcon::REGISTER_USP)
+    {
+        if ((reg1.type >= Falcon::REGISTER_C0 && reg0.type <= Falcon::REGISTER_C3) || reg0.type == Falcon::REGISTER_CSP)
+        {
+            reg0.value.u = reg1.value.c;
+        }
+        else if ((reg1.type >= Falcon::REGISTER_L0 && reg1.type <= Falcon::REGISTER_L3) || reg1.type == Falcon::REGISTER_LSP)
+        {
+            reg0.value.u = reg1.value.l;
+        }
+        else if ((reg1.type >= Falcon::REGISTER_F0 && reg1.type <= Falcon::REGISTER_F3) || reg1.type == Falcon::REGISTER_FSP)
+        {
+            reg0.value.u = reg1.value.f;
+        }
+    }
+    else if ((reg0.type >= Falcon::REGISTER_L0 && reg0.type <= Falcon::REGISTER_L3) || reg0.type == Falcon::REGISTER_LSP)
+    {
+        if ((reg1.type >= Falcon::REGISTER_C0 && reg0.type <= Falcon::REGISTER_C3) || reg0.type == Falcon::REGISTER_CSP)
+        {
+            reg0.value.l = reg1.value.c;
+        }
+        else if ((reg1.type >= Falcon::REGISTER_U0 && reg1.type <= Falcon::REGISTER_U3) || reg1.type == Falcon::REGISTER_USP)
+        {
+            reg0.value.l = reg1.value.u;
+        }
+        else if ((reg1.type >= Falcon::REGISTER_F0 && reg1.type <= Falcon::REGISTER_F3) || reg1.type == Falcon::REGISTER_FSP)
+        {
+            reg0.value.l = reg1.value.f;
+        }
+    }
+    else if ((reg0.type >= Falcon::REGISTER_F0 && reg0.type <= Falcon::REGISTER_F3) || reg0.type == Falcon::REGISTER_FSP)
+    {
+        if ((reg1.type >= Falcon::REGISTER_C0 && reg0.type <= Falcon::REGISTER_C3) || reg0.type == Falcon::REGISTER_CSP)
+        {
+            reg0.value.f = reg1.value.c;
+        }
+        else if ((reg1.type >= Falcon::REGISTER_U0 && reg1.type <= Falcon::REGISTER_U3) || reg1.type == Falcon::REGISTER_USP)
+        {
+            reg0.value.f = reg1.value.u;
+        }
+        else if ((reg1.type >= Falcon::REGISTER_L0 && reg1.type <= Falcon::REGISTER_L3) || reg1.type == Falcon::REGISTER_LSP)
+        {
+            reg0.value.f = reg1.value.l;
+        }
     }
 }
 
@@ -831,10 +901,61 @@ static void op_jmp(Falcon::VM & vm)
     vm.setJmp(!inst.arg1 ? true : false);
 }
 
-Falcon::VM::VM(const std::string & __bytecode)
-    : instructionPtr(0), stack_pointer(0), advanceOnly(false), jmpStart(false), jmpEnd(false)
+static void op_raise(Falcon::VM & vm)
 {
-    for (int i = 0; i < 8192; i++)
+    Falcon::Internal::Instruction inst = vm.getCurrentInstruction();
+
+    Falcon::Internal::Register & reg = vm.getRegister(inst.arg1, inst.arg1_offset);
+
+    std::string errType("SignalRaise::");
+    std::string description;
+
+    switch(reg.value.c)
+    {
+        case SIGABRT:
+            errType.append("Abort");
+            description = "Aborted";
+            break;
+
+        case SIGSEGV:
+            errType.append("SegmentationFault");
+            description = "Segmentation fault occured";
+            break;
+
+        case SIGFPE:
+            errType.append("Arithematic");
+            description = "Arithematic error";
+            break;
+    }
+
+    Falcon::Internal::RuntimeError(errType, description, vm.getCurrentFunction(), vm.getInstructionPtr(), vm.getStackTrace());
+}
+
+Falcon::Internal::CompileTimeError::CompileTimeError(std::string name, std::string description, std::string filename, uint64_t location)
+{
+    std::cout<<"CompileTimeError::"<<name<<": "<<description<<".\n";
+    std::cout<<"\t\t\tIn file "<<filename<<" at "<<location<<"\n";
+    exit(SIGABRT);
+}
+
+Falcon::Internal::RuntimeError::RuntimeError(std::string name, std::string description, std::string function, uint64_t location, std::stack<std::pair<std::string, uint64_t>> stackTrace)
+{
+    std::cout<<"RuntimeError::"<<name<<": "<<description<<".\n";
+    std::cout<<"\t\t\tIn function    "<<function<<" : "<<location<<"\n";
+
+    while (stackTrace.size() > 1)
+    {
+        std::cout<<"\t\t\tCalled by      "<<stackTrace.top().first<<" : "<<stackTrace.top().second<<"\n";
+        stackTrace.pop();
+    }
+
+    exit(SIGABRT);
+}
+
+Falcon::VM::VM(const std::string & __bytecode)
+    : instructionPtr(0), stackPtr(0), advanceOnly(false), jmpStart(false), jmpEnd(false)
+{
+    for (int i = 0; i < FALCON_VM_STACK_SIZE; i++)
     {
         this->stack[i].value.u = 0;
     }
@@ -893,9 +1014,12 @@ Falcon::VM::VM(const std::string & __bytecode)
 
     this->operators[INSTRUCTION_MOV]    = op_mov;
     this->operators[INSTRUCTION_MOVR]   = op_movr;
+    this->operators[INSTRUCTION_CAST]   = op_cast;
 
     this->operators[INSTRUCTION_CALL]   = op_call;
     this->operators[INSTRUCTION_JMP]    = op_jmp;
+
+    this->operators[INSTRUCTION_RAISE]  = op_raise;
 
     this->compile(__bytecode);
 }
@@ -1002,6 +1126,16 @@ Falcon::Internal::Instruction & Falcon::VM::getCurrentInstruction()
     return this->instructions[this->instructionPtr - 1];
 }
 
+std::string Falcon::VM::getCurrentFunction()
+{
+    return this->currentFunction;
+}
+
+std::stack<std::pair<std::string, uint64_t>> Falcon::VM::getStackTrace()
+{
+    return this->stackFrame;
+}
+
 bool Falcon::VM::getCmpResult(uint8_t id)
 {
     assert(id < 2);
@@ -1031,7 +1165,7 @@ Falcon::Internal::Register & Falcon::VM::getRegister(RegisterType id, uint8_t of
     assert(id < 21);
     if (id > REGISTER_CSP && id < REGISTER_FSP)
     {
-        Internal::Register & reg = this->stack[this->stack_pointer - offset];
+        Internal::Register & reg = this->stack[this->stackPtr - offset];
         reg.type = id;
         return reg;
     }
@@ -1063,51 +1197,84 @@ void Falcon::VM::externalFunction(std::string name, void( * function)(VM & vm))
 
 void Falcon::VM::pushChar(char data)
 {
-    this->stack[this->stack_pointer++].value.c = (uint8_t)data;
+    if (this->stackPtr == FALCON_VM_STACK_SIZE)
+    {
+        Falcon::Internal::RuntimeError("StackOverflow", "Stack overflowed", this->currentFunction, this->instructionPtr, this->stackFrame);
+    }
+    this->stack[this->stackPtr++].value.c = (uint8_t)data;
 }
 
 void Falcon::VM::pushUint(uint64_t data)
 {
-    this->stack[this->stack_pointer++].value.u = data;
+    if (this->stackPtr == FALCON_VM_STACK_SIZE)
+    {
+        Falcon::Internal::RuntimeError("StackOverflow", "Stack overflowed", this->currentFunction,  this->instructionPtr, this->stackFrame);
+    }
+    this->stack[this->stackPtr++].value.u = data;
 }
 
 void Falcon::VM::pushInt(int64_t data)
 {
-    this->stack[this->stack_pointer++].value.l = data;
+    if (this->stackPtr == FALCON_VM_STACK_SIZE)
+    {
+        Falcon::Internal::RuntimeError("StackOverflow", "Stack overflowed", this->currentFunction,  this->instructionPtr, this->stackFrame);
+    }
+    this->stack[this->stackPtr++].value.l = data;
 }
 
 void Falcon::VM::pushFloat(double data)
 {
-    this->stack[this->stack_pointer++].value.f = data;
+    if (this->stackPtr == FALCON_VM_STACK_SIZE)
+    {
+        Falcon::Internal::RuntimeError("StackOverflow", "Stack overflowed", this->currentFunction,  this->instructionPtr, this->stackFrame);
+    }
+    this->stack[this->stackPtr++].value.f = data;
 }
 
 char Falcon::VM::popChar()
 {
-    this->stack_pointer--;
-    return this->stack[this->stack_pointer].value.c;
+    if (this->stackPtr == 0)
+    {
+        Falcon::Internal::RuntimeError("StackUnderflow", "Stack underflowed", this->currentFunction,  this->instructionPtr, this->stackFrame);
+    }
+    this->stackPtr--;
+    return this->stack[this->stackPtr].value.c;
 }
 
 uint64_t Falcon::VM::popUint()
 {
-    this->stack_pointer--;
-    return this->stack[this->stack_pointer].value.u;
+    if (this->stackPtr == 0)
+    {
+        Falcon::Internal::RuntimeError("StackUnderflow", "Stack underflowed", this->currentFunction,  this->instructionPtr, this->stackFrame);
+    }
+    this->stackPtr--;
+    return this->stack[this->stackPtr].value.u;
 }
 
 int64_t Falcon::VM::popInt()
 {
-    this->stack_pointer--;
-    return this->stack[this->stack_pointer].value.l;
+    if (this->stackPtr == 0)
+    {
+        Falcon::Internal::RuntimeError("StackUnderflow", "Stack underflowed", this->currentFunction,  this->instructionPtr, this->stackFrame);
+    }
+    this->stackPtr--;
+    return this->stack[this->stackPtr].value.l;
 }
 
 double Falcon::VM::popFloat()
 {
-    this->stack_pointer--;
-    return this->stack[this->stack_pointer].value.f;
+    if (this->stackPtr == 0)
+    {
+        Falcon::Internal::RuntimeError("StackUnderflow", "Stack underflowed", this->currentFunction,  this->instructionPtr, this->stackFrame);
+    }
+    this->stackPtr--;
+    return this->stack[this->stackPtr].value.f;
 }
 
 void Falcon::VM::run(std::string function)
 {
-    this->stackFrame.push(this->instructionPtr);
+    this->currentFunction = function;
+    this->stackFrame.push(std::pair<std::string, uint64_t>(this->currentFunction, this->instructionPtr));
     std::pair<bool, uint64_t> & data = this->functions[function];
     if (data.first)
     {
@@ -1116,19 +1283,22 @@ void Falcon::VM::run(std::string function)
     }
     else
     {
-        this->instructionPtr = data.second;
+        this->currentFunction   = function;
+        this->instructionPtr    = data.second;
     }
     while (this->instructionPtr < this->instructions.size())
     {
         if (this->jmpStart)
         {
-            this->instructionPtr = this->stackFrame.top();
+            this->currentFunction   = this->stackFrame.top().first;
+            this->instructionPtr    = this->stackFrame.top().second;
             continue;
         }
         else if (this->jmpEnd)
         {
             this->stackFrame.pop();
-            this->instructionPtr = this->stackFrame.top();
+            this->currentFunction   = this->stackFrame.top().first;
+            this->instructionPtr    = this->stackFrame.top().second;
         }
         this->advance();
         if (this->currentInstruction.type == INSTRUCTION_END)
@@ -1139,7 +1309,8 @@ void Falcon::VM::run(std::string function)
             }
             else
             {
-                this->instructionPtr = this->stackFrame.top();
+                this->currentFunction   = this->stackFrame.top().first;
+                this->instructionPtr    = this->stackFrame.top().second;
                 this->stackFrame.pop();
             }
         }
@@ -1148,20 +1319,33 @@ void Falcon::VM::run(std::string function)
             this->operators[this->currentInstruction.type](*this);
         }
     }
-    this->instructionPtr = this->stackFrame.top();
+    this->currentFunction   = this->stackFrame.top().first;
+    this->instructionPtr    = this->stackFrame.top().second;
     this->stackFrame.pop();
 }
 
 void Falcon::VM::gotoFunction(std::string function)
 {
-    std::pair<bool, uint64_t> func = this->functions[function];
-    if (!func.first)
+    if (this->functions.count(function) > 0)
     {
-        this->stackFrame.push(this->instructionPtr);
-        this->instructionPtr = func.second;
+        std::pair<bool, uint64_t> func = this->functions[function];
+
+        if (!func.first)
+        {
+            this->stackFrame.push(std::pair<std::string, uint64_t>(this->currentFunction, this->instructionPtr));
+            this->currentFunction   = function;
+            this->instructionPtr    = func.second;
+        }
+        else
+        {
+            ((void( * )(VM &))func.second)(*this);
+        }
     }
     else
     {
-        ((void( * )(VM &))func.second)(*this);
+        std::string description("Calling uninitialized external funciton \'");
+        description.append(function);
+        description.push_back('\'');
+        Internal::RuntimeError("UninitializedExternal", description, this->currentFunction, this->instructionPtr, this->stackFrame);
     }
 }
