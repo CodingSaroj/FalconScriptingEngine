@@ -14,7 +14,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: configure
-      run: premake5/premake5 gmake2
+      run: ./premake5/premake5 gmake2
     - name: build32
       run: make config=release_linux32
     - name: build64
