@@ -11,21 +11,13 @@ defaults:
     shell: bash
     working-directory: .
 
-jobs:
-  configure:
-    runs-on: ubuntu-latest
-   
-    steps:
-     - uses: actions/checkout@v2
-     - name: configure
-       run: ./premake5/premake5 gmake2
-       
+jobs:  
   build:
-    needs: [configure]
-
     runs-on: ubuntu-latest
     
     steps:
     - uses: actions/checkout@v2
+    - name: configure
+      run: ./premake5/premake5 gmake2
     - name: build64
       run: make config=release_linux64
