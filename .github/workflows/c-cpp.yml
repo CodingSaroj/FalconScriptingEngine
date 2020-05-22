@@ -6,15 +6,27 @@ on:
   pull_request:
     branches: [ master ]
 
+defaults:
+  run:
+    shell: bash
+    working-directory: Falcon
+
 jobs:
+  configure:
+   runs-on: ubuntu-latest
+   
+   steps:
+     - uses: actions/checkout@v2
+     - name: configure
+       run: ./premake5/premake5 gmake2
+       
   build:
+    needs: [configure]
 
     runs-on: ubuntu-latest
     
     steps:
     - uses: actions/checkout@v2
-    - name: configure
-      run: ./premake5/premake5 gmake2
     - name: build32
       run: make config=release_linux32
     - name: build64
