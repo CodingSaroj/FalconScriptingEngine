@@ -780,6 +780,52 @@ static void op_pop(Falcon::VM & vm)
     }
 }
 
+static void op_alloc(Falcon::VM & vm)
+{
+    Falcon::Internal::Instruction inst = vm.getCurrentInstruction();
+
+    Falcon::Internal::Register & reg0 = vm.getRegister(inst.arg1, inst.arg1_offset);
+    Falcon::Internal::Register & reg1 = vm.getRegister(inst.arg2, inst.extra.arg2_offset);
+
+    if ((reg1.type > Falcon::REGISTER_U0 && reg1.type < Falcon::REGISTER_U3) || reg1.type == Falcon::REGISTER_USP)
+    {
+        reg0.value.ptr = vm.allocate(reg1.value.u);
+    }
+}
+
+static void op_free(Falcon::VM & vm)
+{
+    Falcon::Internal::Instruction inst = vm.getCurrentInstruction();
+
+    Falcon::Internal::Register & reg0 = vm.getRegister(inst.arg1, inst.arg1_offset);
+    Falcon::Internal::Register & reg1 = vm.getRegister(inst.arg2, inst.extra.arg2_offset);
+
+    if ((reg1.type > Falcon::REGISTER_U0 && reg1.type < Falcon::REGISTER_U3) || reg1.type == Falcon::REGISTER_USP)
+    {
+        vm.deallocate(reg0.value.ptr, reg1.value.u);
+    }
+}
+
+static void op_ref(Falcon::VM & vm)
+{
+    Falcon::Internal::Instruction inst = vm.getCurrentInstruction();
+
+    Falcon::Internal::Register & reg0 = vm.getRegister(inst.arg1, inst.arg1_offset);
+    Falcon::Internal::Register & reg1 = vm.getRegister(inst.arg2, inst.extra.arg2_offset);
+
+    reg0.value.ptr = (void *)&reg1.value;
+}
+
+static void op_deref(Falcon::VM & vm)
+{
+    Falcon::Internal::Instruction inst = vm.getCurrentInstruction();
+
+    Falcon::Internal::Register & reg0 = vm.getRegister(inst.arg1, inst.arg1_offset);
+    Falcon::Internal::Register & reg1 = vm.getRegister(inst.arg2, inst.extra.arg2_offset);
+
+    reg0.value = *(Falcon::Internal::Register::Value *)reg1.value.ptr;
+}
+
 static void op_mov(Falcon::VM & vm)
 {
     Falcon::Internal::Instruction inst = vm.getCurrentInstruction();
@@ -977,21 +1023,34 @@ Falcon::Internal::RuntimeError::RuntimeError(std::string name, std::string descr
     exit(SIGABRT);
 }
 
-Falcon::VM::VM(const std::string & __bytecode)
-    : instructionPtr(0), stackPtr(0), advanceOnly(false), jmpStart(false), jmpEnd(false)
+Falcon::VM::VM(const std::string & __bytecode, uint64_t __heapSize)
+    : instructionPtr(0), stackPtr(0), heapSize(__heapSize), advanceOnly(false), jmpStart(false), jmpEnd(false)
 {
     for (int i = 0; i < FALCON_VM_STACK_SIZE; i++)
     {
         this->stack[i].value.u = 0;
     }
     
-    for (int i = 0; i < 17; i++)
+    this->heap = malloc(this->heapSize);
+    this->allocationBitset.reserve(this->heapSize);
+    this->allocationBitset.insert(this->allocationBitset.begin(), this->heapSize, false);
+
+    for (int i = 0; i < 18; i++)
     {
         if (i < 2)
         {
             this->cmpResult[i] = 0;
         }
-        this->registers[i].type = (RegisterType)i;
+        
+        if (i == 17)
+        {
+            this->registers[i].type = REGISTER_NULL;
+        }
+        else
+        {
+            this->registers[i].type = (RegisterType)i;
+        }
+
         this->registers[i].value.u = 0;
     }
 
@@ -1037,6 +1096,11 @@ Falcon::VM::VM(const std::string & __bytecode)
     this->operators[INSTRUCTION_PUSH]   = op_push;
     this->operators[INSTRUCTION_POP]    = op_pop;
 
+    this->operators[INSTRUCTION_ALLOC]  = op_alloc;
+    this->operators[INSTRUCTION_FREE]   = op_free;
+    this->operators[INSTRUCTION_REF]    = op_ref;
+    this->operators[INSTRUCTION_DEREF]  = op_deref;
+
     this->operators[INSTRUCTION_MOV]    = op_mov;
     this->operators[INSTRUCTION_MOVR]   = op_movr;
     this->operators[INSTRUCTION_CAST]   = op_cast;
@@ -1047,6 +1111,61 @@ Falcon::VM::VM(const std::string & __bytecode)
     this->operators[INSTRUCTION_RAISE]  = op_raise;
 
     this->compile(__bytecode);
+}
+
+Falcon::VM::~VM()
+{
+    free(this->heap);
+}
+
+void * Falcon::VM::heapFindContiguousMemory(uint64_t blockSize)
+{
+    void * ptr = nullptr;
+
+    for (uint64_t i = 0; i < this->allocationBitset.size(); i++)
+    {
+        if (!this->allocationBitset[i])
+        {
+            uint64_t start = i;
+            uint64_t size = 0;
+
+            while (i < this->allocationBitset.size() && !this->allocationBitset[i])
+            {
+                size++;
+                i++;
+            }
+
+            if (size >= blockSize)
+            {
+                auto startIt = this->allocationBitset.begin() + start;
+                ptr = (void *)(((uint64_t *)this->heap) + start);
+                std::fill(startIt, startIt + blockSize, true);
+            }
+        }
+    }
+
+    if (!ptr)
+    {
+        std::string description("Unable to allocate ");
+        description.append(std::to_string(blockSize));
+        description.append(" bytes of contiguous memory on heap");
+        Internal::RuntimeError("SegmentationFault", description, this->currentFunction, 0, this->stackFrame);
+    }
+
+    return ptr;
+}
+
+void * Falcon::VM::allocate(uint64_t blockSize)
+{
+    return this->heapFindContiguousMemory(blockSize);
+}
+
+void Falcon::VM::deallocate(void * block, uint64_t blockSize)
+{
+    uint64_t    distance    = (uint64_t)block - (uint64_t)this->heap;
+    auto        iter          = this->allocationBitset.begin() + distance;
+
+    std::fill(iter, iter + blockSize, false);
 }
 
 void Falcon::VM::compile(std::string __bytecode)
@@ -1187,7 +1306,7 @@ void Falcon::VM::setJmp(bool start)
 
 Falcon::Internal::Register & Falcon::VM::getRegister(RegisterType id, uint8_t offset)
 {
-    assert(id < 21);
+    assert(id < 23);
     if (id > REGISTER_CSP && id < REGISTER_FSP)
     {
         Internal::Register & reg = this->stack[this->stackPtr - offset];

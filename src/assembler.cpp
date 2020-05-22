@@ -6,6 +6,7 @@ static std::vector<std::string> registers
     "u0", "u1", "u2", "u3",
     "l0", "l1", "l2", "l3",
     "f0", "f1", "f2", "f3",
+    "ptr", "psp",
     "csp", "usp", "lsp", "fsp",
     "null"
 };
@@ -18,6 +19,8 @@ static std::vector<std::string> instructions
     "lseq0", "lseq1", "iseq0", "iseq1", "neq0", "neq1", "not0", "not1",
     "cand", "cor",
     "push", "pop",
+    "alloc", "free",
+    "ref", "deref",
     "mov", "movr",
     "cast", "raise",
     "call", "jmp"
@@ -34,6 +37,8 @@ std::vector<std::string> binaryInstructions
     "lshft", "rshft", "and", "or", "xor",
     "grt0", "grt1", "greq0", "greq1", "less0", "less1",
     "lseq0", "lseq1", "iseq0", "iseq1", "neq0", "neq1",
+    "alloc", "free",
+    "ref", "deref",
     "mov", "movr",
     "cast"
 };
@@ -71,6 +76,10 @@ std::unordered_map<std::string, Falcon::InstructionType> instructionMap
     {"not1"     ,   Falcon::INSTRUCTION_NOT1},
     {"push"     ,   Falcon::INSTRUCTION_PUSH},
     {"pop"      ,   Falcon::INSTRUCTION_POP},
+    {"alloc"    ,   Falcon::INSTRUCTION_ALLOC},
+    {"free"     ,   Falcon::INSTRUCTION_FREE},
+    {"ref"      ,   Falcon::INSTRUCTION_REF},
+    {"deref"    ,   Falcon::INSTRUCTION_DEREF},
     {"mov"      ,   Falcon::INSTRUCTION_MOV},
     {"movr"     ,   Falcon::INSTRUCTION_MOVR},
     {"cast"     ,   Falcon::INSTRUCTION_CAST},
@@ -146,6 +155,10 @@ static inline Falcon::RegisterType getRegisterType(std::string type)
     {
         return Falcon::REGISTER_F3;
     }
+    else if (type == "ptr")
+    {
+        return Falcon::REGISTER_PTR;
+    }
     else if (type == "csp")
     {
         return Falcon::REGISTER_CSP;
@@ -161,6 +174,10 @@ static inline Falcon::RegisterType getRegisterType(std::string type)
     else if (type == "fsp")
     {
         return Falcon::REGISTER_FSP;
+    }
+    else if (type == "psp")
+    {
+        return Falcon::REGISTER_PSP;
     }
     else if (type == "null")
     {

@@ -9,10 +9,15 @@
 #include <cassert>
 #include <csignal>
 #include <cstdint>
+#include <cstdlib>
 #include <cstring>
 
 #ifndef FALCON_VM_STACK_SIZE
     #define FALCON_VM_STACK_SIZE 8192
+#endif
+
+#ifndef FALCON_VM_HEAP_SIZE
+    #define FALCON_VM_HEAP_SIZE 65536
 #endif
 
 namespace Falcon
@@ -55,6 +60,12 @@ namespace Falcon
 
         INSTRUCTION_PUSH,
         INSTRUCTION_POP,
+
+		INSTRUCTION_ALLOC,
+		INSTRUCTION_FREE,
+		INSTRUCTION_REF,
+        INSTRUCTION_DEREF,
+
         INSTRUCTION_MOV,
         INSTRUCTION_MOVR,
         INSTRUCTION_CAST,
@@ -85,10 +96,12 @@ namespace Falcon
         REGISTER_F1,
         REGISTER_F2,
         REGISTER_F3,
+        REGISTER_PTR,
         REGISTER_CSP,
         REGISTER_USP,
         REGISTER_LSP,
         REGISTER_FSP,
+        REGISTER_PSP,
         REGISTER_NULL
     };
 
@@ -118,6 +131,7 @@ namespace Falcon
                 uint64_t    u;
                 int64_t     l;
                 double      f;
+                void *      ptr;
             };
             
             RegisterType    type;
@@ -164,13 +178,22 @@ namespace Falcon
             /*
              * Registers
              */
-            Internal::Register  registers[17];
+            Internal::Register  registers[18];
 
             /*
              * Stack
              */
             Internal::Register  stack[FALCON_VM_STACK_SIZE];
             uint16_t            stackPtr;
+
+            /*
+             * Heap
+             */
+            void *              heap;
+            uint64_t            heapSize;
+            std::vector<bool>   allocationBitset;
+
+            void *      heapFindContiguousMemory(uint64_t blockSize);
 
             /*
              * Operators
@@ -208,7 +231,8 @@ namespace Falcon
             }
 
         public:
-            VM(const std::string & __bytecode);
+            VM(const std::string & __bytecode, uint64_t heapSize = FALCON_VM_HEAP_SIZE);
+            ~VM();
        
             /*
              * Flag getters and setters
@@ -247,6 +271,12 @@ namespace Falcon
             uint64_t    popUint();
             int64_t     popInt();
             double      popFloat();
+
+            /*
+             * Heap manipulation
+             */
+            void *      allocate(uint64_t blockSize);
+            void        deallocate(void * block, uint64_t blockSize);
 
             /*
              * Call a function
