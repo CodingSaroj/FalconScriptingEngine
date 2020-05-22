@@ -1,3 +1,4 @@
+![C/C++ CI](https://github.com/SarojKumar10/Falcon/workflows/C/C++%20CI/badge.svg)
 <html>
   <body>
     <img alt="Falcon", src="logos/falcon.svg", width=256, height=256, align="left">
