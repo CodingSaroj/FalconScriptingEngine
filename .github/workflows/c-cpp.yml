@@ -13,9 +13,9 @@ defaults:
 
 jobs:
   configure:
-   runs-on: ubuntu-latest
+    runs-on: ubuntu-latest
    
-   steps:
+    steps:
      - uses: actions/checkout@v2
      - name: configure
        run: ./premake5/premake5 gmake2
@@ -27,7 +27,5 @@ jobs:
     
     steps:
     - uses: actions/checkout@v2
-    - name: build32
-      run: make config=release_linux32
     - name: build64
       run: make config=release_linux64
