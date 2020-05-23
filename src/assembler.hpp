@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2020 SarojKumar10
+ * Licensed under the MIT license.
+ * Refer to 'LICENSE' file at toplevel directory for details.
+ */
+
 #ifndef FALCON_ASSEMBLER_HPP
 #define FALCON_ASSEMBLER_HPP
 

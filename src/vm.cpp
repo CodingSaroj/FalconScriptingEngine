@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2020 SarojKumar10
+ * Licensed under the MIT license.
+ * Refer to 'LICENSE' file at toplevel directory for details.
+ */
+
 #include "vm.hpp"
 
 #define RESET   "\033[0m"
@@ -1052,7 +1058,12 @@ void Falcon::Module::compile(std::string & bytecode)
 
             inst.symbol.pop_back();
 
-            this->registerSymbol(*(uint16_t *)&bytecode[i + 1], inst.symbol);
+            this->symbols.insert(
+                    std::pair<uint16_t, std::string>(
+                            *(uint16_t *)&bytecode[i + 1],
+                            inst.symbol
+                    )
+            );
 
             if (count > 0)
             {
@@ -1065,7 +1076,15 @@ void Falcon::Module::compile(std::string & bytecode)
             inst.extra.arg2_offset  = bytecode[i + 2];
             if (inst.type == INSTRUCTION_START)
             {
-                this->registerFunction(this->getSymbol(*(uint16_t *)&bytecode[i + 1]), this->instructions.size() + 1);
+                this->functions.insert(
+                        std::pair<std::string, std::pair<bool, uint64_t>>(
+                                this->symbols[*(uint16_t *)&bytecode[i + 1]],
+                                std::pair<bool, uint64_t>(
+                                        true,
+                                        this->instructions.size() + 1
+                                )
+                        )
+                );
             }
             i -= 1;
         }
@@ -1081,16 +1100,16 @@ void Falcon::Module::compile(std::string & bytecode)
         }
         else if (inst.type == INSTRUCTION_PUSH || inst.type == INSTRUCTION_POP)
         {
-            inst.arg1               = (RegisterType)(((bytecode[i] & 0b00000011) << 3) | ((__bytecode[i + 1] & 0b11100000) >> 5));
-            inst.arg1_offset        = ((bytecode[i + 1] & 0b00011111) << 3) | ((__bytecode[i + 2] & 0b11100000) >> 5);
+            inst.arg1               = (RegisterType)(((bytecode[i] & 0b00000011) << 3) | ((bytecode[i + 1] & 0b11100000) >> 5));
+            inst.arg1_offset        = ((bytecode[i + 1] & 0b00011111) << 3) | ((bytecode[i + 2] & 0b11100000) >> 5);
             inst.arg2               = (RegisterType)((bytecode[i + 2] & 0b00011111));
 
             i -= 1;
         }
         else if (inst.type == INSTRUCTION_MOV)
         {
-            inst.arg1               = (RegisterType)(((bytecode[i] & 0b00000011) << 3) | ((__bytecode[i + 1] & 0b11100000) >> 5));
-            inst.arg1_offset        = ((bytecode[i + 1] & 0b00011111) << 3) | ((__bytecode[i + 2] & 0b11100000) >> 5);
+            inst.arg1               = (RegisterType)(((bytecode[i] & 0b00000011) << 3) | ((bytecode[i + 1] & 0b11100000) >> 5));
+            inst.arg1_offset        = ((bytecode[i + 1] & 0b00011111) << 3) | ((bytecode[i + 2] & 0b11100000) >> 5);
             inst.arg2               = (RegisterType)((bytecode[i + 2] & 0b00011111));
 
             if (inst.arg1 >= REGISTER_C0 && inst.arg1 <= REGISTER_C3)
@@ -1101,8 +1120,8 @@ void Falcon::Module::compile(std::string & bytecode)
             {
                 uint8_t bytes[] =
                 {
-                    bytecode[i + 3], __bytecode[i + 4], __bytecode[i + 5], __bytecode[i + 6],
-                    bytecode[i + 7], __bytecode[i + 8], __bytecode[i + 9], __bytecode[i + 10]
+                    bytecode[i + 3], bytecode[i + 4], bytecode[i + 5], bytecode[i + 6],
+                    bytecode[i + 7], bytecode[i + 8], bytecode[i + 9], bytecode[i + 10]
                 };
                 inst.extra.u = *(uint64_t *)bytes;
                 i += 7;
@@ -1110,8 +1129,8 @@ void Falcon::Module::compile(std::string & bytecode)
         }
         else
         {
-            inst.arg1               = (RegisterType)(((bytecode[i] & 0b00000011) << 3) | ((__bytecode[i + 1] & 0b11100000) >> 5));
-            inst.arg1_offset        = ((bytecode[i + 1] & 0b00011111) << 3) | ((__bytecode[i + 2] & 0b11100000) >> 5);
+            inst.arg1               = (RegisterType)(((bytecode[i] & 0b00000011) << 3) | ((bytecode[i + 1] & 0b11100000) >> 5));
+            inst.arg1_offset        = ((bytecode[i + 1] & 0b00011111) << 3) | ((bytecode[i + 2] & 0b11100000) >> 5);
             inst.arg2               = (RegisterType)((bytecode[i + 2] & 0b00011111));
             inst.extra.arg2_offset  = bytecode[i + 3];
         }
@@ -1135,8 +1154,8 @@ void Falcon::Module::link(  std::vector<Internal::Instruction> &                
     }
 
     __instructions.insert (__instructions.end() - 1 , this->instructions.begin(), this->instructions.end());
-    __symbols.insert      (__symbols.end() - 1      , this->symbols.begin()     , this->symbols.end());
-    __functions.insert    (__functions.end() - 1    , tempFunctions.begin()     , tempFunctions.end());
+    __symbols.insert      (this->symbols.begin()    , this->symbols.end());
+    __functions.insert    (tempFunctions.begin()    , tempFunctions.end());
 }
 
 Falcon::Library::Library(std::vector<Module> & __modules)
