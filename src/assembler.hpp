@@ -87,6 +87,8 @@ namespace Falcon
                     double      f;
                 };
                 
+                uint8_t semanticValue;
+
                 Token   reg;
                 uint8_t regOffset;
 

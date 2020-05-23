@@ -1023,7 +1023,138 @@ Falcon::Internal::RuntimeError::RuntimeError(std::string name, std::string descr
     exit(SIGABRT);
 }
 
-Falcon::VM::VM(const std::string & __bytecode, uint64_t __heapSize)
+Falcon::Module::Module(std::string & bytecode)
+{
+    this->compile(bytecode);
+}
+
+void Falcon::Module::compile(std::string & bytecode)
+{
+    for (int i = 0; i < bytecode.size(); i += 4)
+    {
+        Internal::Instruction inst;
+        inst.type               = (InstructionType)((bytecode[i] & 0b11111100) >> 2);
+        if (inst.type == INSTRUCTION_SYMBOL)
+        {
+            inst.arg1_offset        = bytecode[i + 1];
+            inst.extra.arg2_offset  = bytecode[i + 2];
+
+            char c = '\0';
+            int count = 0;
+
+            do
+            {
+                c = bytecode[i + (count + 3)];
+                inst.symbol.push_back(c);
+                count++;
+            }
+            while (c != 0);
+
+            inst.symbol.pop_back();
+
+            this->registerSymbol(*(uint16_t *)&bytecode[i + 1], inst.symbol);
+
+            if (count > 0)
+            {
+                i += --count;
+            }
+        }
+        else if (inst.type == INSTRUCTION_START || inst.type == INSTRUCTION_IF || inst.type == INSTRUCTION_ELSE || inst.type == INSTRUCTION_CALL)
+        {
+            inst.arg1_offset        = bytecode[i + 1];
+            inst.extra.arg2_offset  = bytecode[i + 2];
+            if (inst.type == INSTRUCTION_START)
+            {
+                this->registerFunction(this->getSymbol(*(uint16_t *)&bytecode[i + 1]), this->instructions.size() + 1);
+            }
+            i -= 1;
+        }
+        else if (inst.type == INSTRUCTION_JMP)
+        {
+            inst.arg1_offset = bytecode[i + 1];
+
+            i -= 2;
+        }
+        else if (inst.type == INSTRUCTION_END || inst.type == INSTRUCTION_CAND || inst.type == INSTRUCTION_COR)
+        {
+            i -= 3;
+        }
+        else if (inst.type == INSTRUCTION_PUSH || inst.type == INSTRUCTION_POP)
+        {
+            inst.arg1               = (RegisterType)(((bytecode[i] & 0b00000011) << 3) | ((__bytecode[i + 1] & 0b11100000) >> 5));
+            inst.arg1_offset        = ((bytecode[i + 1] & 0b00011111) << 3) | ((__bytecode[i + 2] & 0b11100000) >> 5);
+            inst.arg2               = (RegisterType)((bytecode[i + 2] & 0b00011111));
+
+            i -= 1;
+        }
+        else if (inst.type == INSTRUCTION_MOV)
+        {
+            inst.arg1               = (RegisterType)(((bytecode[i] & 0b00000011) << 3) | ((__bytecode[i + 1] & 0b11100000) >> 5));
+            inst.arg1_offset        = ((bytecode[i + 1] & 0b00011111) << 3) | ((__bytecode[i + 2] & 0b11100000) >> 5);
+            inst.arg2               = (RegisterType)((bytecode[i + 2] & 0b00011111));
+
+            if (inst.arg1 >= REGISTER_C0 && inst.arg1 <= REGISTER_C3)
+            {
+                inst.extra.arg2_offset = bytecode[i + 3];
+            }
+            else
+            {
+                uint8_t bytes[] =
+                {
+                    bytecode[i + 3], __bytecode[i + 4], __bytecode[i + 5], __bytecode[i + 6],
+                    bytecode[i + 7], __bytecode[i + 8], __bytecode[i + 9], __bytecode[i + 10]
+                };
+                inst.extra.u = *(uint64_t *)bytes;
+                i += 7;
+            }
+        }
+        else
+        {
+            inst.arg1               = (RegisterType)(((bytecode[i] & 0b00000011) << 3) | ((__bytecode[i + 1] & 0b11100000) >> 5));
+            inst.arg1_offset        = ((bytecode[i + 1] & 0b00011111) << 3) | ((__bytecode[i + 2] & 0b11100000) >> 5);
+            inst.arg2               = (RegisterType)((bytecode[i + 2] & 0b00011111));
+            inst.extra.arg2_offset  = bytecode[i + 3];
+        }
+
+        this->instructions.push_back(inst);
+    }
+}
+
+void Falcon::Module::link(  std::vector<Internal::Instruction> &                         __instructions,
+                            std::unordered_map<uint64_t, std::string> &                  __symbols,
+                            std::unordered_map<std::string, std::pair<bool, uint64_t>> & __functions   )
+{
+    std::unordered_map<std::string, std::pair<bool, uint64_t>> tempFunctions = this->functions;
+
+    for (auto p : tempFunctions)
+    {
+        if (!p.second.first)
+        {
+            p.second.second += __instructions.size();
+        }
+    }
+
+    __instructions.insert (__instructions.end() - 1 , this->instructions.begin(), this->instructions.end());
+    __symbols.insert      (__symbols.end() - 1      , this->symbols.begin()     , this->symbols.end());
+    __functions.insert    (__functions.end() - 1    , tempFunctions.begin()     , tempFunctions.end());
+}
+
+Falcon::Library::Library(std::vector<Module> & __modules)
+    : modules(__modules)
+{
+}
+
+void Falcon::Library::link( std::vector<Internal::Instruction> &                         instructions,
+                            std::unordered_map<uint64_t, std::string> &                  symbols,
+                            std::unordered_map<std::string, std::pair<bool, uint64_t>> & functions   )
+{
+    for (Module & module : this->modules)
+    {
+        module.link(instructions, symbols, functions);
+    }
+}
+
+Falcon::VM::VM(uint64_t __heapSize)
     : instructionPtr(0), stackPtr(0), heapSize(__heapSize), advanceOnly(false), jmpStart(false), jmpEnd(false)
 {
     for (int i = 0; i < FALCON_VM_STACK_SIZE; i++)
@@ -1109,8 +1240,6 @@ Falcon::VM::VM(const std::string & __bytecode, uint64_t __heapSize)
     this->operators[INSTRUCTION_JMP]    = op_jmp;
 
     this->operators[INSTRUCTION_RAISE]  = op_raise;
-
-    this->compile(__bytecode);
 }
 
 Falcon::VM::~VM()
@@ -1168,96 +1297,14 @@ void Falcon::VM::deallocate(void * block, uint64_t blockSize)
     std::fill(iter, iter + blockSize, false);
 }
 
-void Falcon::VM::compile(std::string __bytecode)
+void Falcon::VM::link(Module & module)
 {
-    for (int i = 0; i < __bytecode.size(); i += 4)
-    {
-        Internal::Instruction inst;
-        inst.type               = (InstructionType)((__bytecode[i] & 0b11111100) >> 2);
-        if (inst.type == INSTRUCTION_SYMBOL)
-        {
-            inst.arg1_offset        = __bytecode[i + 1];
-            inst.extra.arg2_offset  = __bytecode[i + 2];
+    module.link(this->instructions, this->symbols, this->functions);
+}
 
-            char c = '\0';
-            int count = 0;
-
-            do
-            {
-                c = __bytecode[i + (count + 3)];
-                inst.symbol.push_back(c);
-                count++;
-            }
-            while (c != 0);
-
-            inst.symbol.pop_back();
-
-            this->registerSymbol(*(uint16_t *)&__bytecode[i + 1], inst.symbol);
-
-            if (count > 0)
-            {
-                i += --count;
-            }
-        }
-        else if (inst.type == INSTRUCTION_START || inst.type == INSTRUCTION_IF || inst.type == INSTRUCTION_ELSE || inst.type == INSTRUCTION_CALL)
-        {
-            inst.arg1_offset        = __bytecode[i + 1];
-            inst.extra.arg2_offset  = __bytecode[i + 2];
-            if (inst.type == INSTRUCTION_START)
-            {
-                this->registerFunction(this->getSymbol(*(uint16_t *)&__bytecode[i + 1]), this->instructions.size() + 1);
-            }
-            i -= 1;
-        }
-        else if (inst.type == INSTRUCTION_JMP)
-        {
-            inst.arg1_offset = __bytecode[i + 1];
-
-            i -= 2;
-        }
-        else if (inst.type == INSTRUCTION_END || inst.type == INSTRUCTION_CAND || inst.type == INSTRUCTION_COR)
-        {
-            i -= 3;
-        }
-        else if (inst.type == INSTRUCTION_PUSH || inst.type == INSTRUCTION_POP)
-        {
-            inst.arg1               = (RegisterType)(((__bytecode[i] & 0b00000011) << 3) | ((__bytecode[i + 1] & 0b11100000) >> 5));
-            inst.arg1_offset        = ((__bytecode[i + 1] & 0b00011111) << 3) | ((__bytecode[i + 2] & 0b11100000) >> 5);
-            inst.arg2               = (RegisterType)((__bytecode[i + 2] & 0b00011111));
-            
-            i -= 1;
-        }
-        else if (inst.type == INSTRUCTION_MOV)
-        {
-            inst.arg1               = (RegisterType)(((__bytecode[i] & 0b00000011) << 3) | ((__bytecode[i + 1] & 0b11100000) >> 5));
-            inst.arg1_offset        = ((__bytecode[i + 1] & 0b00011111) << 3) | ((__bytecode[i + 2] & 0b11100000) >> 5);
-            inst.arg2               = (RegisterType)((__bytecode[i + 2] & 0b00011111));
-
-            if (inst.arg1 >= REGISTER_C0 && inst.arg1 <= REGISTER_C3)
-            {
-                inst.extra.arg2_offset = __bytecode[i + 3];
-            }
-            else
-            {
-                uint8_t bytes[] =
-                {
-                    __bytecode[i + 3], __bytecode[i + 4], __bytecode[i + 5], __bytecode[i + 6],
-                    __bytecode[i + 7], __bytecode[i + 8], __bytecode[i + 9], __bytecode[i + 10]
-                };
-                inst.extra.u = *(uint64_t *)bytes;
-                i += 7;
-            }
-        }
-        else
-        {
-            inst.arg1               = (RegisterType)(((__bytecode[i] & 0b00000011) << 3) | ((__bytecode[i + 1] & 0b11100000) >> 5));
-            inst.arg1_offset        = ((__bytecode[i + 1] & 0b00011111) << 3) | ((__bytecode[i + 2] & 0b11100000) >> 5);
-            inst.arg2               = (RegisterType)((__bytecode[i + 2] & 0b00011111));
-            inst.extra.arg2_offset  = __bytecode[i + 3];
-        }
-
-        this->instructions.push_back(inst);
-    }
+void Falcon::VM::link(Library & library)
+{
+    library.link(this->instructions, this->symbols, this->functions);
 }
 
 uint64_t Falcon::VM::getInstructionPtr()

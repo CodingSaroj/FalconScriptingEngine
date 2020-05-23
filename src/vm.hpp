@@ -150,73 +150,68 @@ namespace Falcon
                 RuntimeError(std::string name, std::string description, std::string function, uint64_t location, std::stack<std::pair<std::string, uint64_t>> stackTrace);
         };
     }
+    
+    class Module
+    {
+        public:
+            Module(std::string & bytecode);
+
+            void link(  std::vector<Internal::Instruction> &                         __instructions,
+                        std::unordered_map<uint64_t, std::string> &                  __symbols,
+                        std::unordered_map<std::string, std::pair<bool, uint64_t>> & __functions   );
+
+        private:
+            std::vector<Internal::Instruction>  instructions;
+
+            std::unordered_map<uint64_t, std::string>                   symbols;
+            std::unordered_map<std::string, std::pair<bool, uint64_t>>  functions;
+
+            void compile(std::string & bytecode);
+    };
+
+    class Library
+    {
+        public:
+            Library(std::vector<Module> & __modules);
+
+            void link(  std::vector<Internal::Instruction> &                         instructions,
+                        std::unordered_map<uint64_t, std::string> &                  symbols,
+                        std::unordered_map<std::string, std::pair<bool, uint64_t>> & functions   );
+
+        private:
+            std::vector<Module> modules;
+    };
 
     class VM
     {
         private:
-            /*
-             * Flags
-             */
             bool    advanceOnly;
             bool    jmpStart;
             bool    jmpEnd;
             bool    cmpResult[2];
 
-            /*
-             * Bytecode related
-             */
             std::vector<Internal::Instruction>  instructions;
             Internal::Instruction               currentInstruction;
             uint64_t                            instructionPtr;
 
-            /*
-             * State
-             */
             std::stack<std::pair<std::string, uint64_t>>    stackFrame;
             std::string                                     currentFunction;
 
-            /*
-             * Registers
-             */
             Internal::Register  registers[18];
 
-            /*
-             * Stack
-             */
             Internal::Register  stack[FALCON_VM_STACK_SIZE];
             uint16_t            stackPtr;
 
-            /*
-             * Heap
-             */
             void *              heap;
             uint64_t            heapSize;
             std::vector<bool>   allocationBitset;
 
             void *      heapFindContiguousMemory(uint64_t blockSize);
 
-            /*
-             * Operators
-             */
             void( *     operators[47])(VM &);
 
-            /*
-             * Symbols:
-             *
-             * uint64_t     -> id
-             * std::string  -> name
-             *
-             *
-             * Function map:
-             *
-             * std::string  -> name
-             * bool         -> external flag
-             * uint64_t     -> bytecode address or function pointer
-             */
             std::unordered_map<uint64_t, std::string> symbols;
             std::unordered_map<std::string, std::pair<bool, uint64_t>> functions;
-
-            void compile(std::string __bytecode);
 
             inline void advance()
             {
@@ -231,12 +226,12 @@ namespace Falcon
             }
 
         public:
-            VM(const std::string & __bytecode, uint64_t heapSize = FALCON_VM_HEAP_SIZE);
+            VM(uint64_t heapSize = FALCON_VM_HEAP_SIZE);
             ~VM();
-       
-            /*
-             * Flag getters and setters
-             */
+
+            void link(Library & library);
+            void link(Module & module);
+
             bool        getCmpResult(uint8_t id);
             void        setCmpResult(uint8_t id, bool res);
             void        setJmp(bool start);
@@ -247,22 +242,13 @@ namespace Falcon
             std::string                                     getCurrentFunction();
             std::stack<std::pair<std::string, uint64_t>>    getStackTrace();
 
-            /*
-             * Register getter
-             */
             Internal::Register & getRegister(RegisterType type, uint8_t offset);
             
-            /*
-             * Function adding functions
-             */
             std::string getSymbol(uint16_t id);
             void        registerSymbol(uint16_t id, std::string name);
             void        registerFunction(std::string name, uint64_t location);
             void        externalFunction(std::string name, void( * function)(VM & vm));
 
-            /*
-             * Stack manipulation
-             */
             void        pushChar(char data);
             void        pushUint(uint64_t data);
             void        pushInt(int64_t data);
@@ -272,15 +258,9 @@ namespace Falcon
             int64_t     popInt();
             double      popFloat();
 
-            /*
-             * Heap manipulation
-             */
             void *      allocate(uint64_t blockSize);
             void        deallocate(void * block, uint64_t blockSize);
 
-            /*
-             * Call a function
-             */
             void        run(std::string function);
             void        gotoFunction(std::string function);
     };

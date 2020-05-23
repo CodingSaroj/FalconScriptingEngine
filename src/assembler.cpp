@@ -88,6 +88,62 @@ std::unordered_map<std::string, Falcon::InstructionType> instructionMap
     {"raise"    ,   Falcon::INSTRUCTION_RAISE}
 };
 
+std::unordered_map<std::string, uint8_t> semanticInstructions   /* 0b 1100 1100
+                                                                 *    Arg0 Arg1
+                                                                 *
+                                                                 * 0        0           0               0
+                                                                 * Int bit  Float bit   Pointer bit     Null bit
+                                                                 *
+                                                                 * Special cases:
+                                                                 *     Arg1 = 0000 = unary
+                                                                 *     Arg = 0001 = temporary value (32, 32.01 etc.)
+                                                                 *
+                                                                 *     instruction = 0b00000000 = function
+                                                                 */
+{
+    {"add"      ,   0b11001100},
+    {"sub"      ,   0b11001100},
+    {"mul"      ,   0b11001100},
+    {"div"      ,   0b11001100},
+    {"mod"      ,   0b11001100},
+    {"inc"      ,   0b11000000},
+    {"dec"      ,   0b11000000},
+    {"lshft"    ,   0b10001000},
+    {"rshft"    ,   0b10001000},
+    {"and"      ,   0b10001000},
+    {"or"       ,   0b10001000},
+    {"xor"      ,   0b10001000},
+    {"cmpl"     ,   0b10000000},
+    {"if"       ,   0b00000000},
+    {"else"     ,   0b00000000},
+    {"grt0"     ,   0b11101110},
+    {"grt1"     ,   0b11101110},
+    {"greq0"    ,   0b11101110},
+    {"greq1"    ,   0b11101110},
+    {"less0"    ,   0b11101110},
+    {"less1"    ,   0b11101110},
+    {"lseq0"    ,   0b11101110},
+    {"lseq1"    ,   0b11101110},
+    {"iseq0"    ,   0b11101110},
+    {"iseq1"    ,   0b11101110},
+    {"neq0"     ,   0b11101110},
+    {"neq1"     ,   0b11101110},
+    {"not0"     ,   0b11100000},
+    {"not1"     ,   0b11100000},
+    {"push"     ,   0b11100000},
+    {"pop"      ,   0b11110000},
+    {"alloc"    ,   0b00101000},
+    {"free"     ,   0b00101000},
+    {"ref"      ,   0b00101110},
+    {"deref"    ,   0b11100010},
+    {"mov"      ,   0b11100001},
+    {"movr"     ,   0b11101110},
+    {"cast"     ,   0b11101110},
+    {"call"     ,   0b00000000},
+    {"jmp"      ,   0b00010000},
+    {"raise"    ,   0b10000000}
+};
+
 static inline Falcon::RegisterType getRegisterType(std::string type)
 {
     
@@ -182,6 +238,103 @@ static inline Falcon::RegisterType getRegisterType(std::string type)
     else if (type == "null")
     {
         return Falcon::REGISTER_NULL;
+    }
+}
+
+static inline uint8_t getSemanticRegister(std::string type)
+{
+    
+    if (type == "c0")
+    {
+        return 0b00001000;
+    }
+    else if (type == "c1")
+    {
+        return 0b00001000;
+    }
+    else if (type == "c2")
+    {
+        return 0b00001000;
+    }
+    else if (type == "c3")
+    {
+        return 0b00001000;
+    }
+    else if (type == "u0")
+    {
+        return 0b00001000;
+    }
+    else if (type == "u1")
+    {
+        return 0b00001000;
+    }
+    else if (type == "u2")
+    {
+        return 0b00001000;
+    }
+    else if (type == "u3")
+    {
+        return 0b00001000;
+    }
+    else if (type == "l0")
+    {
+        return 0b00001000;
+    }
+    else if (type == "l1")
+    {
+        return 0b00001000;
+    }
+    else if (type == "l2")
+    {
+        return 0b00001000;
+    }
+    else if (type == "l3")
+    {
+        return 0b00001000;
+    }
+    else if (type == "f0")
+    {
+        return 0b00000100;
+    }
+    else if (type == "f1")
+    {
+        return 0b00000100;
+    }
+    else if (type == "f2")
+    {
+        return 0b00000100;
+    }
+    else if (type == "f3")
+    {
+        return 0b00000100;
+    }
+    else if (type == "ptr")
+    {
+        return 0b00000010;
+    }
+    else if (type == "csp")
+    {
+        return 0b00001000;
+    }
+    else if (type == "usp")
+    {
+        return 0b00001000;
+    }
+    else if (type == "lsp")
+    {
+        return 0b00001000;
+    }
+    else if (type == "fsp")
+    {
+        return 0b00000100;
+    }
+    else if (type == "psp")
+    {
+        return 0b00000010;
+    }
+    else if (type == "null")
+    {
+        return 0b00000001;
     }
 }
 
@@ -397,27 +550,27 @@ Falcon::Assembler::ExprAST::~ExprAST()
 }
 
 Falcon::Assembler::ExprAtom::ExprAtom(AtomType __type, char __char)
-    : type(__type), c(__char)
+    : type(__type), c(__char), semanticValue(0b00000001)
 {
 }
 
 Falcon::Assembler::ExprAtom::ExprAtom(AtomType __type, uint64_t __uint)
-    : type(__type), u(__uint)
+    : type(__type), u(__uint), semanticValue(0b00000001)
 {
 }
 
 Falcon::Assembler::ExprAtom::ExprAtom(AtomType __type, int64_t __int)
-    : type(__type), l(__int)
+    : type(__type), l(__int), semanticValue(0b00000001)
 {
 }
 
 Falcon::Assembler::ExprAtom::ExprAtom(AtomType __type, double __float)
-    : type(__type), f(__float)
+    : type(__type), f(__float), semanticValue(0b00000001)
 {
 }
 
 Falcon::Assembler::ExprAtom::ExprAtom(AtomType __type, Token __reg, uint8_t __offset)
-    : type(__type), reg(__reg), regOffset(__offset)
+    : type(__type), reg(__reg), regOffset(__offset), semanticValue(getSemanticRegister(__reg.name))
 {
 }
 
@@ -428,7 +581,7 @@ void Falcon::Assembler::ExprAtom::codeGen(std::ostream & out)
 Falcon::Assembler::ExprStatement::ExprStatement(Token __instruction, bool __atom2Used, ExprAtom __atom0, ExprAtom __atom1)
     : instruction(__instruction), atom2Used(__atom2Used), atoms{__atom0, __atom1}
 {
-    if (this->instruction.name != "pop")
+    /*if (this->instruction.name != "pop")
     {
         if (this->atoms[0].type == ExprAtom::REGISTER && this->atoms[0].reg.name == "null")
         {
@@ -437,6 +590,50 @@ Falcon::Assembler::ExprStatement::ExprStatement(Token __instruction, bool __atom
         else if (this->atoms[1].type == ExprAtom::REGISTER && this->atoms[1].reg.name == "null")
         {
             Internal::CompileTimeError("ReadingNullRegister", "Reading from null register", this->instruction.line);
+        }
+    }*/
+    uint8_t semanticInstruction = semanticInstructions[this->instruction.name];
+    uint8_t semanticReg0        = this->atoms[0].semanticValue;
+    uint8_t semanticReg1        = this->atoms[1].semanticValue;
+    uint8_t semanticArgs        = (semanticReg0 << 4) | semanticReg1;
+
+    auto invokeError = [this]()
+    {
+        std::string description("Instruction \'");
+        description.append(this->instruction.name);
+        description.append("\' has invalid arguements");
+        Internal::CompileTimeError("TypeMismatch", description, this->instruction.line); 
+    };
+
+    if (semanticInstruction == 0b00000000)
+    {
+    }
+    else if ((semanticInstruction & 0b00001111) == 0b00000000)
+    {
+        if ((semanticInstruction | (semanticReg0 << 4)) != semanticInstruction)
+        {
+            invokeError();
+        }
+    }
+    else
+    {
+        if ((semanticInstruction & 0b00001111) == 0b00000001)
+        {
+            if ((semanticInstruction | (semanticReg0 << 4)) != semanticInstruction)
+            {
+                invokeError();
+            }
+            else if (this->atoms[1].type == ExprAtom::REGISTER)
+            {
+                invokeError();
+            }
+        }
+        else
+        {
+            if ((semanticInstruction | semanticArgs) != semanticInstruction)
+            {
+                invokeError();
+            }
         }
     }
 }
