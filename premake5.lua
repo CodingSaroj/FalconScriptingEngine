@@ -31,17 +31,16 @@ workspace "Falcon"
             optimize "Off"
 
         filter "configurations:Release"
+            symbols "Off"
             optimize "Full"
 
-        filter "platforms:Win32"
+        filter {"platforms:Win32"}
             architecture "x86"
             system "windows"
-            gccprefix "i686-w64-mingw32-"
 
-        filter "platforms:Win64"
+        filter {"platforms:Win64"}
             architecture "x86_64"
             system "windows"
-            gccprefix "x86_64-w64-mingw32-"
 
         filter "platforms:Linux32"
             architecture "x86"
