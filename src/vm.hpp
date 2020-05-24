@@ -74,6 +74,7 @@ namespace Falcon
 
         INSTRUCTION_MOV,
         INSTRUCTION_MOVR,
+        INSTRUCTION_MOVP,
         INSTRUCTION_CAST,
         INSTRUCTION_CALL,
         INSTRUCTION_JMP,
@@ -214,7 +215,7 @@ namespace Falcon
 
             void *      heapFindContiguousMemory(uint64_t blockSize);
 
-            void( *     operators[47])(VM &);
+            void( *     operators[48])(VM &);
 
             std::unordered_map<uint64_t, std::string> symbols;
             std::unordered_map<std::string, std::pair<bool, uint64_t>> functions;
@@ -252,7 +253,6 @@ namespace Falcon
             
             std::string getSymbol(uint16_t id);
             void        registerSymbol(uint16_t id, std::string name);
-            void        registerFunction(std::string name, uint64_t location);
             void        externalFunction(std::string name, void( * function)(VM & vm));
 
             void        pushChar(char data);

@@ -27,7 +27,7 @@ static std::vector<std::string> instructions
     "push", "pop",
     "alloc", "free",
     "ref", "deref",
-    "mov", "movr",
+    "mov", "movr", "movp",
     "cast", "raise",
     "call", "jmp"
 };
@@ -45,7 +45,7 @@ std::vector<std::string> binaryInstructions
     "lseq0", "lseq1", "iseq0", "iseq1", "neq0", "neq1",
     "alloc", "free",
     "ref", "deref",
-    "mov", "movr",
+    "mov", "movr", "movp",
     "cast"
 };
 
@@ -88,6 +88,7 @@ std::unordered_map<std::string, Falcon::InstructionType> instructionMap
     {"deref"    ,   Falcon::INSTRUCTION_DEREF},
     {"mov"      ,   Falcon::INSTRUCTION_MOV},
     {"movr"     ,   Falcon::INSTRUCTION_MOVR},
+    {"movp"     ,   Falcon::INSTRUCTION_MOVP},
     {"cast"     ,   Falcon::INSTRUCTION_CAST},
     {"call"     ,   Falcon::INSTRUCTION_CALL},
     {"jmp"      ,   Falcon::INSTRUCTION_JMP},
@@ -144,6 +145,7 @@ std::unordered_map<std::string, uint8_t> semanticInstructions   /* 0b 1100 1100
     {"deref"    ,   0b11100010},
     {"mov"      ,   0b11100001},
     {"movr"     ,   0b11101110},
+    {"movp"     ,   0b00101110},
     {"cast"     ,   0b11101110},
     {"call"     ,   0b00000000},
     {"jmp"      ,   0b00010000},

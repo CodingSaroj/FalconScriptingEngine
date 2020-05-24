@@ -793,7 +793,7 @@ static void op_alloc(Falcon::VM & vm)
     Falcon::Internal::Register & reg0 = vm.getRegister(inst.arg1, inst.arg1_offset);
     Falcon::Internal::Register & reg1 = vm.getRegister(inst.arg2, inst.extra.arg2_offset);
 
-    if ((reg1.type > Falcon::REGISTER_U0 && reg1.type < Falcon::REGISTER_U3) || reg1.type == Falcon::REGISTER_USP)
+    if ((reg1.type >= Falcon::REGISTER_U0 && reg1.type <= Falcon::REGISTER_U3) || reg1.type == Falcon::REGISTER_USP)
     {
         reg0.value.ptr = vm.allocate(reg1.value.u);
     }
@@ -806,7 +806,7 @@ static void op_free(Falcon::VM & vm)
     Falcon::Internal::Register & reg0 = vm.getRegister(inst.arg1, inst.arg1_offset);
     Falcon::Internal::Register & reg1 = vm.getRegister(inst.arg2, inst.extra.arg2_offset);
 
-    if ((reg1.type > Falcon::REGISTER_U0 && reg1.type < Falcon::REGISTER_U3) || reg1.type == Falcon::REGISTER_USP)
+    if ((reg1.type >= Falcon::REGISTER_U0 && reg1.type <= Falcon::REGISTER_U3) || reg1.type == Falcon::REGISTER_USP)
     {
         vm.deallocate(reg0.value.ptr, reg1.value.u);
     }
@@ -878,6 +878,31 @@ static void op_movr(Falcon::VM & vm)
     else if ((reg0.type >= Falcon::REGISTER_F0 && reg0.type <= Falcon::REGISTER_F3) || reg0.type == Falcon::REGISTER_FSP)
     {
         reg0.value.f = reg1.value.f;
+    }
+}
+
+static void op_movp(Falcon::VM & vm)
+{
+    Falcon::Internal::Instruction inst = vm.getCurrentInstruction();
+
+    Falcon::Internal::Register & reg0 = vm.getRegister(inst.arg1, inst.arg1_offset);
+    Falcon::Internal::Register & reg1 = vm.getRegister(inst.arg2, inst.extra.arg2_offset);
+
+    if ((reg1.type >= Falcon::REGISTER_C0 && reg1.type <= Falcon::REGISTER_C3) || reg1.type == Falcon::REGISTER_CSP)
+    {
+        *(uint8_t *)reg0.value.ptr = reg1.value.c;
+    }
+    else if ((reg1.type >= Falcon::REGISTER_U0 && reg1.type <= Falcon::REGISTER_U3) || reg1.type == Falcon::REGISTER_LSP)
+    {
+        *(uint64_t *)reg0.value.ptr = reg1.value.u;
+    }
+    else if ((reg1.type >= Falcon::REGISTER_L0 && reg1.type <= Falcon::REGISTER_L3) || reg1.type == Falcon::REGISTER_USP)
+    {
+        *(int64_t *)reg0.value.ptr = reg1.value.l;
+    }
+    else if ((reg1.type >= Falcon::REGISTER_F0 && reg1.type <= Falcon::REGISTER_F3) || reg1.type == Falcon::REGISTER_FSP)
+    {
+        *(double *)reg0.value.ptr = reg1.value.f;
     }
 }
 
@@ -1080,7 +1105,7 @@ void Falcon::Module::compile(std::string & bytecode)
                         std::pair<std::string, std::pair<bool, uint64_t>>(
                                 this->symbols[*(uint16_t *)&bytecode[i + 1]],
                                 std::pair<bool, uint64_t>(
-                                        true,
+                                        false,
                                         this->instructions.size() + 1
                                 )
                         )
@@ -1145,17 +1170,17 @@ void Falcon::Module::link(  std::vector<Internal::Instruction> &                
 {
     std::unordered_map<std::string, std::pair<bool, uint64_t>> tempFunctions = this->functions;
 
-    for (auto p : tempFunctions)
+    for (auto it = tempFunctions.begin(); it != tempFunctions.end(); it++)
     {
-        if (!p.second.first)
+        if (!it->second.first)
         {
-            p.second.second += __instructions.size();
+            it->second.second += __instructions.size();
         }
     }
 
-    __instructions.insert (__instructions.end() - 1 , this->instructions.begin(), this->instructions.end());
-    __symbols.insert      (this->symbols.begin()    , this->symbols.end());
-    __functions.insert    (tempFunctions.begin()    , tempFunctions.end());
+    __instructions.insert (__instructions.end() , this->instructions.begin(), this->instructions.end());
+    __symbols.insert      (this->symbols.begin(), this->symbols.end());
+    __functions.insert    (tempFunctions.begin(), tempFunctions.end());
 }
 
 Falcon::Library::Library(std::vector<Module> & __modules)
@@ -1204,11 +1229,6 @@ Falcon::VM::VM(uint64_t __heapSize)
         this->registers[i].value.u = 0;
     }
 
-    for (int i = 0; i < 47; i++)
-    {
-        this->operators[i] = 0;
-    }
-
     this->operators[INSTRUCTION_ADD]    = op_add;
     this->operators[INSTRUCTION_SUB]    = op_sub;
     this->operators[INSTRUCTION_MUL]    = op_mul;
@@ -1253,12 +1273,18 @@ Falcon::VM::VM(uint64_t __heapSize)
 
     this->operators[INSTRUCTION_MOV]    = op_mov;
     this->operators[INSTRUCTION_MOVR]   = op_movr;
+    this->operators[INSTRUCTION_MOVP]   = op_movp;
     this->operators[INSTRUCTION_CAST]   = op_cast;
 
     this->operators[INSTRUCTION_CALL]   = op_call;
     this->operators[INSTRUCTION_JMP]    = op_jmp;
 
     this->operators[INSTRUCTION_RAISE]  = op_raise;
+
+    this->operators[INSTRUCTION_SYMBOL] = 0;
+    this->operators[INSTRUCTION_EXTERN] = 0;
+    this->operators[INSTRUCTION_START]  = 0;
+    this->operators[INSTRUCTION_END]    = 0;
 }
 
 Falcon::VM::~VM()
@@ -1393,11 +1419,6 @@ void Falcon::VM::registerSymbol(uint16_t id, std::string name)
 std::string Falcon::VM::getSymbol(uint16_t id)
 {
     return this->symbols[id];
-}
-
-void Falcon::VM::registerFunction(std::string name, uint64_t location)
-{
-    this->functions.insert(std::pair<std::string, std::pair<bool, uint64_t>>(name, std::pair<bool, uint64_t>(false, location)));
 }
 
 void Falcon::VM::externalFunction(std::string name, void( * function)(VM & vm))
