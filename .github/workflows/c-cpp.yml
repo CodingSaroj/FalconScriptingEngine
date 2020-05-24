@@ -12,6 +12,10 @@ defaults:
 
 jobs:
   build_linux:
+    defaults:
+      run:
+        shell: bash
+    
     runs-on: ubuntu-latest
     
     steps:
@@ -22,6 +26,10 @@ jobs:
       run: make config=release_linux64
   
   build_windows:
+    defaults:
+      run:
+        shell: cmd
+    
     runs-on: windows-latest
     
     steps:
@@ -29,4 +37,6 @@ jobs:
       - name: configure
         run: premake5\premake5.exe vs2019
       - name: build64
-        run: msbuild Falcon.sln /p:Configuration=Release|Win64
+        run: |
+          call "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Visual Studio 2019\Visual Studio Tools\Developer Command Prompt for VS 2019.lnk"
+          msbuild Falcon.sln /p:Configuration=Release|Win64
