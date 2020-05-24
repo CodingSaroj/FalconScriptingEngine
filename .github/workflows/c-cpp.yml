@@ -8,11 +8,10 @@ on:
 
 defaults:
   run:
-    shell: bash
     working-directory: .
 
-jobs:  
-  build:
+jobs:
+  build_linux:
     runs-on: ubuntu-latest
     
     steps:
@@ -21,3 +20,13 @@ jobs:
       run: ./premake5/premake5 gmake2
     - name: build64
       run: make config=release_linux64
+  
+  build_windows:
+    runs-on: windows-latest
+    
+    steps:
+      - uses: actions/checkout@v2
+      - name: configure
+        run: premake5\premake5.exe vs2019
+      - name: build64
+        run: msbuild Falcon.sln /p:Configuration=Release|Win64
