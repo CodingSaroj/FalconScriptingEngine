@@ -39,4 +39,4 @@ jobs:
       - name: build64
         run: |
           call "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Visual Studio 2019\Visual Studio Tools\Developer Command Prompt for VS 2019.lnk"
-          msbuild Falcon.sln /p:Configuration=Release|Win64
+          msbuild.exe Falcon.sln /p:Configuration=Release|Win64
