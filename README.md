@@ -1,5 +1,7 @@
 ![C/C++ CI](https://github.com/SarojKumar10/Falcon/workflows/C/C++%20CI/badge.svg)
-![Falcon](./logos/falcon512x512.png)
+
+<img alt="Falcon" align="left" width="256px" height="256px" src="./logos/falcon.svg">
+
 # Falcon Scripting Engine
 
  A scripting engine written in C++.
