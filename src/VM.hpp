@@ -1,9 +1,14 @@
 #ifndef FALCON_VM_HPP
 #define FALCON_VM_HPP
 
+#include <algorithm>
 #include <functional>
 #include <stack>
 #include <unordered_map>
+#include <vector>
+
+#include <cstdlib>
+#include <cstring>
 
 #include "OpCode.hpp"
 #include "Register.hpp"
@@ -12,17 +17,25 @@
     #define FALCON_VM_STACK_SIZE 65536
 #endif
 
+#define FALCON_VM_DEFAULT_HEAP_SIZE 8388608
+
 namespace Falcon
 {
     class VM
     {
         public:
-            VM(uint8_t * code);
+            VM(uint8_t * code, uint64_t heapSize = FALCON_VM_DEFAULT_HEAP_SIZE);
+            ~VM();
 
             Register &  getRegister(RegisterType::RegisterType type, uint64_t offset);
 
             void        push(uint8_t * data, uint8_t size);
             uint8_t *   pop(uint8_t size);
+
+            void *      allocMemory(uint64_t size);
+            void        freeMemory(void * address, uint64_t size);
+
+            void externalFunction(uint32_t id, std::function<void(VM&)> function);
 
             void run(uint64_t entryPoint);
 
@@ -32,14 +45,24 @@ namespace Falcon
             uint64_t  m_IP;
             uint64_t  m_SP;
             bool      m_Cmp[2];
+            bool      m_NoFollowRef;
 
             std::stack<uint64_t> m_StackFrame;
 
-            Register  m_Registers[21];
+            Register   m_Registers[12];
 
-            uint8_t   m_Stack[FALCON_VM_STACK_SIZE];
+            Register * m_RegisterMap[RegisterType::AO1 + 1];
+
+            uint8_t    m_Stack[FALCON_VM_STACK_SIZE];
+
+            uint8_t *  m_Heap;
+            uint64_t   m_HeapSize;
+
+            std::vector<bool> m_AllocationBitset;
 
             std::function<void()> m_Operators[(uint8_t)OpCode::STOP + 1];
+
+            std::unordered_map<uint32_t, std::function<void(VM&)>> m_ExternalFunctions;
 
             void uadd8();
             void uadd16();
@@ -141,14 +164,15 @@ namespace Falcon
             void uneq32();
             void uneq64();
 
-            void lnd();
-
-            void lor();
-
             void umov8();
             void umov16();
             void umov32();
             void umov64();
+
+            void umvr8();
+            void umvr16();
+            void umvr32();
+            void umvr64();
 
             void upsh8();
             void upsh16();
@@ -159,6 +183,14 @@ namespace Falcon
             void upop16();
             void upop32();
             void upop64();
+
+            void lnd();
+            void lor();
+
+            void popnul();
+            
+            void alloc();
+            void free();
 
             void jmt();
             void jmf();

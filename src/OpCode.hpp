@@ -31,12 +31,18 @@ namespace Falcon
             ULSE8, ULSE16, ULSE32, ULSE64,
             UISE8, UISE16, UISE32, UISE64,
             UNEQ8, UNEQ16, UNEQ32, UNEQ64,
-            LND,   LOR,
 
             UMOV8, UMOV16, UMOV32, UMOV64,
+            UMVR8, UMVR16, UMVR32, UMVR64,
 
             UPSH8, UPSH16, UPSH32, UPSH64,
             UPOP8, UPOP16, UPOP32, UPOP64,
+
+            LND,   LOR,
+
+            POPNUL,
+
+            ALLOC, FREE,
 
             JMT,   JMF,    CALL,   EXTRN,
             RET,   STOP
