@@ -184,6 +184,184 @@ namespace Falcon
             void upop32();
             void upop64();
 
+            void iadd8();
+            void iadd16();
+            void iadd32();
+            void iadd64();
+
+            void isub8();
+            void isub16();
+            void isub32();
+            void isub64();
+
+            void imul8();
+            void imul16();
+            void imul32();
+            void imul64();
+
+            void idiv8();
+            void idiv16();
+            void idiv32();
+            void idiv64();
+
+            void imod8();
+            void imod16();
+            void imod32();
+            void imod64();
+
+            void iinc8();
+            void iinc16();
+            void iinc32();
+            void iinc64();
+
+            void idec8();
+            void idec16();
+            void idec32();
+            void idec64();
+            
+            void ilst8();
+            void ilst16();
+            void ilst32();
+            void ilst64();
+
+            void irst8();
+            void irst16();
+            void irst32();
+            void irst64();
+
+            void ibnd8();
+            void ibnd16();
+            void ibnd32();
+            void ibnd64();
+
+            void ibor8();
+            void ibor16();
+            void ibor32();
+            void ibor64();
+
+            void ixor8();
+            void ixor16();
+            void ixor32();
+            void ixor64();
+
+            void icml8();
+            void icml16();
+            void icml32();
+            void icml64();
+
+            void inot8();
+            void inot16();
+            void inot32();
+            void inot64();
+
+            void igrt8();
+            void igrt16();
+            void igrt32();
+            void igrt64();
+
+            void iles8();
+            void iles16();
+            void iles32();
+            void iles64();
+
+            void igre8();
+            void igre16();
+            void igre32();
+            void igre64();
+
+            void ilse8();
+            void ilse16();
+            void ilse32();
+            void ilse64();
+
+            void iise8();
+            void iise16();
+            void iise32();
+            void iise64();
+
+            void ineq8();
+            void ineq16();
+            void ineq32();
+            void ineq64();
+
+            void imov8();
+            void imov16();
+            void imov32();
+            void imov64();
+
+            void imvr8();
+            void imvr16();
+            void imvr32();
+            void imvr64();
+
+            void ipsh8();
+            void ipsh16();
+            void ipsh32();
+            void ipsh64();
+
+            void ipop8();
+            void ipop16();
+            void ipop32();
+            void ipop64();
+
+            void fadd32();
+            void fadd64();
+
+            void fsub32();
+            void fsub64();
+
+            void fmul32();
+            void fmul64();
+
+            void fdiv32();
+            void fdiv64();
+
+            void finc32();
+            void finc64();
+
+            void fdec32();
+            void fdec64();
+            
+            void fgrt32();
+            void fgrt64();
+
+            void fles32();
+            void fles64();
+
+            void fgre32();
+            void fgre64();
+
+            void flse32();
+            void flse64();
+
+            void fise32();
+            void fise64();
+
+            void fneq32();
+            void fneq64();
+
+            void fmov32();
+            void fmov64();
+
+            void fmvr32();
+            void fmvr64();
+
+            void fpsh32();
+            void fpsh64();
+
+            void fpop32();
+            void fpop64();
+
+            void radd8();
+            void radd16();
+            void radd32();
+            void radd64();
+
+            void rsub8();
+            void rsub16();
+            void rsub32();
+            void rsub64();
+
             void lnd();
             void lor();
 

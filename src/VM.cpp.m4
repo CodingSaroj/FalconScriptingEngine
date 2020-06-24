@@ -155,6 +155,176 @@ namespace Falcon
         m_Operators[OpCode::UPOP32] = std::bind(&VM::upop32, this);
         m_Operators[OpCode::UPOP64] = std::bind(&VM::upop64, this);
         
+        m_Operators[OpCode::IADD8] = std::bind(&VM::iadd8, this);
+        m_Operators[OpCode::IADD16] = std::bind(&VM::iadd16, this);
+        m_Operators[OpCode::IADD32] = std::bind(&VM::iadd32, this);
+        m_Operators[OpCode::IADD64] = std::bind(&VM::iadd64, this);
+
+        m_Operators[OpCode::ISUB8] = std::bind(&VM::isub8, this);
+        m_Operators[OpCode::ISUB16] = std::bind(&VM::isub16, this);
+        m_Operators[OpCode::ISUB32] = std::bind(&VM::isub32, this);
+        m_Operators[OpCode::ISUB64] = std::bind(&VM::isub64, this);
+
+        m_Operators[OpCode::IMUL8] = std::bind(&VM::imul8, this);
+        m_Operators[OpCode::IMUL16] = std::bind(&VM::imul16, this);
+        m_Operators[OpCode::IMUL32] = std::bind(&VM::imul32, this);
+        m_Operators[OpCode::IMUL64] = std::bind(&VM::imul64, this);
+
+        m_Operators[OpCode::IDIV8] = std::bind(&VM::idiv8, this);
+        m_Operators[OpCode::IDIV16] = std::bind(&VM::idiv16, this);
+        m_Operators[OpCode::IDIV32] = std::bind(&VM::idiv32, this);
+        m_Operators[OpCode::IDIV64] = std::bind(&VM::idiv64, this);
+
+        m_Operators[OpCode::IMOD8] = std::bind(&VM::imod8, this);
+        m_Operators[OpCode::IMOD16] = std::bind(&VM::imod16, this);
+        m_Operators[OpCode::IMOD32] = std::bind(&VM::imod32, this);
+        m_Operators[OpCode::IMOD64] = std::bind(&VM::imod64, this);
+
+        m_Operators[OpCode::IINC8] = std::bind(&VM::iinc8, this);
+        m_Operators[OpCode::IINC16] = std::bind(&VM::iinc16, this);
+        m_Operators[OpCode::IINC32] = std::bind(&VM::iinc32, this);
+        m_Operators[OpCode::IINC64] = std::bind(&VM::iinc64, this);
+
+        m_Operators[OpCode::IDEC8] = std::bind(&VM::idec8, this);
+        m_Operators[OpCode::IDEC16] = std::bind(&VM::idec16, this);
+        m_Operators[OpCode::IDEC32] = std::bind(&VM::idec32, this);
+        m_Operators[OpCode::IDEC64] = std::bind(&VM::idec64, this);
+
+        m_Operators[OpCode::ILST8] = std::bind(&VM::ilst8, this);
+        m_Operators[OpCode::ILST16] = std::bind(&VM::ilst16, this);
+        m_Operators[OpCode::ILST32] = std::bind(&VM::ilst32, this);
+        m_Operators[OpCode::ILST64] = std::bind(&VM::ilst64, this);
+
+        m_Operators[OpCode::IRST8] = std::bind(&VM::irst8, this);
+        m_Operators[OpCode::IRST16] = std::bind(&VM::irst16, this);
+        m_Operators[OpCode::IRST32] = std::bind(&VM::irst32, this);
+        m_Operators[OpCode::IRST64] = std::bind(&VM::irst64, this);
+
+        m_Operators[OpCode::IBND8] = std::bind(&VM::ibnd8, this);
+        m_Operators[OpCode::IBND16] = std::bind(&VM::ibnd16, this);
+        m_Operators[OpCode::IBND32] = std::bind(&VM::ibnd32, this);
+        m_Operators[OpCode::IBND64] = std::bind(&VM::ibnd64, this);
+
+        m_Operators[OpCode::IBOR8] = std::bind(&VM::ibor8, this);
+        m_Operators[OpCode::IBOR16] = std::bind(&VM::ibor16, this);
+        m_Operators[OpCode::IBOR32] = std::bind(&VM::ibor32, this);
+        m_Operators[OpCode::IBOR64] = std::bind(&VM::ibor64, this);
+
+        m_Operators[OpCode::IXOR8] = std::bind(&VM::ixor8, this);
+        m_Operators[OpCode::IXOR16] = std::bind(&VM::ixor16, this);
+        m_Operators[OpCode::IXOR32] = std::bind(&VM::ixor32, this);
+        m_Operators[OpCode::IXOR64] = std::bind(&VM::ixor64, this);
+
+        m_Operators[OpCode::ICML8] = std::bind(&VM::icml8, this);
+        m_Operators[OpCode::ICML16] = std::bind(&VM::icml16, this);
+        m_Operators[OpCode::ICML32] = std::bind(&VM::icml32, this);
+        m_Operators[OpCode::ICML64] = std::bind(&VM::icml64, this);
+
+        m_Operators[OpCode::INOT8] = std::bind(&VM::inot8, this);
+        m_Operators[OpCode::INOT16] = std::bind(&VM::inot16, this);
+        m_Operators[OpCode::INOT32] = std::bind(&VM::inot32, this);
+        m_Operators[OpCode::INOT64] = std::bind(&VM::inot64, this);
+
+        m_Operators[OpCode::IGRT8] = std::bind(&VM::igrt8, this);
+        m_Operators[OpCode::IGRT16] = std::bind(&VM::igrt16, this);
+        m_Operators[OpCode::IGRT32] = std::bind(&VM::igrt32, this);
+        m_Operators[OpCode::IGRT64] = std::bind(&VM::igrt64, this);
+
+        m_Operators[OpCode::ILES8] = std::bind(&VM::iles8, this);
+        m_Operators[OpCode::ILES16] = std::bind(&VM::iles16, this);
+        m_Operators[OpCode::ILES32] = std::bind(&VM::iles32, this);
+        m_Operators[OpCode::ILES64] = std::bind(&VM::iles64, this);
+
+        m_Operators[OpCode::IGRE8] = std::bind(&VM::igre8, this);
+        m_Operators[OpCode::IGRE16] = std::bind(&VM::igre16, this);
+        m_Operators[OpCode::IGRE32] = std::bind(&VM::igre32, this);
+        m_Operators[OpCode::IGRE64] = std::bind(&VM::igre64, this);
+
+        m_Operators[OpCode::ILSE8] = std::bind(&VM::ilse8, this);
+        m_Operators[OpCode::ILSE16] = std::bind(&VM::ilse16, this);
+        m_Operators[OpCode::ILSE32] = std::bind(&VM::ilse32, this);
+        m_Operators[OpCode::ILSE64] = std::bind(&VM::ilse64, this);
+
+        m_Operators[OpCode::IISE8] = std::bind(&VM::iise8, this);
+        m_Operators[OpCode::IISE16] = std::bind(&VM::iise16, this);
+        m_Operators[OpCode::IISE32] = std::bind(&VM::iise32, this);
+        m_Operators[OpCode::IISE64] = std::bind(&VM::iise64, this);
+
+        m_Operators[OpCode::INEQ8] = std::bind(&VM::ineq8, this);
+        m_Operators[OpCode::INEQ16] = std::bind(&VM::ineq16, this);
+        m_Operators[OpCode::INEQ32] = std::bind(&VM::ineq32, this);
+        m_Operators[OpCode::INEQ64] = std::bind(&VM::ineq64, this);
+
+        m_Operators[OpCode::IMOV8] = std::bind(&VM::imov8, this);
+        m_Operators[OpCode::IMOV16] = std::bind(&VM::imov16, this);
+        m_Operators[OpCode::IMOV32] = std::bind(&VM::imov32, this);
+        m_Operators[OpCode::IMOV64] = std::bind(&VM::imov64, this);
+
+        m_Operators[OpCode::IPSH8] = std::bind(&VM::ipsh8, this);
+        m_Operators[OpCode::IPSH16] = std::bind(&VM::ipsh16, this);
+        m_Operators[OpCode::IPSH32] = std::bind(&VM::ipsh32, this);
+        m_Operators[OpCode::IPSH64] = std::bind(&VM::ipsh64, this);
+        
+        m_Operators[OpCode::IPOP8] = std::bind(&VM::ipop8, this);
+        m_Operators[OpCode::IPOP16] = std::bind(&VM::ipop16, this);
+        m_Operators[OpCode::IPOP32] = std::bind(&VM::ipop32, this);
+        m_Operators[OpCode::IPOP64] = std::bind(&VM::ipop64, this);
+
+        m_Operators[OpCode::FADD32] = std::bind(&VM::fadd32, this);
+        m_Operators[OpCode::FADD64] = std::bind(&VM::fadd64, this);
+
+        m_Operators[OpCode::FSUB32] = std::bind(&VM::fsub32, this);
+        m_Operators[OpCode::FSUB64] = std::bind(&VM::fsub64, this);
+
+        m_Operators[OpCode::FMUL32] = std::bind(&VM::fmul32, this);
+        m_Operators[OpCode::FMUL64] = std::bind(&VM::fmul64, this);
+
+        m_Operators[OpCode::FDIV32] = std::bind(&VM::fdiv32, this);
+        m_Operators[OpCode::FDIV64] = std::bind(&VM::fdiv64, this);
+
+        m_Operators[OpCode::FINC32] = std::bind(&VM::finc32, this);
+        m_Operators[OpCode::FINC64] = std::bind(&VM::finc64, this);
+
+        m_Operators[OpCode::FDEC32] = std::bind(&VM::fdec32, this);
+        m_Operators[OpCode::FDEC64] = std::bind(&VM::fdec64, this);
+
+        m_Operators[OpCode::FGRT32] = std::bind(&VM::fgrt32, this);
+        m_Operators[OpCode::FGRT64] = std::bind(&VM::fgrt64, this);
+
+        m_Operators[OpCode::FLES32] = std::bind(&VM::fles32, this);
+        m_Operators[OpCode::FLES64] = std::bind(&VM::fles64, this);
+
+        m_Operators[OpCode::FGRE32] = std::bind(&VM::fgre32, this);
+        m_Operators[OpCode::FGRE64] = std::bind(&VM::fgre64, this);
+
+        m_Operators[OpCode::FLSE32] = std::bind(&VM::flse32, this);
+        m_Operators[OpCode::FLSE64] = std::bind(&VM::flse64, this);
+
+        m_Operators[OpCode::FISE32] = std::bind(&VM::fise32, this);
+        m_Operators[OpCode::FISE64] = std::bind(&VM::fise64, this);
+
+        m_Operators[OpCode::FNEQ32] = std::bind(&VM::fneq32, this);
+        m_Operators[OpCode::FNEQ64] = std::bind(&VM::fneq64, this);
+
+        m_Operators[OpCode::FMOV32] = std::bind(&VM::fmov32, this);
+        m_Operators[OpCode::FMOV64] = std::bind(&VM::fmov64, this);
+
+        m_Operators[OpCode::FPSH32] = std::bind(&VM::fpsh32, this);
+        m_Operators[OpCode::FPSH64] = std::bind(&VM::fpsh64, this);
+        
+        m_Operators[OpCode::FPOP32] = std::bind(&VM::fpop32, this);
+        m_Operators[OpCode::FPOP64] = std::bind(&VM::fpop64, this);
+ 
+        m_Operators[OpCode::RADD8] = std::bind(&VM::radd8, this);
+        m_Operators[OpCode::RADD16] = std::bind(&VM::radd16, this);
+        m_Operators[OpCode::RADD32] = std::bind(&VM::radd32, this);
+        m_Operators[OpCode::RADD64] = std::bind(&VM::radd64, this);
+
+        m_Operators[OpCode::RSUB8] = std::bind(&VM::rsub8, this);
+        m_Operators[OpCode::RSUB16] = std::bind(&VM::rsub16, this);
+        m_Operators[OpCode::RSUB32] = std::bind(&VM::rsub32, this);
+        m_Operators[OpCode::RSUB64] = std::bind(&VM::rsub64, this);
+
         m_Operators[OpCode::LND] = std::bind(&VM::lnd, this);
         m_Operators[OpCode::LOR] = std::bind(&VM::lor, this);
 
@@ -182,14 +352,12 @@ namespace Falcon
         Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP], getRegister(RegisterType::AO1, 0).u64);
         r0.$3 = r0.$3 $2 r1.$3;
     }')
-
     define(`UNFUN',
     `void VM::$1()
     {
         Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP], getRegister(RegisterType::AO0, 0).u64);
         r0.$3 = $2 r0.$3;
     }')
-
     define(`BINCMPFUN',
     `void VM::$1()
     {
@@ -197,14 +365,19 @@ namespace Falcon
         Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP], getRegister(RegisterType::AO1, 0).u64);
         m_Cmp[(uint8_t)getRegister(RegisterType::CMT, 0).u8] = r0.$3 $2 r1.$3;
     }')
-
     define(`UNCMPFUN',
     `void VM::$1()
     {
         Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP], getRegister(RegisterType::AO0, 0).u64);
         m_Cmp[(uint8_t)getRegister(RegisterType::CMT, 0).u8] = $2 r0.$3;
     }')
-
+    define(`BINPTRFUN',
+    `void VM::$1()
+    {
+        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP], getRegister(RegisterType::AO0, 0).u64);
+        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP], getRegister(RegisterType::AO1, 0).u64);
+        r0.$3 = (void *)((uint64_t)r0.$3 $2 (uint64_t)r1.$3);
+    }')
     define(`MOVFUN',
     `void VM::$1()
     {
@@ -216,7 +389,6 @@ namespace Falcon
 
         r0.$4 = *($2 *)bytes;
     }')
-
     define(`MVRFUN',
     `void VM::$1()
     {
@@ -225,21 +397,18 @@ namespace Falcon
 
         r0.$4 = r1.$4;
     }')
-
     define(`PSHFUN',
     `void VM::$1()
     {
         Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP], getRegister(RegisterType::AO0, 0).u64);
         push((uint8_t *)&r0.$3, $2);
     }')
-
     define(`POPFUN',
     `void VM::$1()
     {
         Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP], getRegister(RegisterType::AO0, 0).u64);
         r0.$4 = *($2 *)pop($3);
     }')
-
     BINFUN(uadd8, +, u8)
 
     BINFUN(uadd16, +, u16)
@@ -431,6 +600,278 @@ namespace Falcon
     POPFUN(upop32, uint32_t, 4, u32)
     
     POPFUN(upop64, uint64_t, 8, u64)
+
+    BINFUN(iadd8, +, i8)
+
+    BINFUN(iadd16, +, i16)
+    
+    BINFUN(iadd32, +, i32)
+    
+    BINFUN(iadd64, +, i64)
+
+    BINFUN(isub8, -, i8)
+
+    BINFUN(isub16, -, i16)
+    
+    BINFUN(isub32, -, i32)
+    
+    BINFUN(isub64, -, i64)
+
+    BINFUN(imul8, *, i8)
+
+    BINFUN(imul16, *, i16)
+    
+    BINFUN(imul32, *, i32)
+    
+    BINFUN(imul64, *, i64)
+
+    BINFUN(idiv8, /, i8)
+
+    BINFUN(idiv16, /, i16)
+    
+    BINFUN(idiv32, /, i32)
+    
+    BINFUN(idiv64, /, i64)
+
+    BINFUN(imod8, %, i8)
+
+    BINFUN(imod16, %, i16)
+    
+    BINFUN(imod32, %, i32)
+    
+    BINFUN(imod64, %, i64)
+
+    UNFUN(iinc8, ++, i8)
+
+    UNFUN(iinc16, ++, i16)
+    
+    UNFUN(iinc32, ++, i32)
+    
+    UNFUN(iinc64, ++, i64)
+
+    UNFUN(idec8, --, i8)
+
+    UNFUN(idec16, --, i16)
+    
+    UNFUN(idec32, --, i32)
+    
+    UNFUN(idec64, --, i64)
+
+    BINFUN(ilst8, <<, i8)
+
+    BINFUN(ilst16, <<, i16)
+    
+    BINFUN(ilst32, <<, i32)
+    
+    BINFUN(ilst64, <<, i64)
+
+    BINFUN(irst8, >>, i8)
+
+    BINFUN(irst16, >>, i16)
+    
+    BINFUN(irst32, >>, i32)
+    
+    BINFUN(irst64, >>, i64)
+
+    BINFUN(ibnd8, &, i8)
+
+    BINFUN(ibnd16, &, i16)
+    
+    BINFUN(ibnd32, &, i32)
+    
+    BINFUN(ibnd64, &, i64)
+
+    BINFUN(ibor8, |, i8)
+
+    BINFUN(ibor16, |, i16)
+    
+    BINFUN(ibor32, |, i32)
+    
+    BINFUN(ibor64, |, i64)
+
+    BINFUN(ixor8, ^, i8)
+
+    BINFUN(ixor16, ^, i16)
+    
+    BINFUN(ixor32, ^, i32)
+    
+    BINFUN(ixor64, ^, i64)
+
+    UNFUN(icml8, ~, i8)
+
+    UNFUN(icml16, ~, i16)
+    
+    UNFUN(icml32, ~, i32)
+    
+    UNFUN(icml64, ~, i64)
+
+    UNFUN(inot8, !, i8)
+
+    UNFUN(inot16, !, i16)
+    
+    UNFUN(inot32, !, i32)
+    
+    UNFUN(inot64, !, i64)
+
+    BINCMPFUN(igrt8, >, i8)
+
+    BINCMPFUN(igrt16, >, i16)
+    
+    BINCMPFUN(igrt32, >, i32)
+    
+    BINCMPFUN(igrt64, >, i64)
+
+    BINCMPFUN(iles8, <, i8)
+
+    BINCMPFUN(iles16, <, i16)
+    
+    BINCMPFUN(iles32, <, i32)
+    
+    BINCMPFUN(iles64, <, i64)
+
+    BINCMPFUN(igre8, >=, i8)
+
+    BINCMPFUN(igre16, >=, i16)
+    
+    BINCMPFUN(igre32, >=, i32)
+    
+    BINCMPFUN(igre64, >=, i64)
+
+    BINCMPFUN(ilse8, <=, i8)
+
+    BINCMPFUN(ilse16, <=, i16)
+    
+    BINCMPFUN(ilse32, <=, i32)
+    
+    BINCMPFUN(ilse64, <=, i64)
+
+    BINCMPFUN(iise8, ==, i8)
+
+    BINCMPFUN(iise16, ==, i16)
+    
+    BINCMPFUN(iise32, ==, i32)
+    
+    BINCMPFUN(iise64, ==, i64)
+
+    BINCMPFUN(ineq8, !=, i8)
+
+    BINCMPFUN(ineq16, !=, i16)
+    
+    BINCMPFUN(ineq32, !=, i32)
+    
+    BINCMPFUN(ineq64, !=, i64)
+
+    MOVFUN(imov8, int8_t, 1, i8)
+
+    MOVFUN(imov16, int16_t, 2, i16)
+    
+    MOVFUN(imov32, int32_t, 4, i32)
+    
+    MOVFUN(imov64, int64_t, 8, i64)
+
+    MVRFUN(imvr8, int8_t, 1, i8)
+
+    MVRFUN(imvr16, int16_t, 2, i16)
+    
+    MVRFUN(imvr32, int32_t, 4, i32)
+    
+    MVRFUN(imvr64, int64_t, 8, i64)
+
+    PSHFUN(ipsh8, 1, i8)
+    
+    PSHFUN(ipsh16, 2, i16)
+    
+    PSHFUN(ipsh32, 4, i32)
+    
+    PSHFUN(ipsh64, 8, i64)
+
+    POPFUN(ipop8, int8_t, 1, i8)
+    
+    POPFUN(ipop16, int16_t, 2, i16)
+    
+    POPFUN(ipop32, int32_t, 4, i32)
+    
+    POPFUN(ipop64, int64_t, 8, i64)
+
+    BINFUN(fadd32, +, f32)
+    
+    BINFUN(fadd64, +, f64)
+
+    BINFUN(fsub32, -, f32)
+    
+    BINFUN(fsub64, -, f64)
+
+    BINFUN(fmul32, *, f32)
+    
+    BINFUN(fmul64, *, f64)
+
+    BINFUN(fdiv32, /, f32)
+    
+    BINFUN(fdiv64, /, f64)
+    
+    UNFUN(finc32, ++, f32)
+    
+    UNFUN(finc64, ++, f64)
+
+    UNFUN(fdec32, --, f32)
+    
+    UNFUN(fdec64, --, f64)
+
+    BINCMPFUN(fgrt32, >, f32)
+    
+    BINCMPFUN(fgrt64, >, f64)
+
+    BINCMPFUN(fles32, <, f32)
+    
+    BINCMPFUN(fles64, <, f64)
+
+    BINCMPFUN(fgre32, >=, f32)
+    
+    BINCMPFUN(fgre64, >=, f64)
+
+    BINCMPFUN(flse32, <=, f32)
+    
+    BINCMPFUN(flse64, <=, f64)
+
+    BINCMPFUN(fise32, ==, f32)
+    
+    BINCMPFUN(fise64, ==, f64)
+
+    BINCMPFUN(fneq32, !=, f32)
+    
+    BINCMPFUN(fneq64, !=, f64)
+
+    MOVFUN(fmov32, float, 4, f32)
+    
+    MOVFUN(fmov64, double, 8, f64)
+
+    MVRFUN(fmvr32, float, 4, f32)
+    
+    MVRFUN(fmvr64, double, 8, f64)
+    
+    PSHFUN(fpsh32, 4, f32)
+    
+    PSHFUN(fpsh64, 8, f64)
+
+    POPFUN(fpop32, float, 4, f32)
+    
+    POPFUN(fpop64, double, 8, f64)
+
+    BINPTRFUN(radd8, +, ptr)
+
+    BINPTRFUN(radd16, +, ptr)
+    
+    BINPTRFUN(radd32, +, ptr)
+    
+    BINPTRFUN(radd64, +, ptr)
+
+    BINPTRFUN(rsub8, -, ptr)
+
+    BINPTRFUN(rsub16, -, ptr)
+    
+    BINPTRFUN(rsub32, -, ptr)
+    
+    BINPTRFUN(rsub64, -, ptr)
 
     void VM::lnd()
     {
