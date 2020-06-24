@@ -7,8 +7,6 @@ workspace "Falcon"
 
     platforms
     {
-        "Win32",
-        "Win64",
         "Linux32",
         "Linux64"
     }
@@ -17,12 +15,10 @@ workspace "Falcon"
         kind "StaticLib"
         language "C++"
         cppdialect "C++17"
-        toolset "gcc"
         targetdir "lib/%{cfg.buildcfg}/%{cfg.system}/%{cfg.architecture}"
 
         files
         {
-            "src/*.hpp",
             "src/*.cpp"
         }
 
@@ -33,14 +29,6 @@ workspace "Falcon"
         filter "configurations:Release"
             symbols "Off"
             optimize "Full"
-
-        filter {"platforms:Win32"}
-            architecture "x86"
-            system "windows"
-
-        filter {"platforms:Win64"}
-            architecture "x86_64"
-            system "windows"
 
         filter "platforms:Linux32"
             architecture "x86"
