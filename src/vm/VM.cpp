@@ -2024,7 +2024,7 @@ namespace Falcon
         }
         else
         {
-            m_IP += 4;
+            m_IP += 8;
         }
     }
 
@@ -2036,27 +2036,27 @@ namespace Falcon
         }
         else
         {
-            m_IP += 4;
+            m_IP += 8;
         }
     }
 
     void VM::call()
     {
-        m_StackFrame.push(m_IP + 4);
-        m_IP = *(uint32_t *)&m_Code[++m_IP];
+        m_StackFrame.push(m_IP + 8);
+        m_IP = *(uint64_t *)&m_Code[++m_IP];
         m_IP--;
     }
 
     void VM::extrn()
     {
-        uint32_t id = *(uint32_t *)&m_Code[++m_IP];
+        uint32_t id = *(uint64_t *)&m_Code[++m_IP];
         
         if (m_ExternalFunctions.count(id) != 0)
         {
             m_ExternalFunctions[id](*this);
         }
 
-        m_IP += 3;
+        m_IP += 7;
     }
     
     Register & VM::getRegister(RegisterType::RegisterType type, uint64_t offset)
