@@ -23,4 +23,6 @@ jobs:
     - name: configure
       run: ./premake5/premake5 gmake2
     - name: build64
-      run: make config=release_linux64
+      run: make config=release_linux64 all
+    - name: testVM
+      run: ./bin/Release/linux/x86_64/vmtest
