@@ -1,11 +1,4 @@
-#include "../vm/OpCode.hpp"
-#include "../vm/Register.hpp"
-
-#include "Context.hpp"
-#include "Falcon/src/assembler/TokenTypes.hpp"
 #include "Lexer.hpp"
-#include "LogLevel.hpp"
-#include <cctype>
 
 namespace Falcon
 {

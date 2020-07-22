@@ -5,6 +5,9 @@
 #include <iostream>
 #include <vector> 
 
+#include "../vm/OpCode.hpp"
+#include "../vm/Register.hpp"
+
 #include "Context.hpp"
 #include "Log.hpp"
 
