@@ -31,9 +31,6 @@ namespace Falcon
             void        push(uint8_t * data, uint64_t size);
             uint8_t *   pop(uint64_t size);
 
-            void *      allocMemory(uint64_t size);
-            void        freeMemory(void * address, uint64_t size);
-
             void externalFunction(uint32_t id, std::function<void(VM&)> function);
 
             void run(uint64_t entryPoint);
@@ -47,7 +44,7 @@ namespace Falcon
             bool      m_Cmp[2];
             bool      m_NoFollowRef;
 
-            Register   m_Registers[12];
+            Register   m_Registers[9];
 
             Register * m_RegisterMap[RegisterType::AO1 + 1];
 
@@ -126,11 +123,6 @@ namespace Falcon
             void ucml16();
             void ucml32();
             void ucml64();
-
-            void unot8();
-            void unot16();
-            void unot32();
-            void unot64();
 
             void ugrt8();
             void ugrt16();
@@ -247,11 +239,6 @@ namespace Falcon
             void icml32();
             void icml64();
 
-            void inot8();
-            void inot16();
-            void inot32();
-            void inot64();
-
             void igrt8();
             void igrt16();
             void igrt32();
@@ -350,24 +337,12 @@ namespace Falcon
             void fpop32();
             void fpop64();
 
-            void radd8();
-            void radd16();
-            void radd32();
-            void radd64();
-
-            void rsub8();
-            void rsub16();
-            void rsub32();
-            void rsub64();
-
             void lnd();
             void lor();
+            void lnot();
 
             void popnul();
             
-            void alloc();
-            void free();
-
             void jmp();
             void jmt();
             void jmf();

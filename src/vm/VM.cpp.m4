@@ -30,15 +30,10 @@ namespace Falcon
         m_RegisterMap[RegisterType::D32] = &m_Registers[3];
         m_RegisterMap[RegisterType::D64] = &m_Registers[3];
         
-        m_RegisterMap[RegisterType::R1] = &m_Registers[4];
-        m_RegisterMap[RegisterType::R2] = &m_Registers[5];
-        m_RegisterMap[RegisterType::R3] = &m_Registers[6];
-        m_RegisterMap[RegisterType::R4] = &m_Registers[7];
-
-        m_RegisterMap[RegisterType::SP] = &m_Registers[8];
-        m_RegisterMap[RegisterType::CMT] = &m_Registers[9];
-        m_RegisterMap[RegisterType::AO0] = &m_Registers[10];
-        m_RegisterMap[RegisterType::AO1] = &m_Registers[11];
+        m_RegisterMap[RegisterType::SP] = &m_Registers[4];
+        m_RegisterMap[RegisterType::CMT] = &m_Registers[5];
+        m_RegisterMap[RegisterType::AO0] = &m_Registers[6];
+        m_RegisterMap[RegisterType::AO1] = &m_Registers[7];
 
         m_Operators[OpCode::UADD8] = std::bind(&VM::uadd8, this);
         m_Operators[OpCode::UADD16] = std::bind(&VM::uadd16, this);
@@ -105,11 +100,6 @@ namespace Falcon
         m_Operators[OpCode::UCML32] = std::bind(&VM::ucml32, this);
         m_Operators[OpCode::UCML64] = std::bind(&VM::ucml64, this);
 
-        m_Operators[OpCode::UNOT8] = std::bind(&VM::unot8, this);
-        m_Operators[OpCode::UNOT16] = std::bind(&VM::unot16, this);
-        m_Operators[OpCode::UNOT32] = std::bind(&VM::unot32, this);
-        m_Operators[OpCode::UNOT64] = std::bind(&VM::unot64, this);
-
         m_Operators[OpCode::UGRT8] = std::bind(&VM::ugrt8, this);
         m_Operators[OpCode::UGRT16] = std::bind(&VM::ugrt16, this);
         m_Operators[OpCode::UGRT32] = std::bind(&VM::ugrt32, this);
@@ -144,6 +134,11 @@ namespace Falcon
         m_Operators[OpCode::UMOV16] = std::bind(&VM::umov16, this);
         m_Operators[OpCode::UMOV32] = std::bind(&VM::umov32, this);
         m_Operators[OpCode::UMOV64] = std::bind(&VM::umov64, this);
+        
+        m_Operators[OpCode::UMVR8] = std::bind(&VM::umvr8, this);
+        m_Operators[OpCode::UMVR16] = std::bind(&VM::umvr16, this);
+        m_Operators[OpCode::UMVR32] = std::bind(&VM::umvr32, this);
+        m_Operators[OpCode::UMVR64] = std::bind(&VM::umvr64, this);
 
         m_Operators[OpCode::UPSH8] = std::bind(&VM::upsh8, this);
         m_Operators[OpCode::UPSH16] = std::bind(&VM::upsh16, this);
@@ -220,11 +215,6 @@ namespace Falcon
         m_Operators[OpCode::ICML32] = std::bind(&VM::icml32, this);
         m_Operators[OpCode::ICML64] = std::bind(&VM::icml64, this);
 
-        m_Operators[OpCode::INOT8] = std::bind(&VM::inot8, this);
-        m_Operators[OpCode::INOT16] = std::bind(&VM::inot16, this);
-        m_Operators[OpCode::INOT32] = std::bind(&VM::inot32, this);
-        m_Operators[OpCode::INOT64] = std::bind(&VM::inot64, this);
-
         m_Operators[OpCode::IGRT8] = std::bind(&VM::igrt8, this);
         m_Operators[OpCode::IGRT16] = std::bind(&VM::igrt16, this);
         m_Operators[OpCode::IGRT32] = std::bind(&VM::igrt32, this);
@@ -259,6 +249,11 @@ namespace Falcon
         m_Operators[OpCode::IMOV16] = std::bind(&VM::imov16, this);
         m_Operators[OpCode::IMOV32] = std::bind(&VM::imov32, this);
         m_Operators[OpCode::IMOV64] = std::bind(&VM::imov64, this);
+
+        m_Operators[OpCode::IMVR8] = std::bind(&VM::imvr8, this);
+        m_Operators[OpCode::IMVR16] = std::bind(&VM::imvr16, this);
+        m_Operators[OpCode::IMVR32] = std::bind(&VM::imvr32, this);
+        m_Operators[OpCode::IMVR64] = std::bind(&VM::imvr64, this);
 
         m_Operators[OpCode::IPSH8] = std::bind(&VM::ipsh8, this);
         m_Operators[OpCode::IPSH16] = std::bind(&VM::ipsh16, this);
@@ -308,6 +303,9 @@ namespace Falcon
 
         m_Operators[OpCode::FMOV32] = std::bind(&VM::fmov32, this);
         m_Operators[OpCode::FMOV64] = std::bind(&VM::fmov64, this);
+        
+        m_Operators[OpCode::FMVR32] = std::bind(&VM::fmvr32, this);
+        m_Operators[OpCode::FMVR64] = std::bind(&VM::fmvr64, this);
 
         m_Operators[OpCode::FPSH32] = std::bind(&VM::fpsh32, this);
         m_Operators[OpCode::FPSH64] = std::bind(&VM::fpsh64, this);
@@ -315,23 +313,11 @@ namespace Falcon
         m_Operators[OpCode::FPOP32] = std::bind(&VM::fpop32, this);
         m_Operators[OpCode::FPOP64] = std::bind(&VM::fpop64, this);
  
-        m_Operators[OpCode::RADD8] = std::bind(&VM::radd8, this);
-        m_Operators[OpCode::RADD16] = std::bind(&VM::radd16, this);
-        m_Operators[OpCode::RADD32] = std::bind(&VM::radd32, this);
-        m_Operators[OpCode::RADD64] = std::bind(&VM::radd64, this);
-
-        m_Operators[OpCode::RSUB8] = std::bind(&VM::rsub8, this);
-        m_Operators[OpCode::RSUB16] = std::bind(&VM::rsub16, this);
-        m_Operators[OpCode::RSUB32] = std::bind(&VM::rsub32, this);
-        m_Operators[OpCode::RSUB64] = std::bind(&VM::rsub64, this);
-
         m_Operators[OpCode::LND] = std::bind(&VM::lnd, this);
         m_Operators[OpCode::LOR] = std::bind(&VM::lor, this);
+        m_Operators[OpCode::NOT] = std::bind(&VM::lnot, this);
 
         m_Operators[OpCode::POPNUL] = std::bind(&VM::popnul, this);
-
-        m_Operators[OpCode::ALLOC] = std::bind(&VM::alloc, this);
-        m_Operators[OpCode::FREE] = std::bind(&VM::free, this);
 
         m_Operators[OpCode::JMP] = std::bind(&VM::jmp, this);
         m_Operators[OpCode::JMT] = std::bind(&VM::jmt, this);
@@ -372,13 +358,6 @@ namespace Falcon
     {
         Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP], getRegister(RegisterType::AO0, 0).u64);
         m_Cmp[(uint8_t)getRegister(RegisterType::CMT, 0).u8] = $2 r0.$3;
-    }')
-    define(`BINPTRFUN',
-    `void VM::$1()
-    {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP], getRegister(RegisterType::AO0, 0).u64);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP], getRegister(RegisterType::AO1, 0).u64);
-        r0.$3 = (void *)((uint64_t)r0.$3 $2 (uint64_t)r1.$3);
     }')
     define(`MOVFUN',
     `void VM::$1()
@@ -514,14 +493,6 @@ namespace Falcon
     UNFUN(ucml32, ~, u32)
     
     UNFUN(ucml64, ~, u64)
-
-    UNFUN(unot8, !, u8)
-
-    UNFUN(unot16, !, u16)
-    
-    UNFUN(unot32, !, u32)
-    
-    UNFUN(unot64, !, u64)
 
     BINCMPFUN(ugrt8, >, u8)
 
@@ -707,14 +678,6 @@ namespace Falcon
     
     UNFUN(icml64, ~, i64)
 
-    UNFUN(inot8, !, i8)
-
-    UNFUN(inot16, !, i16)
-    
-    UNFUN(inot32, !, i32)
-    
-    UNFUN(inot64, !, i64)
-
     BINCMPFUN(igrt8, >, i8)
 
     BINCMPFUN(igrt16, >, i16)
@@ -859,22 +822,6 @@ namespace Falcon
     
     POPFUN(fpop64, double, 8, f64)
 
-    BINPTRFUN(radd8, +, ptr)
-
-    BINPTRFUN(radd16, +, ptr)
-    
-    BINPTRFUN(radd32, +, ptr)
-    
-    BINPTRFUN(radd64, +, ptr)
-
-    BINPTRFUN(rsub8, -, ptr)
-
-    BINPTRFUN(rsub16, -, ptr)
-    
-    BINPTRFUN(rsub32, -, ptr)
-    
-    BINPTRFUN(rsub64, -, ptr)
-
     void VM::lnd()
     {
         m_Cmp[0] = m_Cmp[0] && m_Cmp[1];
@@ -885,38 +832,18 @@ namespace Falcon
         m_Cmp[0] = m_Cmp[0] || m_Cmp[1];
     }
 
+    void VM::lnot()
+    {
+        uint8_t index = m_RegisterMap[RegisterType::CMT]->u8;
+        m_Cmp[index] = ! m_Cmp[index];
+    }
+
     void VM::popnul()
     {
         uint32_t size = *(uint32_t *)&m_Code[++m_IP];
         pop(size);
 
         m_IP += 3;
-    }
-
-    void VM::alloc()
-    {
-        m_NoFollowRef = true;
-
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP], 0);
-        
-        m_NoFollowRef = false;
-
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP], 0);
-
-        r0.ptr = allocMemory(r1.u64);
-    }
-
-    void VM::free()
-    {
-        m_NoFollowRef = true;
-
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP], 0);
-        
-        m_NoFollowRef = false;
-        
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP], 0);
-
-        freeMemory(r0.ptr, r1.u64);
     }
 
     void VM::jmp()
@@ -1003,16 +930,26 @@ namespace Falcon
     
     Register & VM::getRegister(RegisterType::RegisterType type, uint64_t offset)
     {
-        if (type == RegisterType::SP)
+        Register * reg = nullptr;
+        uint8_t & typeU8 = *(uint8_t *)&type;
+        
+        bool ref = typeU8 & 0b10000000, follow = typeU8 & 0b01000000;
+
+        typeU8 &= 0b00011111;
+
+        reg = type == RegisterType::SP ? (Register *)&m_Stack[m_FP + offset] : m_RegisterMap[type];
+
+        if (ref)
         {
-            return *(Register *)&m_Stack[m_FP + offset];
+            m_Registers[8].u64 = (uint64_t)reg;
+            reg = &m_Registers[8];
         }
-        else if (type >= RegisterType::R1 && type <= RegisterType::R4)
+        else if (follow)
         {
-            return m_NoFollowRef ? *m_RegisterMap[type] : *(Register *)(m_RegisterMap[type]->ptr);
+            reg = (Register *)reg->u64;
         }
 
-        return *m_RegisterMap[type];
+        return *reg;
     }
 
     void VM::push(uint8_t * data, uint64_t size)
@@ -1026,49 +963,6 @@ namespace Falcon
         m_SP -= size;
 
         return &m_Stack[m_SP];
-    }
-
-    void * VM::allocMemory(uint64_t size)
-    {
-        uint64_t address = 0;
-        uint64_t availableSize = 0;
-
-        for (int i = 0; i < m_HeapSize; i++)
-        {
-            if (!m_Heap[i])
-            {
-                if (!availableSize)
-                {
-                    address = i + 1;
-                }
-                
-                availableSize++;
-
-                if (availableSize == size)
-                {
-                    address--;
-                    break;
-                }
-            }
-            else
-            {
-                address = 0;
-                availableSize = 0;
-            }
-        }
-
-        if (address)
-        {
-            std::fill(m_AllocationBitset.begin() + address, m_AllocationBitset.begin() + address + size, true);
-        }
-
-        return (void *)&m_Heap[address];
-    }
-
-    void VM::freeMemory(void * address, uint64_t size)
-    {
-        uint64_t start = ((uint64_t)address - (uint64_t)m_Heap) - 1;
-        std::fill(m_AllocationBitset.begin() + start, m_AllocationBitset.begin() + start + size, false);
     }
 
     void VM::externalFunction(uint32_t id, std::function<void(VM&)> function)

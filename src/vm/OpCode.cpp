@@ -20,7 +20,6 @@ namespace Falcon
             "UBOR8", "UBOR16", "UBOR32", "UBOR64",
             "UXOR8", "UXOR16", "UXOR32", "UXOR64",
             "UCML8", "UCML16", "UCML32", "UCML64",
-            "UNOT8", "UNOT16", "UNOT32", "UNOT64",
 
             "UGRT8", "UGRT16", "UGRT32", "UGRT64",
             "ULES8", "ULES16", "ULES32", "ULES64",
@@ -49,7 +48,6 @@ namespace Falcon
             "IBOR8", "IBOR16", "IBOR32", "IBOR64",
             "IXOR8", "IXOR16", "IXOR32", "IXOR64",
             "ICML8", "ICML16", "ICML32", "ICML64",
-            "INOT8", "INOT16", "INOT32", "INOT64",
 
             "IGRT8", "IGRT16", "IGRT32", "IGRT64",
             "ILES8", "ILES16", "ILES32", "ILES64",
@@ -84,10 +82,7 @@ namespace Falcon
             "FPSH32", "FPSH64",
             "FPOP32", "FPOP64",
 
-            "RADD8", "RADD16", "RADD32", "RADD64",
-            "RSUB8", "RSUB16", "RSUB32", "RSUB64",
- 
-            "LND",   "LOR",
+            "LND",   "LOR",     "NOT",
 
             "POPNUL",
 
