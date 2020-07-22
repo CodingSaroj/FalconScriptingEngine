@@ -3,7 +3,6 @@
 
 #include <algorithm>
 #include <functional>
-#include <stack>
 #include <unordered_map>
 #include <vector>
 
@@ -29,8 +28,8 @@ namespace Falcon
 
             Register &  getRegister(RegisterType::RegisterType type, uint64_t offset);
 
-            void        push(uint8_t * data, uint8_t size);
-            uint8_t *   pop(uint8_t size);
+            void        push(uint8_t * data, uint64_t size);
+            uint8_t *   pop(uint64_t size);
 
             void *      allocMemory(uint64_t size);
             void        freeMemory(void * address, uint64_t size);
@@ -44,10 +43,9 @@ namespace Falcon
             
             uint64_t  m_IP;
             uint64_t  m_SP;
+            uint64_t  m_FP;
             bool      m_Cmp[2];
             bool      m_NoFollowRef;
-
-            std::stack<uint64_t> m_StackFrame;
 
             Register   m_Registers[12];
 
@@ -370,11 +368,13 @@ namespace Falcon
             void alloc();
             void free();
 
+            void jmp();
             void jmt();
             void jmf();
 
             void call();
             void extrn();
+            void ret();
     };
 }
 

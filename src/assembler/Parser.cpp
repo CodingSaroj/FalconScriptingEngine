@@ -16,26 +16,15 @@ namespace Falcon
         {
             AtomNode * atom = nullptr;
 
-            if (m_CurrentToken.Type == TokenType::CHAR)
-            {
-                atom = new AtomNode(m_CurrentToken.Char);
-            }
-            else if (m_CurrentToken.Type == TokenType::UINT)
-            {
-                atom = new AtomNode(m_CurrentToken.Uint);
-            }
-            else if (m_CurrentToken.Type == TokenType::INT)
-            {
-                atom = new AtomNode(m_CurrentToken.Int);
-            }
-            else if (m_CurrentToken.Type == TokenType::FLOAT)
-            {
-                atom = new AtomNode(m_CurrentToken.Float);
-            }
-            else if (m_CurrentToken.Type == TokenType::REGISTER)
-            {
-                atom = new AtomNode(m_CurrentToken.Str);
-            }
+            if (m_CurrentToken.Type == TokenType::CHAR) { atom = new AtomNode(m_CurrentToken.Char); }
+
+            else if (m_CurrentToken.Type == TokenType::UINT) { atom = new AtomNode(m_CurrentToken.Uint); }
+
+            else if (m_CurrentToken.Type == TokenType::INT) { atom = new AtomNode(m_CurrentToken.Int); }
+
+            else if (m_CurrentToken.Type == TokenType::FLOAT) { atom = new AtomNode(m_CurrentToken.Float); }
+
+            else if (m_CurrentToken.Type == TokenType::REGISTER) { atom = new AtomNode(m_CurrentToken.Str); }
 
             return (ASTNode *)atom;
         }
@@ -115,10 +104,7 @@ namespace Falcon
                 }
             }
 
-            if (!routine->Instructions.size())
-            {
-                Log(LogLevel::WRN, "Empty routine `" + name + "`.");
-            }
+            if (!routine->Instructions.size()) { Log(LogLevel::WRN, "Empty routine `" + name + "`."); }
 
             return (ASTNode *)routine;
         }
@@ -170,10 +156,7 @@ namespace Falcon
                 m_CurrentToken = m_FetchToken();
                 code->Routines.emplace_back(*(RoutineNode *)processRoutine());
 
-                while (m_CurrentToken.Type == TokenType::NEWLINE)
-                {
-                    m_CurrentToken = m_FetchToken();
-                }
+                while (m_CurrentToken.Type == TokenType::NEWLINE) { m_CurrentToken = m_FetchToken(); }
             }
 
             return code;

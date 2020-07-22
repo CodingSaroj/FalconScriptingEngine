@@ -333,11 +333,13 @@ namespace Falcon
         m_Operators[OpCode::ALLOC] = std::bind(&VM::alloc, this);
         m_Operators[OpCode::FREE] = std::bind(&VM::free, this);
 
+        m_Operators[OpCode::JMP] = std::bind(&VM::jmp, this);
         m_Operators[OpCode::JMT] = std::bind(&VM::jmt, this);
         m_Operators[OpCode::JMF] = std::bind(&VM::jmf, this);
 
         m_Operators[OpCode::CALL] = std::bind(&VM::call, this);
         m_Operators[OpCode::EXTRN] = std::bind(&VM::extrn, this);
+        m_Operators[OpCode::RET] = std::bind(&VM::ret, this);
     }
 
     VM::~VM()
@@ -2016,11 +2018,17 @@ namespace Falcon
         freeMemory(r0.ptr, r1.u64);
     }
 
+    void VM::jmp()
+    {
+        m_IP = *(uint64_t *)&m_Code[++m_IP];
+        m_IP--;
+    }
+
     void VM::jmt()
     {
         if (m_Cmp[0])
         {
-            call();
+            jmp();
         }
         else
         {
@@ -2032,7 +2040,7 @@ namespace Falcon
     {
         if (!m_Cmp[0])
         {
-            call();
+            jmp();
         }
         else
         {
@@ -2042,7 +2050,26 @@ namespace Falcon
 
     void VM::call()
     {
-        m_StackFrame.push(m_IP + 8);
+        uint64_t currentIP = m_IP + 12;
+
+        uint32_t argsSize = *(uint32_t *)&m_Code[++m_IP];
+
+        m_IP += 3;
+
+        uint8_t * args = new uint8_t[argsSize];
+
+        memcpy(args, pop(argsSize), argsSize);
+
+        push((uint8_t *)&m_SP, 8);
+        push((uint8_t *)&currentIP, 8);
+        push((uint8_t *)&m_FP, 8);
+
+        m_FP = m_SP;
+
+        push(args, argsSize);
+
+        delete[] args;
+
         m_IP = *(uint64_t *)&m_Code[++m_IP];
         m_IP--;
     }
@@ -2058,12 +2085,26 @@ namespace Falcon
 
         m_IP += 7;
     }
+
+    void VM::ret()
+    {
+        uint64_t retSize = *(uint32_t *)&m_Code[++m_IP];
+        uint8_t * retData = pop(retSize);
+
+        m_SP = m_FP;
+
+        m_FP = *(uint64_t *)pop(8);
+        m_IP = *(uint64_t *)pop(8);
+        m_SP = *(uint64_t *)pop(8);
+
+        push(retData, retSize);
+    }
     
     Register & VM::getRegister(RegisterType::RegisterType type, uint64_t offset)
     {
         if (type == RegisterType::SP)
         {
-            return *(Register *)&m_Stack[m_SP - offset];
+            return *(Register *)&m_Stack[m_FP + offset];
         }
         else if (type >= RegisterType::R1 && type <= RegisterType::R4)
         {
@@ -2073,13 +2114,13 @@ namespace Falcon
         return *m_RegisterMap[type];
     }
 
-    void VM::push(uint8_t * data, uint8_t size)
+    void VM::push(uint8_t * data, uint64_t size)
     {
         memcpy(&m_Stack[m_SP], data, size);
         m_SP += size;
     }
 
-    uint8_t * VM::pop(uint8_t size)
+    uint8_t * VM::pop(uint64_t size)
     {
         m_SP -= size;
 
@@ -2141,21 +2182,13 @@ namespace Falcon
     {
         m_IP = entryPoint;
 
-        uint8_t op = m_Code[m_IP];
+        OpCode::OpCode op = (OpCode::OpCode)m_Code[m_IP];
 
         while (op != OpCode::STOP)
         {
-            if (op == OpCode::RET)
-            {
-                m_IP = m_StackFrame.top();
-                m_StackFrame.pop();
-            }
-            else
-            {
-                m_Operators[op]();
-            }
+            m_Operators[(uint8_t)op]();
 
-            op = m_Code[++m_IP];
+            op = (OpCode::OpCode)m_Code[++m_IP];
         }
     }
 }
