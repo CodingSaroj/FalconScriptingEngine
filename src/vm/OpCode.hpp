@@ -88,17 +88,32 @@ namespace Falcon
             FPSH32, FPSH64,
             FPOP32, FPOP64,
 
-            LND,   LOR,     NOT,
+            PSHSTR,
 
-            POPNUL,
+            LND, LOR, NOT,
 
-            ALLOC, FREE,
+            LOAD8,  LOAD16, LOAD32, LOAD64,
+            LODREF,
 
-            JMT,   JMF,    JMP,   CALL,
-            EXTRN, RET,   STOP
+            PSHNUL, POPNUL,
+
+            JMP,    JMT,    JMF,    CALL,
+            EXTRN,  RET,    FUNC,   STOP
         };
 
-        extern std::vector<std::string> names;
+        enum class Layout : uint8_t
+        {
+            BASE,
+            UN_REG,
+            UN_NUM,
+            UN_STR,
+            BIN_REG_REG,
+            BIN_MOV,
+            BIN_CALL
+        };
+
+        extern std::vector<std::string> s_Names;
+        extern std::vector<Layout>      s_Layouts;
    }
 }
 

@@ -2,8 +2,8 @@ project "FalconASM"
     kind "StaticLib"
     language "C++"
     cppdialect "C++17"
-    targetdir "../../lib/%{cfg.buildcfg}/%{cfg.system}/%{cfg.architecture}/"
-    objdir "../../obj/%{cfg.buildcfg}/%{cfg.system}/%{cfg.architecture}/"
+    targetdir "../../lib/%{cfg.buildcfg}/%{cfg.platform}/"
+    objdir "../../obj"
 
     files
     {
@@ -34,12 +34,12 @@ project "FalconASMBin"
     language "C++"
     cppdialect "C++17"
     targetname "fasm"
-    targetdir "../../bin/%{cfg.buildcfg}/%{cfg.system}/%{cfg.architecture}/"
-    objdir "../../obj/%{cfg.buildcfg}/%{cfg.system}/%{cfg.architecture}/"
+    targetdir "../../bin/%{cfg.buildcfg}/%{cfg.platform}/"
+    objdir "../../obj"
 
     files
     {
-        "test/*.cpp"
+        "exec/*.cpp"
     }
 
     includedirs
@@ -49,7 +49,7 @@ project "FalconASMBin"
 
     libdirs
     {
-        "../../lib/%{cfg.buildcfg}/%{cfg.system}/%{cfg.architecture}/"
+        "../../lib/%{cfg.buildcfg}/%{cfg.platform}/"
     }
 
     links

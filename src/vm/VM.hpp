@@ -16,48 +16,66 @@
     #define FALCON_VM_STACK_SIZE 65536
 #endif
 
-#define FALCON_VM_DEFAULT_HEAP_SIZE 8388608
-
 namespace Falcon
 {
+    class Debugger;
+
     class VM
     {
         public:
-            VM(uint8_t * code, uint64_t heapSize = FALCON_VM_DEFAULT_HEAP_SIZE);
-            ~VM();
+            VM(uint8_t * code);
 
-            Register &  getRegister(RegisterType::RegisterType type, uint64_t offset);
+            inline Register & getRegister(RegisterType::RegisterType type)
+            {
+                uint8_t & typeU8 = *(uint8_t *)&type;
+                bool ref = typeU8 & 0b00001000, follow = typeU8 & 0b00000100;
+
+                typeU8 &= 0b00000011;
+                
+                if (ref)
+                {
+                    m_Registers[4].u64 = (uint64_t)&m_Registers[typeU8];
+
+                    return m_Registers[4];
+                }
+                else if (follow)
+                {
+                    return *(Register *)m_Registers[typeU8].u64;
+                }
+                
+                return m_Registers[typeU8];
+            }
 
             void        push(uint8_t * data, uint64_t size);
             uint8_t *   pop(uint64_t size);
 
-            void externalFunction(uint32_t id, std::function<void(VM&)> function);
+            void externalFunction(const std::string & name, std::function<void(VM&)> function);
 
-            void run(uint64_t entryPoint);
+            void run(std::string function = std::string("main"), uint64_t argSize = 0);
 
         private:
+            friend Debugger;
+
+            bool      m_Running = false;
+
             uint8_t * m_Code;
             
             uint64_t  m_IP;
             uint64_t  m_SP;
             uint64_t  m_FP;
             bool      m_Cmp[2];
-            bool      m_NoFollowRef;
 
-            Register   m_Registers[9];
-
-            Register * m_RegisterMap[RegisterType::AO1 + 1];
+            Register   m_Registers[5];
 
             uint8_t    m_Stack[FALCON_VM_STACK_SIZE];
 
-            uint8_t *  m_Heap;
-            uint64_t   m_HeapSize;
+            void(VM::* m_Operators[(uint8_t)OpCode::STOP + 1])();
 
-            std::vector<bool> m_AllocationBitset;
+            std::unordered_map<std::string, uint64_t>                 m_Functions;
+            std::unordered_map<std::string, std::function<void(VM&)>> m_ExternalFunctions;
 
-            std::function<void()> m_Operators[(uint8_t)OpCode::STOP + 1];
-
-            std::unordered_map<uint32_t, std::function<void(VM&)>> m_ExternalFunctions;
+            void stop();
+            void collectSymbols();
 
             void uadd8();
             void uadd16();
@@ -336,11 +354,21 @@ namespace Falcon
 
             void fpop32();
             void fpop64();
+            
+            void pshstr();
 
             void lnd();
             void lor();
             void lnot();
 
+            void load8();
+            void load16();
+            void load32();
+            void load64();
+
+            void lodref();
+
+            void pshnul();
             void popnul();
             
             void jmp();

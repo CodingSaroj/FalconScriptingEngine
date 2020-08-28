@@ -5,6 +5,7 @@ namespace Falcon
     namespace Assembler
     {
         static const std::string identChars("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_@$");
+        static const std::string operators("@[]");
         static const std::string whiteSpaces(" \n\t");
         static const std::string octDigits("01234567");
         static const std::string decDigits("0123456789");
@@ -90,14 +91,33 @@ namespace Falcon
         {
             std::string str;
 
-            while (m_CurrentChar != '\0' && whiteSpaces.find(m_CurrentChar) == std::string::npos)
+            if (m_CurrentChar == '\"')
             {
-                //If m_CurrentChar isn't a valid identifier character or a digit.
-                if (identChars.find(m_CurrentChar) == std::string::npos && decDigits.find(m_CurrentChar) == std::string::npos) { break; }
-                
-                str += m_CurrentChar;
+                this->advance();
+
+                while (m_CurrentChar != '\0' && m_CurrentChar != '\"')
+                {
+                    str += m_CurrentChar;
+
+                    this->advance();
+                }
 
                 this->advance();
+            }
+            else
+            {
+                while (m_CurrentChar != '\0' && whiteSpaces.find(m_CurrentChar) == std::string::npos)
+                {
+                    //If m_CurrentChar isn't a valid identifier character, operator or a digit.
+                    if (identChars.find(m_CurrentChar) == std::string::npos && operators.find(m_CurrentChar) == std::string::npos && decDigits.find(m_CurrentChar) == std::string::npos)
+                    {
+                        break;
+                    }
+                
+                    str += m_CurrentChar;
+
+                    this->advance();
+                }
             }
 
             //If this isn't the end.
@@ -115,11 +135,32 @@ namespace Falcon
                                 return str;
                             };
 
-            if (findInVector(RegisterType::names, toUpper(str))) { return Token(TokenType::REGISTER, toUpper(str)); }
-
-            else if (findInVector(OpCode::names, toUpper(str))) { return Token(TokenType::INSTRUCTION, toUpper(str)); }
-
-            else if (str == "sect") { return Token(TokenType::SECTION); }
+            if (findInVector(RegisterType::s_Names, toUpper(str)))
+            {
+                return Token(TokenType::REGISTER, toUpper(str));
+            }
+            else if (str[0] == '@')
+            {
+                if (findInVector(RegisterType::s_Names, toUpper(str.substr(1))))
+                {
+                    return Token(TokenType::REGISTER, toUpper(str));
+                }
+            }
+            else if (str[0] == '[' && str[str.size() - 1] == ']')
+            {
+                if (findInVector(RegisterType::s_Names, toUpper(str.substr(1, str.size() - 2))))
+                {
+                    return Token(TokenType::REGISTER, toUpper(str));
+                }
+            }
+            else if (findInVector(OpCode::s_Names, toUpper(str)))
+            {
+                return Token(TokenType::INSTRUCTION, toUpper(str));
+            }
+            else if (str == "sect")
+            {
+                return Token(TokenType::SECTION);
+            }
 
             return Token(TokenType::IDENTIFIER, str);
         }
@@ -164,13 +205,24 @@ namespace Falcon
             {
                 token = this->processNumber();
             }
-            else if (identChars.find(m_CurrentChar) != std::string::npos)
+            else if (m_CurrentChar == '\"' || identChars.find(m_CurrentChar) != std::string::npos || operators.find(m_CurrentChar) != std::string::npos)
             {
                 token = this->processStr();
             }
             else if (m_CurrentChar == '\'')
             {
                 token = this->processChar();
+            }
+            else if (m_CurrentChar == ';')
+            {
+                while (m_CurrentChar != '\n')
+                {
+                    this->advance();
+                }
+
+                token = Token(TokenType::NEWLINE);
+                Context::Line++;
+                Context::Character = 0;
             }
             else
             {
@@ -185,14 +237,18 @@ namespace Falcon
 
         Token Lexer::peek()
         {
-            //Backup cursor
+            //Backup cursor, line and character
             uint64_t tmp = m_Cursor;
+            uint64_t line = Context::Line;
+            uint64_t character = Context::Character;
 
             //Get the Token
             Token token = lex();
 
-            //Restore the cursor
+            //Restore the cursor, line and character
             m_Cursor = tmp - 1;
+            Context::Line = line;
+            Context::Character = character;
             this->advance();
 
             return token;

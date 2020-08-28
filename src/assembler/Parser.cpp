@@ -1,7 +1,4 @@
 #include "Parser.hpp"
-#include "AST.hpp"
-#include "LogLevel.hpp"
-#include "TokenTypes.hpp"
 
 namespace Falcon
 {
@@ -26,6 +23,11 @@ namespace Falcon
 
             else if (m_CurrentToken.Type == TokenType::REGISTER) { atom = new AtomNode(m_CurrentToken.Str); }
 
+            else if (m_CurrentToken.Type == TokenType::IDENTIFIER) { atom = new AtomNode(m_CurrentToken.Str); }
+
+            atom->Line = Context::Line;
+            atom->Character = Context::Character;
+
             return (ASTNode *)atom;
         }
 
@@ -33,11 +35,14 @@ namespace Falcon
         {
             InstructionNode * inst = new InstructionNode(m_CurrentToken.Str);
 
+            inst->Line = Context::Line;
+            inst->Character = Context::Character;
+
             for (int i = 0; i < 2; i++)
             {
                 TokenType type = m_Peek().Type;
 
-                if (type == TokenType::REGISTER || type == TokenType::CHAR || type == TokenType::UINT || type == TokenType::INT || type == TokenType::FLOAT)
+                if (type == TokenType::IDENTIFIER || type == TokenType::REGISTER || type == TokenType::CHAR || type == TokenType::UINT || type == TokenType::INT || type == TokenType::FLOAT)
                 {
                     m_CurrentToken = m_FetchToken();
 
@@ -52,17 +57,20 @@ namespace Falcon
             return (ASTNode *)inst;
         }
 
-        ASTNode * Parser::processRoutine()
+        ASTNode * Parser::processLabel()
         {
             std::string name = m_CurrentToken.Str;
 
-            RoutineNode * routine = new RoutineNode(name);
+            LabelNode * label = new LabelNode(name);
+
+            label->Line = Context::Line;
+            label->Character = Context::Character;
 
             m_CurrentToken = m_FetchToken();
 
             if (m_CurrentToken.Type != (TokenType)':')
             {
-                Log(LogLevel::ERR, "Expected a `:` after routine `" + name + "`.");
+                Log(LogLevel::ERR, "Expected a `:` after label `" + name + "`.");
                 exit(2);
             }
 
@@ -91,11 +99,11 @@ namespace Falcon
                     }
                 }
                 
-                routine->Instructions.emplace_back(*(InstructionNode *)processInstruction());
+                label->Instructions.emplace_back(*(InstructionNode *)processInstruction());
 
                 if ((m_CurrentToken = m_FetchToken()).Type != TokenType::NEWLINE)
                 {
-                    Log(LogLevel::ERR, "Expected new line after instruction in routine `" + name + "`.");
+                    Log(LogLevel::ERR, "Expected new line after instruction in label `" + name + "`.");
                     exit(2);
                 }
                 else
@@ -104,7 +112,46 @@ namespace Falcon
                 }
             }
 
-            if (!routine->Instructions.size()) { Log(LogLevel::WRN, "Empty routine `" + name + "`."); }
+            if (!label->Instructions.size()) { Log(LogLevel::WRN, "Empty label `" + name + "`."); }
+
+            return (ASTNode *)label;
+        }
+
+        ASTNode * Parser::processRoutine()
+        {
+            std::string & name = m_CurrentToken.Str;
+
+            RoutineNode * routine = new RoutineNode(name);
+
+            routine->Line = Context::Line;
+            routine->Character = Context::Character;
+            
+            m_CurrentToken = m_FetchToken();
+
+            if (m_CurrentToken.Type != (TokenType)':')
+            {
+                Log(LogLevel::ERR, "Expected a `:` after routine `" + name + "`.");
+                exit(2);
+            }
+
+            m_CurrentToken = m_FetchToken();
+
+            if (m_CurrentToken.Type != TokenType::NEWLINE)
+            {
+                Log(LogLevel::ERR, "Expected new line after `:`.");
+                exit(2);
+            }
+            m_CurrentToken = m_FetchToken();
+
+            while (m_CurrentToken.Type == (TokenType)'.')
+            {
+                m_CurrentToken = m_FetchToken();
+                routine->Labels.emplace_back(*(LabelNode *)processLabel());
+
+                while (m_CurrentToken.Type == TokenType::NEWLINE) { m_CurrentToken = m_FetchToken(); }
+            }
+
+            if (!routine->Labels.size()) { Log(LogLevel::WRN, "Empty routine `" + name + "`."); }
 
             return (ASTNode *)routine;
         }
@@ -149,11 +196,13 @@ namespace Falcon
         {
             CodeSectionNode * code = new CodeSectionNode();
 
+            code->Line = Context::Line;
+            code->Character = Context::Character;
+
             m_CurrentToken = m_FetchToken();
 
-            while (m_CurrentToken.Type == (TokenType)'.')
+            while (m_CurrentToken.Type == TokenType::IDENTIFIER)
             {
-                m_CurrentToken = m_FetchToken();
                 code->Routines.emplace_back(*(RoutineNode *)processRoutine());
 
                 while (m_CurrentToken.Type == TokenType::NEWLINE) { m_CurrentToken = m_FetchToken(); }

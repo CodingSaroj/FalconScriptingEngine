@@ -2,7 +2,7 @@
 #include <iomanip>
 #include <chrono>
 
-#include "../VM.hpp"
+#include "../Debugger.hpp"
 
 using namespace Falcon;
 
@@ -10,47 +10,79 @@ int main()
 {
     uint8_t code[] =
     {
-        OpCode::UMOV32, RegisterType::A32, 0x14, 0x00, 0x00, 0x00,
-        OpCode::UPSH32, RegisterType::A32,
-        OpCode::CALL,   0x04, 0x00, 0x00, 0x00, 0x16, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        'm', 'a', 'i', 'n', 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        'f', 'a', 'c', 't', 0x00, 0x18, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+
+        OpCode::FUNC,
+
+        OpCode::UMOV64, RegisterType::R1, 0x14, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        OpCode::UPSH64, RegisterType::R1,
+        OpCode::CALL,   0x08, 0x00, 0x00, 0x00, 'f', 'a', 'c', 't', 0x00,
         OpCode::STOP,
 
-        OpCode::UMOV32, RegisterType::A32, 0x01, 0x00, 0x00, 0x00,
-        OpCode::UPSH32, RegisterType::A32,
-        OpCode::UPSH32, RegisterType::A32,
+        OpCode::FUNC,
 
-        OpCode::UMOV64, RegisterType::AO0, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        OpCode::UMOV64, RegisterType::AO1, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        OpCode::ULSE32, RegisterType::SP, RegisterType::SP,
-        OpCode::JMT,    0x45, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        OpCode::RET,    0x04, 0x00, 0x00, 0x00,
+        OpCode::UMOV64, RegisterType::R1, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        OpCode::UPSH64, RegisterType::R1,
+        OpCode::UPSH64, RegisterType::R1,
 
-        OpCode::UMOV64, RegisterType::AO0, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        OpCode::UMOV64, RegisterType::AO1, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        OpCode::UMUL32, RegisterType::SP, RegisterType::SP,
-        OpCode::UMOV64, RegisterType::AO0, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        OpCode::UINC32, RegisterType::SP,
+        OpCode::LODREF, RegisterType::R1, 0x10, 0x00, 0x00, 0x00,
+        OpCode::LODREF, RegisterType::R2, 0x00, 0x00, 0x00, 0x00,
+        OpCode::ULSE64, 0b00000100 | RegisterType::R1, 0b00000100 | RegisterType::R2,
+        OpCode::JMT,    0x49, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        OpCode::POPNUL, 0x08, 0x00, 0x00, 0x00,
+        OpCode::RET,    0x08, 0x00, 0x00, 0x00,
 
-        OpCode::JMP,    0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        OpCode::LODREF, RegisterType::R1, 0x08, 0x00, 0x00, 0x00,
+        OpCode::LODREF, RegisterType::R2, 0x10, 0x00, 0x00, 0x00,
+        OpCode::UMUL64, 0b00000100 | RegisterType::R1, 0b00000100 | RegisterType::R2,
+        OpCode::LODREF, RegisterType::R1, 0x10, 0x00, 0x00, 0x00,
+        OpCode::UINC64, 0b00000100 | RegisterType::R1,
+
+        OpCode::JMP,    0x27, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+
+        OpCode::FUNC,
+        0xFF
     };
 
-    VM vm(code);
-
-    uint32_t in = 20;
-    //vm.push((uint8_t *)&in, 4);
-
-    uint32_t res = 0;
-    double time = 0.0;
-
-    for (int i = 0; i < 1000; i++)
+    /*Debugger vm(code, {
+        {
+            {1,  {1,  "    fact(20);"}},
+            {4,  {2,  "}"}},
+            {6,  {3,  "    u64 result = 1;"}},
+            {9,  {5,  "    for (int i = 0; i < value; i++)"}},
+            {13, {10, "    return result;"}},
+            {15, {7,  "        result *= i;"}},
+            {18, {5,  "    for (int i = 0; i < value; i++)"}},
+        },
+        {
+            {"main", {"void main()", 1, 2}},
+            {"fact", {"uint64 fact(uint64)", 3, 10, {{"value", {"uint64", 0}}, {"result", {"uint64", 8}}, {"i", {"uint64", 16}}}}}
+        }
+    }, [](const std::string & type, void * mem)->std::string
     {
-        auto start = std::chrono::_V2::high_resolution_clock::now();
-        vm.run(0);
-        auto end = std::chrono::_V2::high_resolution_clock::now();
-        auto duration = end - start;
-        time += duration.count() / 1000000.0;
-        res = *(uint32_t *)vm.pop(4);
+        if (type == "uint64")
+        {
+            return std::to_string(*(uint64_t *)mem);
+        }
+        
+        return "";
+    });*/
+
+    //vm.setBreakpoint(1);
+    
+    VM vm(code);
+    
+    double time = 0.0;
+    
+    for (uint64_t i = 0; i < 1000; i++)
+    {
+        auto s = std::chrono::high_resolution_clock::now();
+        vm.run();
+        auto e = std::chrono::high_resolution_clock::now();
+        auto d = e - s;
+        time += d.count() / 1000000.0;
     }
 
-    std::cout<<"Result: "<<res<<" in "<<std::fixed<<time / 1000.0<<"ms\n";
+    std::cout<<"Finished in "<<std::fixed<<time / 1000.0<<"ms.\n";
 }

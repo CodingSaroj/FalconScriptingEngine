@@ -1,10 +1,13 @@
 #ifndef FALCON_ASM_AST_HPP
 #define FALCON_ASM_AST_HPP
 
+#include <algorithm>
 #include <string>
 #include <vector>
 
 #include <cstdint>
+
+#include "../vm/Register.hpp"
 
 namespace Falcon
 {
@@ -13,6 +16,9 @@ namespace Falcon
         class ASTNode
         {
             public:
+                uint64_t Line;
+                uint64_t Character;
+
                 virtual ~ASTNode() = default;
         };
 
@@ -21,6 +27,7 @@ namespace Falcon
             public:
                 enum class AtomType
                 {
+                    IDENTIFIER,
                     REGISTER,
                     CHAR,
                     UINT,
@@ -35,9 +42,9 @@ namespace Falcon
                     int64_t  Int;
                     double   Float;
                 };
-                std::string Register;
+                std::string Str;
 
-                AtomNode(std::string reg);
+                AtomNode(const std::string & str);
                 AtomNode(char data);
                 AtomNode(uint64_t data);
                 AtomNode(int64_t data);
@@ -50,16 +57,25 @@ namespace Falcon
                 std::string             Inst;
                 std::vector<AtomNode>   Args;
 
-                InstructionNode(std::string inst);
+                InstructionNode(const std::string & inst);
         };
 
-        class RoutineNode : public ASTNode
+        class LabelNode : public ASTNode
         {
             public:
                 std::string                  Name;
                 std::vector<InstructionNode> Instructions;
 
-                RoutineNode(std::string name);
+                LabelNode(const std::string & name);
+        };
+
+        class RoutineNode : public ASTNode
+        {
+            public:
+                std::string            Name;
+                std::vector<LabelNode> Labels;
+
+                RoutineNode(const std::string & name);
         };
 
         class CodeSectionNode : public ASTNode

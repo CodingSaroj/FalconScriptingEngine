@@ -1,11 +1,10 @@
 #include "Log.hpp"
-#include "LogLevel.hpp"
 
 namespace Falcon
 {
     namespace Assembler
     {
-        Log::Log(LogLevel level, std::string log)
+        Log::Log(LogLevel level, std::string log, uint64_t line, uint64_t character)
         {
             switch(level)
             {
@@ -22,7 +21,7 @@ namespace Falcon
                     break;
             }
 
-            std::cout<<Context::Line<<":"<<Context::Character<<": "<<log<<"\n";
+            std::cout<<line<<":"<<character<<": "<<log<<"\n";
         }
     }
 }

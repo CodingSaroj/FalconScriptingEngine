@@ -4,7 +4,7 @@ namespace Falcon
 {
     namespace OpCode
     {
-        std::vector<std::string> names =
+        std::vector<std::string> s_Names =
         {
             "UADD8", "UADD16", "UADD32", "UADD64",
             "USUB8", "USUB16", "USUB32", "USUB64",
@@ -81,16 +81,117 @@ namespace Falcon
 
             "FPSH32", "FPSH64",
             "FPOP32", "FPOP64",
+            
+            "PSHSTR",
 
-            "LND",   "LOR",     "NOT",
+            "LND", "LOR", "NOT",
 
-            "POPNUL",
+            "LOAD8",  "LOAD16", "LOAD32", "LOAD64",
+            "LODREF",
 
-            "ALLOC", "FREE",
+            "PSHNUL", "POPNUL",
 
-            "JMT",   "JMF",     "JMP",  "CALL",
-            "EXTRN", "RET",   "STOP"
+            "JMP",   "JMT", "JMF",  "CALL",
+            "EXTRN", "RET", "FUNC", "STOP"
         };
  
+        static Layout BASE = Layout::BASE;
+        static Layout UN_REG = Layout::UN_REG;
+        static Layout UN_NUM = Layout::UN_NUM;
+        static Layout UN_STR = Layout::UN_STR;
+        static Layout BIN_REG_REG = Layout::BIN_REG_REG;
+        static Layout BIN_MOV = Layout::BIN_MOV;
+        static Layout BIN_CALL = Layout::BIN_CALL;
+
+        std::vector<Layout> s_Layouts
+        {
+            BIN_REG_REG, BIN_REG_REG, BIN_REG_REG, BIN_REG_REG,
+            BIN_REG_REG, BIN_REG_REG, BIN_REG_REG, BIN_REG_REG,
+            BIN_REG_REG, BIN_REG_REG, BIN_REG_REG, BIN_REG_REG,
+            BIN_REG_REG, BIN_REG_REG, BIN_REG_REG, BIN_REG_REG,
+            BIN_REG_REG, BIN_REG_REG, BIN_REG_REG, BIN_REG_REG,
+            UN_REG, UN_REG, UN_REG, UN_REG,
+            UN_REG, UN_REG, UN_REG, UN_REG,
+
+            BIN_REG_REG, BIN_REG_REG, BIN_REG_REG, BIN_REG_REG,
+            BIN_REG_REG, BIN_REG_REG, BIN_REG_REG, BIN_REG_REG,
+            BIN_REG_REG, BIN_REG_REG, BIN_REG_REG, BIN_REG_REG,
+            BIN_REG_REG, BIN_REG_REG, BIN_REG_REG, BIN_REG_REG,
+            BIN_REG_REG, BIN_REG_REG, BIN_REG_REG, BIN_REG_REG,
+            UN_REG, UN_REG, UN_REG, UN_REG,
+
+            BIN_REG_REG, BIN_REG_REG, BIN_REG_REG, BIN_REG_REG,
+            BIN_REG_REG, BIN_REG_REG, BIN_REG_REG, BIN_REG_REG,
+            BIN_REG_REG, BIN_REG_REG, BIN_REG_REG, BIN_REG_REG,
+            BIN_REG_REG, BIN_REG_REG, BIN_REG_REG, BIN_REG_REG,
+            BIN_REG_REG, BIN_REG_REG, BIN_REG_REG, BIN_REG_REG,
+            BIN_REG_REG, BIN_REG_REG, BIN_REG_REG, BIN_REG_REG,
+
+            BIN_MOV, BIN_MOV, BIN_MOV, BIN_MOV,
+            BIN_REG_REG, BIN_REG_REG, BIN_REG_REG, BIN_REG_REG,
+
+            UN_REG, UN_REG, UN_REG, UN_REG,
+            UN_REG, UN_REG, UN_REG, UN_REG,
+
+            BIN_REG_REG, BIN_REG_REG, BIN_REG_REG, BIN_REG_REG,
+            BIN_REG_REG, BIN_REG_REG, BIN_REG_REG, BIN_REG_REG,
+            BIN_REG_REG, BIN_REG_REG, BIN_REG_REG, BIN_REG_REG,
+            BIN_REG_REG, BIN_REG_REG, BIN_REG_REG, BIN_REG_REG,
+            BIN_REG_REG, BIN_REG_REG, BIN_REG_REG, BIN_REG_REG,
+            UN_REG, UN_REG, UN_REG, UN_REG,
+            UN_REG, UN_REG, UN_REG, UN_REG,
+
+            BIN_REG_REG, BIN_REG_REG, BIN_REG_REG, BIN_REG_REG,
+            BIN_REG_REG, BIN_REG_REG, BIN_REG_REG, BIN_REG_REG,
+            BIN_REG_REG, BIN_REG_REG, BIN_REG_REG, BIN_REG_REG,
+            BIN_REG_REG, BIN_REG_REG, BIN_REG_REG, BIN_REG_REG,
+            BIN_REG_REG, BIN_REG_REG, BIN_REG_REG, BIN_REG_REG,
+            UN_REG, UN_REG, UN_REG, UN_REG,
+
+            BIN_REG_REG, BIN_REG_REG, BIN_REG_REG, BIN_REG_REG,
+            BIN_REG_REG, BIN_REG_REG, BIN_REG_REG, BIN_REG_REG,
+            BIN_REG_REG, BIN_REG_REG, BIN_REG_REG, BIN_REG_REG,
+            BIN_REG_REG, BIN_REG_REG, BIN_REG_REG, BIN_REG_REG,
+            BIN_REG_REG, BIN_REG_REG, BIN_REG_REG, BIN_REG_REG,
+            BIN_REG_REG, BIN_REG_REG, BIN_REG_REG, BIN_REG_REG,
+
+            BIN_MOV, BIN_MOV, BIN_MOV, BIN_MOV,
+            BIN_REG_REG, BIN_REG_REG, BIN_REG_REG, BIN_REG_REG,
+
+            UN_REG, UN_REG, UN_REG, UN_REG,
+            UN_REG, UN_REG, UN_REG, UN_REG,
+
+            BIN_REG_REG, BIN_REG_REG,
+            BIN_REG_REG, BIN_REG_REG,
+            BIN_REG_REG, BIN_REG_REG,
+            BIN_REG_REG, BIN_REG_REG,
+            UN_REG, UN_REG,
+            UN_REG, UN_REG,
+
+            BIN_REG_REG, BIN_REG_REG,
+            BIN_REG_REG, BIN_REG_REG,
+            BIN_REG_REG, BIN_REG_REG,
+            BIN_REG_REG, BIN_REG_REG,
+            BIN_REG_REG, BIN_REG_REG,
+            BIN_REG_REG, BIN_REG_REG,
+
+            BIN_MOV, BIN_MOV,
+            BIN_REG_REG, BIN_REG_REG,
+
+            UN_REG, UN_REG,
+            UN_REG, UN_REG,
+
+            UN_STR,
+
+            BASE, BASE, BASE,
+
+            BIN_MOV, BIN_MOV, BIN_MOV, BIN_MOV,
+            BIN_MOV,
+
+            UN_NUM, UN_NUM,
+
+            UN_NUM, UN_NUM, UN_NUM, BIN_CALL,
+            UN_STR, UN_NUM, BASE, BASE
+        };
     }
 }

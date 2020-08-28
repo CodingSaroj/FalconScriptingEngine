@@ -8,6 +8,10 @@ namespace Falcon
         {
                 switch (token.Type)
             {
+                case TokenType::SECTION:
+                    std::cout<<"Section:\t\t"<<token.Str<<"\n";
+                    break;
+
                 case TokenType::INSTRUCTION:
                     std::cout<<"Instruction:\t\t"<<token.Str<<"\n";
                     break;
@@ -49,7 +53,9 @@ namespace Falcon
         void Serialize(ASTNode * node, std::string padding)
         {
             if (!node)
+            {
                 return;
+            }
         
             if (AtomNode * atom = dynamic_cast<AtomNode *>(node))
             {
@@ -57,8 +63,12 @@ namespace Falcon
         
                 switch (atom->Type)
                 {
+                    case AtomNode::AtomType::IDENTIFIER:
+                        std::cout<<"IdentifierNode:\t\t"<<atom->Str<<"\n";
+                        break;
+
                     case AtomNode::AtomType::REGISTER:
-                        std::cout<<"RegisterNode:\t\t"<<atom->Register<<"\n";
+                        std::cout<<"RegisterNode:\t\t"<<atom->Str<<"\n";
                         break;
         
                     case AtomNode::AtomType::CHAR:
@@ -89,15 +99,26 @@ namespace Falcon
                     Serialize(&arg, padding + "\t");
                 }
             }
+            else if (LabelNode * label = dynamic_cast<LabelNode *>(node))
+            {
+                std::cout<<padding;
+
+                std::cout<<"LabelNode:\t"<<label->Name<<"\n";
+                
+                for (InstructionNode & inst : label->Instructions)
+                {
+                    Serialize(&inst, padding + "\t");
+                }
+            }
             else if (RoutineNode * routine = dynamic_cast<RoutineNode *>(node))
             {
                 std::cout<<padding;
         
                 std::cout<<"RoutineNode:\t"<<routine->Name<<"\n";
         
-                for (InstructionNode & inst : routine->Instructions)
+                for (LabelNode & label : routine->Labels)
                 {
-                    Serialize(&inst, padding + "\t");
+                    Serialize(&label, padding + "\t");
                 }
             }
             else if (CodeSectionNode * code = dynamic_cast<CodeSectionNode *>(node))

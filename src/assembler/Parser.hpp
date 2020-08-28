@@ -26,6 +26,7 @@ namespace Falcon
                 
                 ASTNode * processAtom();
                 ASTNode * processInstruction();
+                ASTNode * processLabel();
                 ASTNode * processRoutine();
                 ASTNode * processSection();
                 ASTNode * processCodeSection();
