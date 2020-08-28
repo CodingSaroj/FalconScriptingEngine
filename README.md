@@ -9,9 +9,3 @@
 ## Features
 
 * Register-based Virtual Machine with custom bytecode.
-
-## Features planned for future releases
-
-* FalconScript: A language exclusive to the Falcon Scripting Engine.  
-* Compilers for Lua, Python, Ruby and Javascript.  
-* JIT x86 (JIT x64 will come after x86 works).  
