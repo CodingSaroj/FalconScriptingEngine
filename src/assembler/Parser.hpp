@@ -28,8 +28,13 @@ namespace Falcon
                 ASTNode * processInstruction();
                 ASTNode * processLabel();
                 ASTNode * processRoutine();
-                ASTNode * processSection();
                 ASTNode * processCodeSection();
+                ASTNode * processDebugMeta();
+                ASTNode * processDebugLineMap();
+                ASTNode * processDebugLocalVar();
+                ASTNode * processDebugRoutine();
+                ASTNode * processDebugSection();
+                ASTNode * processSection();
         };
     }
 }

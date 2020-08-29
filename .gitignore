@@ -1,0 +1,13 @@
+# Build folder
+bin
+lib
+obj
+
+# Build files
+Makefile
+*.make
+*.json
+
+# Testing files
+*.fali
+*.fasm

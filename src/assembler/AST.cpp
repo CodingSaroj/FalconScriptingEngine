@@ -65,5 +65,25 @@ namespace Falcon
             : Name(name)
         {
         }
+
+        DebugMetaNode::DebugMetaNode(const std::string & signature)
+            : Signature(signature)
+        {
+        }
+
+        DebugLineMapNode::DebugLineMapNode(uint64_t startLoc, uint64_t lineNum, const std::string & lineData)
+            : StartLocation(startLoc), LineNumber(lineNum), LineData(lineData)
+        {
+        }
+
+        DebugLocalVarNode::DebugLocalVarNode(const std::string & name, const std::string & type, uint64_t stackOffset)
+            : Name(name), Type(type), StackOffset(stackOffset)
+        {
+        }
+
+        DebugRoutineNode::DebugRoutineNode(const std::string & name, const std::string & signature)
+            : Name(name), MetaData(signature)
+        {
+        }
     }
 }

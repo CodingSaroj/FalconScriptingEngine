@@ -1,4 +1,5 @@
 #include "Parser.hpp"
+#include "AST.hpp"
 
 namespace Falcon
 {
@@ -154,8 +155,76 @@ namespace Falcon
             if (!routine->Labels.size()) { Log(LogLevel::WRN, "Empty routine `" + name + "`."); }
 
             return (ASTNode *)routine;
+        }        
+
+        ASTNode * Parser::processCodeSection()
+        {
+            CodeSectionNode * code = new CodeSectionNode();
+
+            code->Line = Context::Line;
+            code->Character = Context::Character;
+
+            m_CurrentToken = m_FetchToken();
+
+            while (m_CurrentToken.Type == TokenType::IDENTIFIER)
+            {
+                code->Routines.emplace_back(*(RoutineNode *)processRoutine());
+
+                while (m_CurrentToken.Type == TokenType::NEWLINE) { m_CurrentToken = m_FetchToken(); }
+            }
+
+            return code;
+        }
+        
+        ASTNode * Parser::processDebugRoutine()
+        {
+            std::string & name = m_CurrentToken.Str;
+
+            DebugRoutineNode * routine = new DebugRoutineNode(name, "");
+
+            routine->Line = Context::Line;
+            routine->Character = Context::Character;
+            
+            m_CurrentToken = m_FetchToken();
+
+            if (m_CurrentToken.Type != (TokenType)':')
+            {
+                Log(LogLevel::ERR, "Expected a `:` after routine `" + name + "`.");
+                exit(2);
+            }
+
+            m_CurrentToken = m_FetchToken();
+
+            if (m_CurrentToken.Type != TokenType::NEWLINE)
+            {
+                Log(LogLevel::ERR, "Expected new line after `:`.");
+                exit(2);
+            }
+            m_CurrentToken = m_FetchToken();
+
+            return (ASTNode *)routine;
+
         }
 
+        ASTNode * Parser::processDebugSection()
+        {
+            DebugSectionNode * dbg = new DebugSectionNode();
+
+            dbg->Line = Context::Line;
+            dbg->Character = Context::Character;
+
+            m_CurrentToken = m_FetchToken();
+
+            while (m_CurrentToken.Type == TokenType::IDENTIFIER)
+            {
+                dbg->Routines.emplace_back(*(DebugRoutineNode *)processDebugRoutine());
+
+                while (m_CurrentToken.Type == TokenType::NEWLINE) { m_CurrentToken = m_FetchToken(); }
+            }
+
+            return dbg;
+        }
+        
         ASTNode * Parser::processSection()
         {
             if (m_CurrentToken.Type != TokenType::IDENTIFIER)
@@ -185,30 +254,17 @@ namespace Falcon
 
                 return processCodeSection();
             }
+            else if (m_CurrentToken.Str == "debug")
+            {
+                validateSyntax();
+
+                return processDebugSection();
+            }
             else
             {
                 Log(LogLevel::ERR, "Invalid section name `" + m_CurrentToken.Str + "`.");
                 exit(2);
             }
-        }
-
-        ASTNode * Parser::processCodeSection()
-        {
-            CodeSectionNode * code = new CodeSectionNode();
-
-            code->Line = Context::Line;
-            code->Character = Context::Character;
-
-            m_CurrentToken = m_FetchToken();
-
-            while (m_CurrentToken.Type == TokenType::IDENTIFIER)
-            {
-                code->Routines.emplace_back(*(RoutineNode *)processRoutine());
-
-                while (m_CurrentToken.Type == TokenType::NEWLINE) { m_CurrentToken = m_FetchToken(); }
-            }
-
-            return code;
         }
 
         ASTNode * Parser::parse()
