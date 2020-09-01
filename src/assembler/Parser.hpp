@@ -24,17 +24,19 @@ namespace Falcon
                 std::function<Token()> m_FetchToken;
                 std::function<Token()> m_Peek;
                 
-                ASTNode * processAtom();
-                ASTNode * processInstruction();
-                ASTNode * processLabel();
-                ASTNode * processRoutine();
-                ASTNode * processCodeSection();
-                ASTNode * processDebugMeta();
-                ASTNode * processDebugLineMap();
-                ASTNode * processDebugLocalVar();
-                ASTNode * processDebugRoutine();
-                ASTNode * processDebugSection();
-                ASTNode * processSection();
+                AtomNode          processAtom();
+                InstructionNode   processInstruction();
+                LabelNode         processLabel();
+                RoutineNode       processRoutine();
+                CodeSectionNode   processCodeSection();
+
+                DebugMetaNode     processDebugMeta();
+                DebugLineMapNode  processDebugLineMap();
+                DebugLocalVarNode processDebugLocalVar();
+                DebugRoutineNode  processDebugRoutine();
+                DebugSectionNode  processDebugSection();
+
+                ASTNode * processModule();
         };
     }
 }

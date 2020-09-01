@@ -1,7 +1,6 @@
 #ifndef FALCON_ASM_GENERATOR_HPP
 #define FALCON_ASM_GENERATOR_HPP
 
-
 #include <unordered_map>
 
 #include <cstring>
@@ -15,12 +14,14 @@ namespace Falcon
         class Generator
         {
         public:
-            Generator(ASTNode * node);
+            Generator(ASTNode * node, bool debug = false);
 
             std::string generate();
 
         private:
             ASTNode * m_Node;
+
+            bool m_Debug;
 
             std::vector<std::pair<uint64_t, std::string>> m_UnresolvedSymbols;
             std::unordered_map<std::string, uint64_t>     m_LabelAddresses;
@@ -33,6 +34,11 @@ namespace Falcon
             void generateInstruction(InstructionNode * inst);
             void generateRoutine(RoutineNode * routine);
             void generateCodeSection(CodeSectionNode * code);
+            
+            void generateDebugRoutine(DebugRoutineNode * routine);
+            void generateDebugSection(DebugSectionNode * dbg);
+
+            void generateModule(ModuleNode * module);
         };
     }
 }

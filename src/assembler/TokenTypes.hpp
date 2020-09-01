@@ -9,10 +9,20 @@ namespace Falcon
     {
         enum class TokenType : uint8_t
         {
+            // Top-level tokens
             SECTION = 128,
             IDENTIFIER,
+
+            // Debug section tokens
+            META,
+            MAP,
+            LOCAL,
+
+            // Code section tokens
             INSTRUCTION,
             REGISTER,
+
+            // General Tokens
             CHAR,
             UINT,
             INT,

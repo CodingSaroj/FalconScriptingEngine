@@ -1,4 +1,5 @@
 #include "SemanticAnalyzer.hpp"
+#include "AST.hpp"
 
 namespace Falcon
 {
@@ -288,7 +289,7 @@ namespace Falcon
 
         ASTNode * SemanticAnalyzer::analyze()
         {
-            if (auto code = dynamic_cast<CodeSectionNode *>(m_Node)) { m_Code = code; analyzeCodeSection(); }
+            if (auto module = dynamic_cast<ModuleNode *>(m_Node)) { m_Code = &module->CodeSection; analyzeCodeSection(); }
 
             return m_Node;
         }

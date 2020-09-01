@@ -157,9 +157,21 @@ namespace Falcon
             {
                 return Token(TokenType::INSTRUCTION, toUpper(str));
             }
-            else if (str == "sect")
+            else if (toUpper(str) == "SECT")
             {
                 return Token(TokenType::SECTION);
+            }
+            else if (toUpper(str) == "META")
+            {
+                return Token(TokenType::META);
+            }
+            else if (toUpper(str) == "MAP")
+            {
+                return Token(TokenType::MAP);
+            }
+            else if (toUpper(str) == "LOCAL")
+            {
+                return Token(TokenType::LOCAL);
             }
 
             return Token(TokenType::IDENTIFIER, str);

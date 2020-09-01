@@ -10,6 +10,10 @@ static struct
 {
     bool Debug = false;
 
+    #ifdef DEBUG
+        bool LogTokens = false, LogAST = false;
+    #endif
+
     std::string InputName = "a.fasm";
     std::string TargetName = "a.fali";
 } s_State;
@@ -45,6 +49,16 @@ void parseCmdArgs(int argc, char * argv[])
         {
             s_State.Debug = true;
         }
+        #ifdef DEBUG
+            else if (str == "-ltk" || str == "--log-tokens")
+            {
+                s_State.LogTokens = true;
+            }
+            else if (str == "-last" || str == "--log-ast")
+            {
+                s_State.LogAST = true;
+            }
+        #endif
         else if (str == "-i")
         {
             if (i == argc - 1)
@@ -120,13 +134,38 @@ int main(int argc, char * argv[])
 
     in.close();
 
+    #ifdef DEBUG
+        if (s_State.LogTokens)
+        {
+            Falcon::Assembler::Lexer lexer(inStr);
+
+            Falcon::Assembler::Token token((Falcon::Assembler::TokenType)'\0');
+
+            while ((token = lexer.lex()).Type != (Falcon::Assembler::TokenType)'\0')
+            {
+                Serialize(token);
+            }
+        }
+    #endif
+
     Falcon::Assembler::Lexer lexer(inStr);
 
     Falcon::Assembler::Parser parser(std::bind(&Falcon::Assembler::Lexer::lex, &lexer), std::bind(&Falcon::Assembler::Lexer::peek, &lexer));
 
+    #ifdef DEBUG
+        if (s_State.LogAST)
+        {
+            Falcon::Assembler::Lexer lexer(inStr);
+
+            Falcon::Assembler::Parser p(std::bind(&Falcon::Assembler::Lexer::lex, &lexer), std::bind(&Falcon::Assembler::Lexer::peek, &lexer));
+
+            Serialize(p.parse());
+        }
+    #endif
+
     Falcon::Assembler::SemanticAnalyzer semanticAnalyzer(parser.parse());
 
-    Falcon::Assembler::Generator generator(semanticAnalyzer.analyze());
+    Falcon::Assembler::Generator generator(semanticAnalyzer.analyze(), s_State.Debug);
 
     std::ofstream out(s_State.TargetName);
 

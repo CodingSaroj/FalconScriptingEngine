@@ -6,30 +6,42 @@ namespace Falcon
     {
         void Serialize(Token token)
         {
-                switch (token.Type)
+            switch (token.Type)
             {
                 case TokenType::SECTION:
-                    std::cout<<"Section:\t\t"<<token.Str<<"\n";
+                    std::cout<<"Section:    \t"<<token.Str<<"\n";
+                    break;
+ 
+                case TokenType::IDENTIFIER:
+                    std::cout<<"Identifier:    \t"<<token.Str<<"\n";
+                    break;
+
+                case TokenType::META:
+                    std::cout<<"DebugMeta\n";
+                    break;
+
+                case TokenType::MAP:
+                    std::cout<<"DebugLineMap\n";
+                    break;
+
+                case TokenType::LOCAL:
+                    std::cout<<"DebugLocal\n";
                     break;
 
                 case TokenType::INSTRUCTION:
-                    std::cout<<"Instruction:\t\t"<<token.Str<<"\n";
+                    std::cout<<"Instruction:    \t"<<token.Str<<"\n";
                     break;
         
                 case TokenType::REGISTER:
-                    std::cout<<"Register:\t\t"<<token.Str<<"\n";
-                    break;
-        
-                case TokenType::IDENTIFIER:
-                    std::cout<<"Identifier:\t\t"<<token.Str<<"\n";
+                    std::cout<<"Register:    \t"<<token.Str<<"\n";
                     break;
         
                 case TokenType::CHAR:
-                    std::cout<<"Character:\t\t"<<token.Char<<"\n";
+                    std::cout<<"Character:    \t"<<token.Char<<"\n";
                     break;
         
                 case TokenType::INT:
-                    std::cout<<"Integer:\t\t"<<token.Int<<"\n";
+                    std::cout<<"Integer:    \t"<<token.Int<<"\n";
                     break;
                     
                 case TokenType::UINT:
@@ -37,7 +49,7 @@ namespace Falcon
                     break;
         
                 case TokenType::FLOAT:
-                    std::cout<<"FloatingPoint:\t\t"<<token.Float<<"\n";
+                    std::cout<<"FloatingPoint:    \t"<<token.Float<<"\n";
                     break;
         
                 case TokenType::NEWLINE:
@@ -45,7 +57,7 @@ namespace Falcon
                     break;
         
                 default:
-                    std::cout<<"Arbitarory:\t\t"<<(char)token.Type<<"\n";
+                    std::cout<<"Arbitarory:    \t"<<(char)token.Type<<"\n";
                     break;
             }
         }
@@ -57,38 +69,38 @@ namespace Falcon
                 return;
             }
         
-            if (AtomNode * atom = dynamic_cast<AtomNode *>(node))
+            if (auto * atom = dynamic_cast<AtomNode *>(node))
             {
                 std::cout<<padding;
         
                 switch (atom->Type)
                 {
                     case AtomNode::AtomType::IDENTIFIER:
-                        std::cout<<"IdentifierNode:\t\t"<<atom->Str<<"\n";
+                        std::cout<<"IdentifierNode:    \t"<<atom->Str<<"\n";
                         break;
 
                     case AtomNode::AtomType::REGISTER:
-                        std::cout<<"RegisterNode:\t\t"<<atom->Str<<"\n";
+                        std::cout<<"RegisterNode:    \t"<<atom->Str<<"\n";
                         break;
         
                     case AtomNode::AtomType::CHAR:
-                        std::cout<<"CharNode:\t\t"<<atom->Char<<"\n";
+                        std::cout<<"CharNode:    \t"<<atom->Char<<"\n";
                         break;
         
                     case AtomNode::AtomType::UINT:
-                        std::cout<<"UintNode:\t\t"<<atom->Uint<<"\n";
+                        std::cout<<"UintNode:    \t"<<atom->Uint<<"\n";
                         break;
                     
                     case AtomNode::AtomType::INT:
-                        std::cout<<"IntNode:\t\t"<<atom->Int<<"\n";
+                        std::cout<<"IntNode:    \t"<<atom->Int<<"\n";
                         break;
                     
                     case AtomNode::AtomType::FLOAT:
-                        std::cout<<"FloatNode:\t\t"<<atom->Float<<"\n";
+                        std::cout<<"FloatNode:    \t"<<atom->Float<<"\n";
                         break;
                 }
             }
-            else if (InstructionNode * inst = dynamic_cast<InstructionNode *>(node))
+            else if (auto * inst = dynamic_cast<InstructionNode *>(node))
             {
                 std::cout<<padding;
         
@@ -99,7 +111,7 @@ namespace Falcon
                     Serialize(&arg, padding + "\t");
                 }
             }
-            else if (LabelNode * label = dynamic_cast<LabelNode *>(node))
+            else if (auto * label = dynamic_cast<LabelNode *>(node))
             {
                 std::cout<<padding;
 
@@ -110,7 +122,7 @@ namespace Falcon
                     Serialize(&inst, padding + "\t");
                 }
             }
-            else if (RoutineNode * routine = dynamic_cast<RoutineNode *>(node))
+            else if (auto * routine = dynamic_cast<RoutineNode *>(node))
             {
                 std::cout<<padding;
         
@@ -121,14 +133,70 @@ namespace Falcon
                     Serialize(&label, padding + "\t");
                 }
             }
-            else if (CodeSectionNode * code = dynamic_cast<CodeSectionNode *>(node))
+            else if (auto * code = dynamic_cast<CodeSectionNode *>(node))
             {
-                std::cout<<"CodeSectionNode:\n";
+                std::cout<<padding<<"CodeSectionNode:\n";
         
                 for (RoutineNode & routine : code->Routines)
                 {
-                    Serialize(&routine, "\t");
+                    Serialize(&routine, padding + "\t");
                 }
+            }
+            else if (auto * meta = dynamic_cast<DebugMetaNode *>(node))
+            {
+                std::cout<<padding<<"DebugMetaNode:\n";
+                std::cout<<padding + "\t"<<meta->Signature<<"\n";
+            }
+            else if (auto * lineMap = dynamic_cast<DebugLineMapNode *>(node))
+            {
+                std::cout<<padding;
+
+                std::cout<<"LineMapNode:\n";
+                std::cout<<padding + "\tStartLocation:\t"<<lineMap->StartLocation<<"\n";
+                std::cout<<padding + "\tLineNumber:\t"<<lineMap->LineNumber<<"\n";
+                std::cout<<padding + "\tLineData:\t\""<<lineMap->LineData<<"\"\n";
+            }
+            else if (auto * localVar = dynamic_cast<DebugLocalVarNode *>(node))
+            {
+                std::cout<<padding;
+
+                std::cout<<"LocalVarNode:\n";
+                std::cout<<padding + "\t"<<localVar->Name;
+                std::cout<<"\n"<<padding + "\t"<<localVar->Type<<"\n";
+                std::cout<<padding + "\t"<<localVar->StackOffset<<"\n";
+            }
+            else if (auto * routine = dynamic_cast<DebugRoutineNode *>(node))
+            {
+                std::cout<<padding<<"DebugRoutineNode:\t"<<routine->Name<<"\n";
+
+                Serialize(&routine->MetaData, padding + "\t");
+
+                for (auto & lineMap : routine->LineMaps)
+                {
+                    Serialize(&lineMap, padding + "\t");
+                }
+
+                for (auto & localVar : routine->LocalVariables)
+                {
+                    Serialize(&localVar, padding + "\t");
+                }
+            }
+            else if (auto * debug = dynamic_cast<DebugSectionNode *>(node))
+            {
+                std::cout<<padding<<"DebugSectionNode:\n";
+
+                for (auto & routine : debug->Routines)
+                {
+                    Serialize(&routine, padding + "\t");
+                }
+            }
+            else if (auto * module = dynamic_cast<ModuleNode *>(node))
+            {
+                std::cout<<"ModuleNode:\n";
+
+                Serialize(&module->CodeSection, "\t");
+
+                Serialize(&module->DebugSection, "\t");
             }
         }
     }

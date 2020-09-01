@@ -4,8 +4,8 @@ namespace Falcon
 {
     namespace Assembler
     {
-        Generator::Generator(ASTNode * node)
-            : m_Node(node)
+        Generator::Generator(ASTNode * node, bool debug)
+            : m_Node(node), m_Debug(debug)
         {
         }
 
@@ -135,6 +135,17 @@ namespace Falcon
 
         void Generator::generateCodeSection(CodeSectionNode * code)
         {
+            m_Bytecode += "CODE";
+
+            uint64_t sizeStart = m_Bytecode.size();
+
+            for (int i = 0; i < 8; i++)
+            {
+                m_Bytecode += '\0';
+            }
+
+            uint64_t codeSectionStart = m_Bytecode.size();
+
             for (auto & routine : code->Routines)
             {
                 m_Symbols[routine.Name] = m_Bytecode.size();
@@ -154,18 +165,101 @@ namespace Falcon
                     m_Bytecode[location + i] = ((char *)&address)[i];
                 }
             }
+
+            m_Bytecode.insert(codeSectionStart, generateSymbolTable());
+            
+            uint64_t codeSectionSize = (m_Bytecode.size() - codeSectionStart) + 1;
+
+            for (int i = 0; i < 8; i++)
+            {
+                m_Bytecode[sizeStart + i] = ((char *)&codeSectionSize)[i];
+            }
+
+            m_Bytecode += '\377';
+        }
+
+        void Generator::generateDebugRoutine(DebugRoutineNode * routine)
+        {
+            m_Bytecode += routine->Name;
+            m_Bytecode += '\0';
+
+            m_Bytecode += 'M';
+            m_Bytecode += routine->MetaData.Signature;
+            m_Bytecode += '\0';
+
+            m_Bytecode += 'L';
+
+            for (auto lineMap : routine->LineMaps)
+            {
+                for (int i = 0; i < 16; i++)
+                {
+                    m_Bytecode += ((char *)&lineMap.StartLocation)[i];
+                }
+
+                m_Bytecode += lineMap.LineData;
+                m_Bytecode += '\0';
+            }
+
+            m_Bytecode += 'V';
+
+            for (auto localVar : routine->LocalVariables)
+            {
+                m_Bytecode += localVar.Name;
+                m_Bytecode += '\0';
+
+                m_Bytecode += localVar.Type;
+                m_Bytecode += '\0';
+                
+                for (int i = 0; i < 8; i++)
+                {
+                    m_Bytecode += ((char *)&localVar.StackOffset)[i];
+                }
+            }
+
+            m_Bytecode += 'E';
+        }
+
+        void Generator::generateDebugSection(DebugSectionNode * dbg)
+        {
+            m_Bytecode += "DEBG";
+
+            uint64_t sizeStart = m_Bytecode.size();
+
+            for (int i = 0; i < 8; i++)
+            {
+                m_Bytecode += '\0';
+            }
+
+            uint64_t debugSectionStart = m_Bytecode.size();
+
+            for (auto & routine : dbg->Routines)
+            {
+                generateDebugRoutine(&routine);
+            }
+
+            uint64_t debugSectionSize = m_Bytecode.size() - debugSectionStart;
+
+            for (int i = 0; i < 8; i++)
+            {
+                m_Bytecode[sizeStart + i] = ((char *)&debugSectionSize)[i];
+            }
+        }
+        
+        void Generator::generateModule(ModuleNode * module)
+        {
+            generateCodeSection(&module->CodeSection);
+
+            if (m_Debug)
+            {
+                generateDebugSection(&module->DebugSection);
+            }
         }
 
         std::string Generator::generate()
         {
-            if (auto code = dynamic_cast<CodeSectionNode *>(m_Node)) { generateCodeSection(code); }
+            if (auto module = dynamic_cast<ModuleNode *>(m_Node)) { generateModule(module); }
 
-            std::string data = generateSymbolTable() + m_Bytecode;
-            uint64_t size = data.size();
-
-            data = std::string((char *)&size, 8) + data;
-
-            return "FLCN" + data + '\377';
+            return "FLCN" + m_Bytecode;
         }
     }
 }

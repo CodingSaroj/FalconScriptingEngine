@@ -13,19 +13,17 @@ namespace Falcon
 {
     namespace Assembler
     {
-        class ASTNode
+        struct ASTNode
         {
-        public:
             uint64_t Line;
             uint64_t Character;
 
             virtual ~ASTNode() = default;
         };
 
-        class AtomNode : public ASTNode
+        struct AtomNode : public ASTNode
         {
-        public:
-            enum class AtomType
+            enum struct AtomType
             {
                 IDENTIFIER,
                 REGISTER,
@@ -42,6 +40,7 @@ namespace Falcon
                 int64_t  Int;
                 double   Float;
             };
+
             std::string Str;
 
             AtomNode(const std::string & str);
@@ -51,50 +50,44 @@ namespace Falcon
             AtomNode(double data);
         };
 
-        class InstructionNode : public ASTNode
+        struct InstructionNode : public ASTNode
         {
-        public:
             std::string             Inst;
             std::vector<AtomNode>   Args;
 
             InstructionNode(const std::string & inst);
         };
 
-        class LabelNode : public ASTNode
+        struct LabelNode : public ASTNode
         {
-        public:
             std::string                  Name;
             std::vector<InstructionNode> Instructions;
 
             LabelNode(const std::string & name);
         };
 
-        class RoutineNode : public ASTNode
+        struct RoutineNode : public ASTNode
         {
-        public:
             std::string            Name;
             std::vector<LabelNode> Labels;
 
             RoutineNode(const std::string & name);
         };
 
-        class CodeSectionNode : public ASTNode
+        struct CodeSectionNode : public ASTNode
         {
-        public:
             std::vector<RoutineNode> Routines;
         };
 
-        class DebugMetaNode : public ASTNode
+        struct DebugMetaNode : public ASTNode
         {
-        public:
             std::string Signature;
 
             DebugMetaNode(const std::string & signature);
         };
 
-        class DebugLineMapNode : public ASTNode
+        struct DebugLineMapNode : public ASTNode
         {
-        public:
             uint64_t StartLocation;
             uint64_t LineNumber;
             std::string LineData;
@@ -102,9 +95,8 @@ namespace Falcon
             DebugLineMapNode(uint64_t startLoc, uint64_t lineNum, const std::string & lineData);
         };
 
-        class DebugLocalVarNode : public ASTNode
+        struct DebugLocalVarNode : public ASTNode
         {
-        public:
             std::string Name;
             std::string Type;
             uint64_t    StackOffset;
@@ -112,9 +104,8 @@ namespace Falcon
             DebugLocalVarNode(const std::string & name, const std::string & type, uint64_t stackOffset);
         };
 
-        class DebugRoutineNode : public ASTNode
+        struct DebugRoutineNode : public ASTNode
         {
-        public:
             std::string                    Name;
             DebugMetaNode                  MetaData;
             std::vector<DebugLineMapNode>  LineMaps;
@@ -123,10 +114,15 @@ namespace Falcon
             DebugRoutineNode(const std::string & name, const std::string & signature);
         };
 
-        class DebugSectionNode : public ASTNode
+        struct DebugSectionNode : public ASTNode
         {
-        public:
             std::vector<DebugRoutineNode> Routines;
+        };
+
+        struct ModuleNode : public ASTNode
+        {
+            CodeSectionNode CodeSection;
+            DebugSectionNode DebugSection;
         };
     }
 }

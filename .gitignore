@@ -9,5 +9,6 @@ Makefile
 *.json
 
 # Testing files
+test
 *.fali
 *.fasm

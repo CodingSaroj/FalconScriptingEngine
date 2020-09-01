@@ -1,4 +1,4 @@
-project "FalconVM"
+project "FalconFALI"
     kind "StaticLib"
     language "C++"
     cppdialect "C++17"
@@ -32,11 +32,11 @@ project "FalconVM"
     filter "platforms:*64"
         architecture "x86_64"
 
-project "FalconVMTest"
+project "FalconFALITest"
     kind "ConsoleApp"
     language "C++"
     cppdialect "C++17"
-    targetname "vmtest"
+    targetname "falitest"
     targetdir "../../bin/%{cfg.buildcfg}/%{cfg.platform}/"
     objdir "../../obj"
 
@@ -52,13 +52,14 @@ project "FalconVMTest"
 
     links
     {
-        "FalconVM"
+        "FalconVM",
+        "FalconFALI"
     }
 
     filter "configurations:Debug"
         symbols "On"
         optimize "Off"
-        
+
         defines
         {
             "DEBUG"

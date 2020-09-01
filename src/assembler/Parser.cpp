@@ -1,5 +1,4 @@
 #include "Parser.hpp"
-#include "AST.hpp"
 
 namespace Falcon
 {
@@ -10,34 +9,34 @@ namespace Falcon
         {
         }
 
-        ASTNode * Parser::processAtom()
+        AtomNode Parser::processAtom()
         {
-            AtomNode * atom = nullptr;
+            AtomNode atom('\0');
 
-            if (m_CurrentToken.Type == TokenType::CHAR) { atom = new AtomNode(m_CurrentToken.Char); }
+            if (m_CurrentToken.Type == TokenType::CHAR) { atom = AtomNode(m_CurrentToken.Char); }
 
-            else if (m_CurrentToken.Type == TokenType::UINT) { atom = new AtomNode(m_CurrentToken.Uint); }
+            else if (m_CurrentToken.Type == TokenType::UINT) { atom = AtomNode(m_CurrentToken.Uint); }
 
-            else if (m_CurrentToken.Type == TokenType::INT) { atom = new AtomNode(m_CurrentToken.Int); }
+            else if (m_CurrentToken.Type == TokenType::INT) { atom = AtomNode(m_CurrentToken.Int); }
 
-            else if (m_CurrentToken.Type == TokenType::FLOAT) { atom = new AtomNode(m_CurrentToken.Float); }
+            else if (m_CurrentToken.Type == TokenType::FLOAT) { atom = AtomNode(m_CurrentToken.Float); }
 
-            else if (m_CurrentToken.Type == TokenType::REGISTER) { atom = new AtomNode(m_CurrentToken.Str); }
+            else if (m_CurrentToken.Type == TokenType::REGISTER) { atom = AtomNode(m_CurrentToken.Str); }
 
-            else if (m_CurrentToken.Type == TokenType::IDENTIFIER) { atom = new AtomNode(m_CurrentToken.Str); }
+            else if (m_CurrentToken.Type == TokenType::IDENTIFIER) { atom = AtomNode(m_CurrentToken.Str); }
 
-            atom->Line = Context::Line;
-            atom->Character = Context::Character;
+            atom.Line = Context::Line;
+            atom.Character = Context::Character;
 
-            return (ASTNode *)atom;
+            return atom;
         }
 
-        ASTNode * Parser::processInstruction()
+        InstructionNode Parser::processInstruction()
         {
-            InstructionNode * inst = new InstructionNode(m_CurrentToken.Str);
+            InstructionNode inst(m_CurrentToken.Str);
 
-            inst->Line = Context::Line;
-            inst->Character = Context::Character;
+            inst.Line = Context::Line;
+            inst.Character = Context::Character;
 
             for (int i = 0; i < 2; i++)
             {
@@ -47,7 +46,7 @@ namespace Falcon
                 {
                     m_CurrentToken = m_FetchToken();
 
-                    inst->Args.emplace_back(*(AtomNode *)processAtom());
+                    inst.Args.emplace_back(processAtom());
                 }
                 else
                 {
@@ -55,17 +54,17 @@ namespace Falcon
                 }
             }
 
-            return (ASTNode *)inst;
+            return inst;
         }
 
-        ASTNode * Parser::processLabel()
+        LabelNode Parser::processLabel()
         {
             std::string name = m_CurrentToken.Str;
 
-            LabelNode * label = new LabelNode(name);
+            LabelNode label(name);
 
-            label->Line = Context::Line;
-            label->Character = Context::Character;
+            label.Line = Context::Line;
+            label.Character = Context::Character;
 
             m_CurrentToken = m_FetchToken();
 
@@ -100,7 +99,7 @@ namespace Falcon
                     }
                 }
                 
-                label->Instructions.emplace_back(*(InstructionNode *)processInstruction());
+                label.Instructions.emplace_back(processInstruction());
 
                 if ((m_CurrentToken = m_FetchToken()).Type != TokenType::NEWLINE)
                 {
@@ -113,19 +112,19 @@ namespace Falcon
                 }
             }
 
-            if (!label->Instructions.size()) { Log(LogLevel::WRN, "Empty label `" + name + "`."); }
+            if (!label.Instructions.size()) { Log(LogLevel::WRN, "Empty label `" + name + "`."); }
 
-            return (ASTNode *)label;
+            return label;
         }
 
-        ASTNode * Parser::processRoutine()
+        RoutineNode Parser::processRoutine()
         {
             std::string & name = m_CurrentToken.Str;
 
-            RoutineNode * routine = new RoutineNode(name);
+            RoutineNode routine(name);
 
-            routine->Line = Context::Line;
-            routine->Character = Context::Character;
+            routine.Line = Context::Line;
+            routine.Character = Context::Character;
             
             m_CurrentToken = m_FetchToken();
 
@@ -142,48 +141,154 @@ namespace Falcon
                 Log(LogLevel::ERR, "Expected new line after `:`.");
                 exit(2);
             }
+
             m_CurrentToken = m_FetchToken();
 
             while (m_CurrentToken.Type == (TokenType)'.')
             {
                 m_CurrentToken = m_FetchToken();
-                routine->Labels.emplace_back(*(LabelNode *)processLabel());
+                routine.Labels.emplace_back(processLabel());
 
                 while (m_CurrentToken.Type == TokenType::NEWLINE) { m_CurrentToken = m_FetchToken(); }
             }
 
-            if (!routine->Labels.size()) { Log(LogLevel::WRN, "Empty routine `" + name + "`."); }
+            if (!routine.Labels.size()) { Log(LogLevel::WRN, "Empty routine `" + name + "`."); }
 
-            return (ASTNode *)routine;
+            return routine;
         }        
 
-        ASTNode * Parser::processCodeSection()
+        CodeSectionNode Parser::processCodeSection()
         {
-            CodeSectionNode * code = new CodeSectionNode();
+            CodeSectionNode code;
 
-            code->Line = Context::Line;
-            code->Character = Context::Character;
+            code.Line = Context::Line;
+            code.Character = Context::Character;
 
             m_CurrentToken = m_FetchToken();
 
             while (m_CurrentToken.Type == TokenType::IDENTIFIER)
             {
-                code->Routines.emplace_back(*(RoutineNode *)processRoutine());
+                code.Routines.emplace_back(processRoutine());
 
                 while (m_CurrentToken.Type == TokenType::NEWLINE) { m_CurrentToken = m_FetchToken(); }
             }
 
             return code;
         }
+
+        DebugMetaNode Parser::processDebugMeta()
+        {
+            m_CurrentToken = m_FetchToken();
+
+            if (m_CurrentToken.Type == TokenType::IDENTIFIER)
+            {
+                return DebugMetaNode(m_CurrentToken.Str);
+            }
+            else
+            {
+                Log(LogLevel::ERR, "Expected identifier|str as 1st argument to `meta`.\n");
+                exit(2);
+            }
+        }
+
+        DebugLineMapNode Parser::processDebugLineMap()
+        {
+            uint64_t startLoc, lineNum;
+            std::string lineData;
+
+            m_CurrentToken = m_FetchToken();
+
+            if (m_CurrentToken.Type == TokenType::UINT)
+            {
+                startLoc = m_CurrentToken.Uint;
+            }
+            else
+            {
+                Log(LogLevel::ERR, "Expected uint as 1st argument to `map`.\n");
+                exit(2);
+            }
+            
+            m_CurrentToken = m_FetchToken();
+
+            if (m_CurrentToken.Type == TokenType::UINT)
+            {
+                lineNum = m_CurrentToken.Uint;
+            }
+            else
+            {
+                Log(LogLevel::ERR, "Expected uint as 2nd argument to `map`.\n");
+                exit(2);
+            }
+
+            m_CurrentToken = m_FetchToken();
+
+            if (m_CurrentToken.Type == TokenType::IDENTIFIER)
+            {
+                lineData = m_CurrentToken.Str;
+            }
+            else
+            {
+                Log(LogLevel::ERR, "Expected identifier|str as 3rd argument to `map`.\n");
+                exit(2);
+            }
+
+            m_CurrentToken = m_FetchToken();
+
+            return DebugLineMapNode(startLoc, lineNum, lineData);
+        }
+
+        DebugLocalVarNode Parser::processDebugLocalVar()
+        {
+            std::string name, type;
+            uint64_t stackOffset;
+
+            m_CurrentToken = m_FetchToken();
+
+            if (m_CurrentToken.Type == TokenType::IDENTIFIER)
+            {
+                name = m_CurrentToken.Str;
+            }
+            else
+            {
+                Log(LogLevel::ERR, "Expected identifier|str as 1st argument to `local`.\n");
+                exit(2);
+            }
+
+            m_CurrentToken = m_FetchToken();
+
+            if (m_CurrentToken.Type == TokenType::IDENTIFIER)
+            {
+                type = m_CurrentToken.Str;
+            }
+            else
+            {
+                Log(LogLevel::ERR, "Expected identifier|str as 2nd argument to `local`.\n");
+                exit(2);
+            }
+
+            m_CurrentToken = m_FetchToken();
+
+            if (m_CurrentToken.Type == TokenType::UINT)
+            {
+                stackOffset = m_CurrentToken.Uint;
+            }
+            else
+            {
+                Log(LogLevel::ERR, "Expected uint as 3rd argument to `local`.\n");
+                exit(2);
+            }
+
+            return DebugLocalVarNode(name, type, stackOffset);
+        }
         
-        ASTNode * Parser::processDebugRoutine()
+        DebugRoutineNode Parser::processDebugRoutine()
         {
             std::string & name = m_CurrentToken.Str;
 
-            DebugRoutineNode * routine = new DebugRoutineNode(name, "");
+            DebugRoutineNode routine(name, "");
 
-            routine->Line = Context::Line;
-            routine->Character = Context::Character;
+            routine.Line = Context::Line;
+            routine.Character = Context::Character;
             
             m_CurrentToken = m_FetchToken();
 
@@ -200,24 +305,52 @@ namespace Falcon
                 Log(LogLevel::ERR, "Expected new line after `:`.");
                 exit(2);
             }
+
             m_CurrentToken = m_FetchToken();
 
-            return (ASTNode *)routine;
+            if (m_CurrentToken.Type == TokenType::META)
+            {
+                routine.MetaData = processDebugMeta();
+            }
+
+            m_CurrentToken = m_FetchToken();
+
+            while (m_CurrentToken.Type == TokenType::NEWLINE) { m_CurrentToken = m_FetchToken(); }
+
+            while (m_CurrentToken.Type == TokenType::MAP || m_CurrentToken.Type == TokenType::LOCAL)
+            {
+                auto statementType = m_CurrentToken.Type;
+
+                if (statementType == TokenType::MAP)
+                {
+                    routine.LineMaps.emplace_back(processDebugLineMap());
+                }
+                else
+                {
+                    routine.LocalVariables.emplace_back(processDebugLocalVar());
+                }
+
+                m_CurrentToken = m_FetchToken();
+
+                while (m_CurrentToken.Type == TokenType::NEWLINE) { m_CurrentToken = m_FetchToken(); }
+            }
+
+            return routine;
 
         }
 
-        ASTNode * Parser::processDebugSection()
+        DebugSectionNode Parser::processDebugSection()
         {
-            DebugSectionNode * dbg = new DebugSectionNode();
+            DebugSectionNode dbg;
 
-            dbg->Line = Context::Line;
-            dbg->Character = Context::Character;
+            dbg.Line = Context::Line;
+            dbg.Character = Context::Character;
 
             m_CurrentToken = m_FetchToken();
 
             while (m_CurrentToken.Type == TokenType::IDENTIFIER)
             {
-                dbg->Routines.emplace_back(*(DebugRoutineNode *)processDebugRoutine());
+                dbg.Routines.emplace_back(processDebugRoutine());
 
                 while (m_CurrentToken.Type == TokenType::NEWLINE) { m_CurrentToken = m_FetchToken(); }
             }
@@ -225,11 +358,21 @@ namespace Falcon
             return dbg;
         }
         
-        ASTNode * Parser::processSection()
+        ASTNode * Parser::processModule()
         {
+            ModuleNode * module = new ModuleNode();
+
+            if (m_CurrentToken.Type != TokenType::SECTION)
+            {
+                Log(LogLevel::ERR, "Expected `sect` at toplevel.");
+                exit(2);
+            }
+
+            m_CurrentToken = m_FetchToken();
+
             if (m_CurrentToken.Type != TokenType::IDENTIFIER)
             {
-                Log(LogLevel::ERR, "Expected section name after keyword `sect`.");
+                Log(LogLevel::ERR, "Expected module name after keyword `sect`.");
                 exit(2);
             }
 
@@ -237,7 +380,7 @@ namespace Falcon
                                     {
                                         if ((m_CurrentToken = m_FetchToken()).Type != (TokenType)':')
                                         {
-                                            Log(LogLevel::ERR, "Expected `:` after section name.");
+                                            Log(LogLevel::ERR, "Expected `:` after module name.");
                                             exit(2);
                                         }
 
@@ -252,32 +395,46 @@ namespace Falcon
             {
                 validateSyntax();
 
-                return processCodeSection();
-            }
-            else if (m_CurrentToken.Str == "debug")
-            {
-                validateSyntax();
-
-                return processDebugSection();
+                module->CodeSection = processCodeSection();
             }
             else
             {
-                Log(LogLevel::ERR, "Invalid section name `" + m_CurrentToken.Str + "`.");
+                Log(LogLevel::ERR, "Invalid module name `" + m_CurrentToken.Str + "`.");
                 exit(2);
             }
+
+            if (m_CurrentToken.Type != TokenType::SECTION)
+            {
+                Log(LogLevel::ERR, "Expected `sect` at toplevel.");
+                exit(2);
+            }
+
+            m_CurrentToken = m_FetchToken();
+
+            if (m_CurrentToken.Type != TokenType::IDENTIFIER)
+            {
+                Log(LogLevel::ERR, "Expected module name after keyword `sect`.");
+                exit(2);
+            }
+
+            if (m_CurrentToken.Str == "debug")
+            {
+                validateSyntax();
+
+                module->DebugSection = processDebugSection();
+            }
+            else
+            {
+                Log(LogLevel::ERR, "Invalid module name `" + m_CurrentToken.Str + "`.");
+                exit(2);
+            }
+
+            return module;
         }
 
         ASTNode * Parser::parse()
         {
-            ASTNode * node = nullptr;
-
-            if (m_CurrentToken.Type == TokenType::SECTION)
-            {
-                m_CurrentToken = m_FetchToken();
-                node = processSection();
-            }
-
-            return node;
+            return processModule();
         }
     }
 }

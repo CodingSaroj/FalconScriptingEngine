@@ -16,6 +16,11 @@ project "FalconASM"
         symbols "On"
         optimize "Off"
 
+        defines
+        {
+            "DEBUG"
+        }
+
     filter "configurations:Release"
         symbols "Off"
         optimize "Full"
@@ -60,6 +65,11 @@ project "FalconASMBin"
     filter "configurations:Debug"
         symbols "On"
         optimize "Off"
+
+        defines
+        {
+            "DEBUG"
+        }
 
     filter "configurations:Release"
         symbols "Off"
