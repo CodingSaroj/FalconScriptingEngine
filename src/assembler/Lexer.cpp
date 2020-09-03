@@ -19,7 +19,7 @@ namespace Falcon
         {
         }
 
-        Token Lexer::processNumber(bool sign)
+        Token Lexer::lexNumber(bool sign)
         {
             std::string number;
             bool isFloat                = false;
@@ -74,7 +74,7 @@ namespace Falcon
             else { return Token(TokenType::UINT, std::strtoul(number.c_str(), NULL, 16)); }
         }
 
-        Token Lexer::processChar()
+        Token Lexer::lexChar()
         {
             char value = this->advance();
 
@@ -87,7 +87,7 @@ namespace Falcon
             return Token(TokenType::CHAR, value);
         }
 
-        Token Lexer::processStr()
+        Token Lexer::lexStr()
         {
             std::string str;
 
@@ -163,17 +163,29 @@ namespace Falcon
             }
             else if (toUpper(str) == "META")
             {
-                return Token(TokenType::META);
+                return Token(TokenType::IDENTIFIER, toUpper(str));
             }
             else if (toUpper(str) == "MAP")
             {
-                return Token(TokenType::MAP);
+                return Token(TokenType::IDENTIFIER, toUpper(str));
             }
             else if (toUpper(str) == "LOCAL")
             {
-                return Token(TokenType::LOCAL);
+                return Token(TokenType::IDENTIFIER, toUpper(str));
             }
-
+            else if (toUpper(str) == "FUNCTION")
+            {
+                return Token(TokenType::IDENTIFIER, toUpper(str));
+            }
+            else if (toUpper(str) == "STRUCT")
+            {
+                return Token(TokenType::IDENTIFIER, toUpper(str));
+            }
+            else if (toUpper(str) == "ALIAS")
+            {
+                return Token(TokenType::IDENTIFIER, toUpper(str));
+            }
+            
             return Token(TokenType::IDENTIFIER, str);
         }
 
@@ -211,19 +223,19 @@ namespace Falcon
                 this->advance();
 
                 //Retrieve the negative number Token.
-                token = this->processNumber(true);
+                token = this->lexNumber(true);
             }
             else if (decDigits.find(m_CurrentChar) != std::string::npos)
             {
-                token = this->processNumber();
+                token = this->lexNumber();
             }
             else if (m_CurrentChar == '\"' || identChars.find(m_CurrentChar) != std::string::npos || operators.find(m_CurrentChar) != std::string::npos)
             {
-                token = this->processStr();
+                token = this->lexStr();
             }
             else if (m_CurrentChar == '\'')
             {
-                token = this->processChar();
+                token = this->lexChar();
             }
             else if (m_CurrentChar == ';')
             {

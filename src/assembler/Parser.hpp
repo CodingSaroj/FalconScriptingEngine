@@ -23,20 +23,30 @@ namespace Falcon
 
                 std::function<Token()> m_FetchToken;
                 std::function<Token()> m_Peek;
+
+                constexpr void skipNewlines()
+                {
+                    while (m_CurrentToken.Type == TokenType::NEWLINE) { m_CurrentToken = m_FetchToken(); }
+                }
                 
-                AtomNode          processAtom();
-                InstructionNode   processInstruction();
-                LabelNode         processLabel();
-                RoutineNode       processRoutine();
-                CodeSectionNode   processCodeSection();
+                AtomNode        parseAtom();
+                InstructionNode parseInstruction();
+                LabelNode       parseLabel();
+                RoutineNode     parseRoutine();
+                CodeSectionNode parseCodeSection();
 
-                DebugMetaNode     processDebugMeta();
-                DebugLineMapNode  processDebugLineMap();
-                DebugLocalVarNode processDebugLocalVar();
-                DebugRoutineNode  processDebugRoutine();
-                DebugSectionNode  processDebugSection();
+                DebugMetaNode     parseDebugMeta();
+                DebugLineMapNode  parseDebugLineMap();
+                DebugLocalVarNode parseDebugLocalVar();
+                DebugRoutineNode  parseDebugRoutine();
+                DebugSectionNode  parseDebugSection();
 
-                ASTNode * processModule();
+                ReflectionFunctionNode  parseReflectionFunction();
+                ReflectionStructureNode parseReflectionStructure();
+                ReflectionAliasNode     parseReflectionAlias();
+                ReflectionSectionNode   parseReflectionSection();
+
+                ASTNode * parseModule();
         };
     }
 }

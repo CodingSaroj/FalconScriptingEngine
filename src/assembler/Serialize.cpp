@@ -16,18 +16,6 @@ namespace Falcon
                     std::cout<<"Identifier:    \t"<<token.Str<<"\n";
                     break;
 
-                case TokenType::META:
-                    std::cout<<"DebugMeta\n";
-                    break;
-
-                case TokenType::MAP:
-                    std::cout<<"DebugLineMap\n";
-                    break;
-
-                case TokenType::LOCAL:
-                    std::cout<<"DebugLocal\n";
-                    break;
-
                 case TokenType::INSTRUCTION:
                     std::cout<<"Instruction:    \t"<<token.Str<<"\n";
                     break;
@@ -190,6 +178,54 @@ namespace Falcon
                     Serialize(&routine, padding + "\t");
                 }
             }
+            else if (auto * function = dynamic_cast<ReflectionFunctionNode *>(node))
+            {
+                std::cout<<padding<<"ReflectionFunctionNode:\n";
+
+                std::cout<<padding + "\tReturnType:\t"<<function->ReturnType<<"\n";
+
+                std::cout<<padding + "\tName:\t"<<function->Name<<"\n";
+
+                for (auto param : function->Parameters)
+                {
+                    std::cout<<padding + "\tParam:\t"<<param<<"\n";
+                }
+            }
+            else if (auto * structure = dynamic_cast<ReflectionStructureNode *>(node))
+            {
+                std::cout<<padding<<"ReflectionStructureNode:\t"<<structure->Name<<"\n";
+
+                for (auto member : structure->Members)
+                {
+                    std::cout<<padding + "\tMember:\t"<<member.first<<"\t"<<member.second<<"\n";
+                }
+            }
+            else if (auto * alias = dynamic_cast<ReflectionAliasNode *>(node))
+            {
+                std::cout<<padding<<"ReflectionAliasNode:\n";
+
+                std::cout<<padding + "\tName:\t"<<alias->Name<<"\n";
+                std::cout<<padding + "\tBase:\t"<<alias->Base<<"\n";
+            }
+            else if (auto * refl = dynamic_cast<ReflectionSectionNode *>(node))
+            {
+                std::cout<<padding<<"ReflectionSectionNode:\n";
+
+                for (auto function : refl->Functions)
+                {
+                    Serialize(&function, padding + "\t");
+                }
+
+                for (auto structure : refl->Structures)
+                {
+                    Serialize(&structure, padding + "\t");
+                }
+
+                for (auto alias : refl->Aliases)
+                {
+                    Serialize(&alias, padding + "\t");
+                }
+            } 
             else if (auto * module = dynamic_cast<ModuleNode *>(node))
             {
                 std::cout<<"ModuleNode:\n";
@@ -197,6 +233,8 @@ namespace Falcon
                 Serialize(&module->CodeSection, "\t");
 
                 Serialize(&module->DebugSection, "\t");
+
+                Serialize(&module->ReflectionSection, "\t");
             }
         }
     }

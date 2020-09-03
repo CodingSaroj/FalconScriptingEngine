@@ -31,9 +31,9 @@ namespace Falcon
                 uint64_t m_Cursor;
                 char     m_CurrentChar;
 
-                Token processNumber(bool signedInt = false);
-                Token processChar();
-                Token processStr();
+                Token lexNumber(bool signedInt = false);
+                Token lexChar();
+                Token lexStr();
 
                 inline char advance()
                 {

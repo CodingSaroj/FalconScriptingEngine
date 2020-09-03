@@ -96,19 +96,19 @@ namespace Falcon
                 }
                 else
                 {
-                    if (type == OpCode::UMOV8 || type == OpCode::IMOV8)
+                    if (type == OpCode::MOV8)
                     {
                         m_Bytecode += inst->Args[i].Char;
                     }
-                    else if (type == OpCode::UMOV16 || type == OpCode::IMOV16)
+                    else if (type == OpCode::MOV16)
                     {
                         m_Bytecode.append((char *)&inst->Args[i].Uint, 2);
                     }
-                    else if (type == OpCode::UMOV32 || type == OpCode::IMOV32 || type == OpCode::FMOV32 || (type >= OpCode::LOAD8 && type <= OpCode::LODREF) || type == OpCode::CALL || type == OpCode::RET || type == OpCode::POPNUL)
+                    else if (type == OpCode::MOV32 || (type >= OpCode::LOAD8 && type <= OpCode::LODREF) || type == OpCode::CALL || type == OpCode::RET || type == OpCode::POPNUL)
                     {
                         m_Bytecode.append((char *)&inst->Args[i].Uint, 4);
                     }
-                    else if (type == OpCode::UMOV64 || type == OpCode::IMOV64 || type == OpCode::FMOV64 || type == OpCode::JMP || type == OpCode::JMT || type == OpCode::JMF)
+                    else if (type == OpCode::MOV64 || type == OpCode::JMP || type == OpCode::JMT || type == OpCode::JMF)
                     {
                         m_Bytecode.append((char *)&inst->Args[i].Uint, 8);
                     }
@@ -245,6 +245,87 @@ namespace Falcon
             }
         }
         
+        void Generator::generateReflectionFunction(ReflectionFunctionNode * function)
+        {
+            m_Bytecode += "F";
+
+            m_Bytecode += function->ReturnType;
+            m_Bytecode += '\0';
+
+            m_Bytecode += function->Name;
+            m_Bytecode += '\0';
+
+            for (auto param : function->Parameters)
+            {
+                m_Bytecode += param;
+                m_Bytecode += '\0';
+            }
+        }
+
+        void Generator::generateReflectionStructure(ReflectionStructureNode * structure)
+        {
+            m_Bytecode += "S";
+
+            m_Bytecode += structure->Name;
+            m_Bytecode += '\0';
+
+            for (auto member : structure->Members)
+            {
+                m_Bytecode += member.first;
+                m_Bytecode += '\0';
+
+                m_Bytecode += member.second;
+                m_Bytecode += '\0';
+            }
+        }
+
+        void Generator::generateReflectionAlias(ReflectionAliasNode * alias)
+        {
+            m_Bytecode += "A";
+
+            m_Bytecode += alias->Name;
+            m_Bytecode += '\0';
+
+            m_Bytecode += alias->Base;
+            m_Bytecode += '\0';
+        }
+
+        void Generator::generateReflectionSection(ReflectionSectionNode * refl)
+        {
+            m_Bytecode += "REFL";
+
+            uint64_t sizeStart = m_Bytecode.size();
+
+            for (int i = 0; i < 8; i++)
+            {
+                m_Bytecode += '\0';
+            }
+
+            uint64_t reflectionSectionStart = m_Bytecode.size();
+
+            for (auto & function : refl->Functions)
+            {
+                generateReflectionFunction(&function);
+            }
+
+            for (auto & structure : refl->Structures)
+            {
+                generateReflectionStructure(&structure);
+            }
+            
+            for (auto & alias : refl->Aliases)
+            {
+                generateReflectionAlias(&alias);
+            }
+
+            uint64_t reflectionSectionSize = m_Bytecode.size() - reflectionSectionStart;
+
+            for (int i = 0; i < 8; i++)
+            {
+                m_Bytecode[sizeStart + i] = ((char *)&reflectionSectionSize)[i];
+            }
+        }
+       
         void Generator::generateModule(ModuleNode * module)
         {
             generateCodeSection(&module->CodeSection);
@@ -253,6 +334,8 @@ namespace Falcon
             {
                 generateDebugSection(&module->DebugSection);
             }
+
+            generateReflectionSection(&module->ReflectionSection);
         }
 
         std::string Generator::generate()

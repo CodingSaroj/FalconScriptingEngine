@@ -38,6 +38,11 @@ namespace Falcon
             void generateDebugRoutine(DebugRoutineNode * routine);
             void generateDebugSection(DebugSectionNode * dbg);
 
+            void generateReflectionFunction(ReflectionFunctionNode * function);
+            void generateReflectionStructure(ReflectionStructureNode * structure);
+            void generateReflectionAlias(ReflectionAliasNode * alias);
+            void generateReflectionSection(ReflectionSectionNode * refl);
+
             void generateModule(ModuleNode * module);
         };
     }

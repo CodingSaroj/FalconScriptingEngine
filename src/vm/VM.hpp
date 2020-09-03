@@ -172,26 +172,6 @@ namespace Falcon
             void uneq32();
             void uneq64();
 
-            void umov8();
-            void umov16();
-            void umov32();
-            void umov64();
-
-            void umvr8();
-            void umvr16();
-            void umvr32();
-            void umvr64();
-
-            void upsh8();
-            void upsh16();
-            void upsh32();
-            void upsh64();
-
-            void upop8();
-            void upop16();
-            void upop32();
-            void upop64();
-
             void iadd8();
             void iadd16();
             void iadd32();
@@ -287,26 +267,6 @@ namespace Falcon
             void ineq32();
             void ineq64();
 
-            void imov8();
-            void imov16();
-            void imov32();
-            void imov64();
-
-            void imvr8();
-            void imvr16();
-            void imvr32();
-            void imvr64();
-
-            void ipsh8();
-            void ipsh16();
-            void ipsh32();
-            void ipsh64();
-
-            void ipop8();
-            void ipop16();
-            void ipop32();
-            void ipop64();
-
             void fadd32();
             void fadd64();
 
@@ -342,18 +302,26 @@ namespace Falcon
 
             void fneq32();
             void fneq64();
+    
+            void mov8();
+            void mov16();
+            void mov32();
+            void mov64();
 
-            void fmov32();
-            void fmov64();
-
-            void fmvr32();
-            void fmvr64();
-
-            void fpsh32();
-            void fpsh64();
-
-            void fpop32();
-            void fpop64();
+            void mvr8();
+            void mvr16();
+            void mvr32();
+            void mvr64();
+            
+            void psh8();
+            void psh16();
+            void psh32();
+            void psh64();
+            
+            void pop8();
+            void pop16();
+            void pop32();
+            void pop64();
             
             void pshstr();
 

@@ -100,26 +100,6 @@ namespace Falcon
         m_Operators[OpCode::UNEQ32] = &VM::uneq32;
         m_Operators[OpCode::UNEQ64] = &VM::uneq64;
 
-        m_Operators[OpCode::UMOV8] = &VM::umov8;
-        m_Operators[OpCode::UMOV16] = &VM::umov16;
-        m_Operators[OpCode::UMOV32] = &VM::umov32;
-        m_Operators[OpCode::UMOV64] = &VM::umov64;
-        
-        m_Operators[OpCode::UMVR8] = &VM::umvr8;
-        m_Operators[OpCode::UMVR16] = &VM::umvr16;
-        m_Operators[OpCode::UMVR32] = &VM::umvr32;
-        m_Operators[OpCode::UMVR64] = &VM::umvr64;
-
-        m_Operators[OpCode::UPSH8] = &VM::upsh8;
-        m_Operators[OpCode::UPSH16] = &VM::upsh16;
-        m_Operators[OpCode::UPSH32] = &VM::upsh32;
-        m_Operators[OpCode::UPSH64] = &VM::upsh64;
-        
-        m_Operators[OpCode::UPOP8] = &VM::upop8;
-        m_Operators[OpCode::UPOP16] = &VM::upop16;
-        m_Operators[OpCode::UPOP32] = &VM::upop32;
-        m_Operators[OpCode::UPOP64] = &VM::upop64;
-        
         m_Operators[OpCode::IADD8] = &VM::iadd8;
         m_Operators[OpCode::IADD16] = &VM::iadd16;
         m_Operators[OpCode::IADD32] = &VM::iadd32;
@@ -215,26 +195,6 @@ namespace Falcon
         m_Operators[OpCode::INEQ32] = &VM::ineq32;
         m_Operators[OpCode::INEQ64] = &VM::ineq64;
 
-        m_Operators[OpCode::IMOV8] = &VM::imov8;
-        m_Operators[OpCode::IMOV16] = &VM::imov16;
-        m_Operators[OpCode::IMOV32] = &VM::imov32;
-        m_Operators[OpCode::IMOV64] = &VM::imov64;
-
-        m_Operators[OpCode::IMVR8] = &VM::imvr8;
-        m_Operators[OpCode::IMVR16] = &VM::imvr16;
-        m_Operators[OpCode::IMVR32] = &VM::imvr32;
-        m_Operators[OpCode::IMVR64] = &VM::imvr64;
-
-        m_Operators[OpCode::IPSH8] = &VM::ipsh8;
-        m_Operators[OpCode::IPSH16] = &VM::ipsh16;
-        m_Operators[OpCode::IPSH32] = &VM::ipsh32;
-        m_Operators[OpCode::IPSH64] = &VM::ipsh64;
-        
-        m_Operators[OpCode::IPOP8] = &VM::ipop8;
-        m_Operators[OpCode::IPOP16] = &VM::ipop16;
-        m_Operators[OpCode::IPOP32] = &VM::ipop32;
-        m_Operators[OpCode::IPOP64] = &VM::ipop64;
-
         m_Operators[OpCode::FADD32] = &VM::fadd32;
         m_Operators[OpCode::FADD64] = &VM::fadd64;
 
@@ -270,18 +230,26 @@ namespace Falcon
 
         m_Operators[OpCode::FNEQ32] = &VM::fneq32;
         m_Operators[OpCode::FNEQ64] = &VM::fneq64;
-
-        m_Operators[OpCode::FMOV32] = &VM::fmov32;
-        m_Operators[OpCode::FMOV64] = &VM::fmov64;
         
-        m_Operators[OpCode::FMVR32] = &VM::fmvr32;
-        m_Operators[OpCode::FMVR64] = &VM::fmvr64;
+        m_Operators[OpCode::MOV8] = &VM::mov8;
+        m_Operators[OpCode::MOV16] = &VM::mov16;
+        m_Operators[OpCode::MOV32] = &VM::mov32;
+        m_Operators[OpCode::MOV64] = &VM::mov64;
+         
+        m_Operators[OpCode::MVR8] = &VM::mvr8;
+        m_Operators[OpCode::MVR16] = &VM::mvr16;
+        m_Operators[OpCode::MVR32] = &VM::mvr32;
+        m_Operators[OpCode::MVR64] = &VM::mvr64;
 
-        m_Operators[OpCode::FPSH32] = &VM::fpsh32;
-        m_Operators[OpCode::FPSH64] = &VM::fpsh64;
-        
-        m_Operators[OpCode::FPOP32] = &VM::fpop32;
-        m_Operators[OpCode::FPOP64] = &VM::fpop64;
+        m_Operators[OpCode::PSH8] = &VM::psh8;
+        m_Operators[OpCode::PSH16] = &VM::psh16;
+        m_Operators[OpCode::PSH32] = &VM::psh32;
+        m_Operators[OpCode::PSH64] = &VM::psh64;
+         
+        m_Operators[OpCode::POP8] = &VM::pop8;
+        m_Operators[OpCode::POP16] = &VM::pop16;
+        m_Operators[OpCode::POP32] = &VM::pop32;
+        m_Operators[OpCode::POP64] = &VM::pop64;
 
         m_Operators[OpCode::PSHSTR] = &VM::pshstr;
  
@@ -887,130 +855,6 @@ namespace Falcon
         m_Cmp[0] = r0.u64 != r1.u64;
     }
 
-    void VM::umov8()
-    {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        uint8_t bytes[1];
-        
-        memcpy((uint8_t *)bytes, &m_Code[m_IP + 1], 1);
-        m_IP += 1;
-
-        r0.u8 = *(uint8_t *)bytes;
-    }
-
-    void VM::umov16()
-    {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        uint8_t bytes[2];
-        
-        memcpy((uint8_t *)bytes, &m_Code[m_IP + 1], 2);
-        m_IP += 2;
-
-        r0.u16 = *(uint16_t *)bytes;
-    }
-    
-    void VM::umov32()
-    {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        uint8_t bytes[4];
-        
-        memcpy((uint8_t *)bytes, &m_Code[m_IP + 1], 4);
-        m_IP += 4;
-
-        r0.u32 = *(uint32_t *)bytes;
-    }
-    
-    void VM::umov64()
-    {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        uint8_t bytes[8];
-        
-        memcpy((uint8_t *)bytes, &m_Code[m_IP + 1], 8);
-        m_IP += 8;
-
-        r0.u64 = *(uint64_t *)bytes;
-    }
-
-    void VM::umvr8()
-    {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-
-        r0.u8 = r1.u8;
-    }
-
-    void VM::umvr16()
-    {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-
-        r0.u16 = r1.u16;
-    }
-    
-    void VM::umvr32()
-    {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-
-        r0.u32 = r1.u32;
-    }
-    
-    void VM::umvr64()
-    {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-
-        r0.u64 = r1.u64;
-    }
-
-    void VM::upsh8()
-    {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        push((uint8_t *)&r0.u8, 1);
-    }
-    
-    void VM::upsh16()
-    {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        push((uint8_t *)&r0.u16, 2);
-    }
-    
-    void VM::upsh32()
-    {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        push((uint8_t *)&r0.u32, 4);
-    }
-    
-    void VM::upsh64()
-    {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        push((uint8_t *)&r0.u64, 8);
-    }
-
-    void VM::upop8()
-    {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        r0.u8 = *(uint8_t *)pop(1);
-    }
-    
-    void VM::upop16()
-    {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        r0.u16 = *(uint16_t *)pop(2);
-    }
-    
-    void VM::upop32()
-    {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        r0.u32 = *(uint32_t *)pop(4);
-    }
-    
-    void VM::upop64()
-    {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        r0.u64 = *(uint64_t *)pop(8);
-    }
-
     void VM::iadd8()
     {
         Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
@@ -1553,131 +1397,7 @@ namespace Falcon
         Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         m_Cmp[1] = m_Cmp[0];
         m_Cmp[0] = r0.i64 != r1.i64;
-    }
-
-    void VM::imov8()
-    {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        uint8_t bytes[1];
-        
-        memcpy((uint8_t *)bytes, &m_Code[m_IP + 1], 1);
-        m_IP += 1;
-
-        r0.i8 = *(int8_t *)bytes;
-    }
-
-    void VM::imov16()
-    {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        uint8_t bytes[2];
-        
-        memcpy((uint8_t *)bytes, &m_Code[m_IP + 1], 2);
-        m_IP += 2;
-
-        r0.i16 = *(int16_t *)bytes;
-    }
-    
-    void VM::imov32()
-    {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        uint8_t bytes[4];
-        
-        memcpy((uint8_t *)bytes, &m_Code[m_IP + 1], 4);
-        m_IP += 4;
-
-        r0.i32 = *(int32_t *)bytes;
-    }
-    
-    void VM::imov64()
-    {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        uint8_t bytes[8];
-        
-        memcpy((uint8_t *)bytes, &m_Code[m_IP + 1], 8);
-        m_IP += 8;
-
-        r0.i64 = *(int64_t *)bytes;
-    }
-
-    void VM::imvr8()
-    {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-
-        r0.i8 = r1.i8;
-    }
-
-    void VM::imvr16()
-    {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-
-        r0.i16 = r1.i16;
-    }
-    
-    void VM::imvr32()
-    {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-
-        r0.i32 = r1.i32;
-    }
-    
-    void VM::imvr64()
-    {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-
-        r0.i64 = r1.i64;
-    }
-
-    void VM::ipsh8()
-    {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        push((uint8_t *)&r0.i8, 1);
-    }
-    
-    void VM::ipsh16()
-    {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        push((uint8_t *)&r0.i16, 2);
-    }
-    
-    void VM::ipsh32()
-    {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        push((uint8_t *)&r0.i32, 4);
-    }
-    
-    void VM::ipsh64()
-    {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        push((uint8_t *)&r0.i64, 8);
-    }
-
-    void VM::ipop8()
-    {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        r0.i8 = *(int8_t *)pop(1);
-    }
-    
-    void VM::ipop16()
-    {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        r0.i16 = *(int16_t *)pop(2);
-    }
-    
-    void VM::ipop32()
-    {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        r0.i32 = *(int32_t *)pop(4);
-    }
-    
-    void VM::ipop64()
-    {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        r0.i64 = *(int64_t *)pop(8);
-    }
+    } 
 
     void VM::fadd32()
     {
@@ -1855,7 +1575,29 @@ namespace Falcon
         m_Cmp[0] = r0.f64 != r1.f64;
     }
 
-    void VM::fmov32()
+    void VM::mov8()
+    {
+        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        uint8_t bytes[1];
+        
+        memcpy((uint8_t *)bytes, &m_Code[m_IP + 1], 1);
+        m_IP += 1;
+
+        r0.u8 = *(uint8_t *)bytes;
+    }
+
+    void VM::mov16()
+    {
+        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        uint8_t bytes[2];
+        
+        memcpy((uint8_t *)bytes, &m_Code[m_IP + 1], 2);
+        m_IP += 2;
+
+        r0.u16 = *(uint16_t *)bytes;
+    }
+    
+    void VM::mov32()
     {
         Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         uint8_t bytes[4];
@@ -1863,10 +1605,10 @@ namespace Falcon
         memcpy((uint8_t *)bytes, &m_Code[m_IP + 1], 4);
         m_IP += 4;
 
-        r0.f32 = *(float *)bytes;
+        r0.u32 = *(uint32_t *)bytes;
     }
     
-    void VM::fmov64()
+    void VM::mov64()
     {
         Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         uint8_t bytes[8];
@@ -1874,47 +1616,87 @@ namespace Falcon
         memcpy((uint8_t *)bytes, &m_Code[m_IP + 1], 8);
         m_IP += 8;
 
-        r0.f64 = *(double *)bytes;
+        r0.u64 = *(uint64_t *)bytes;
     }
 
-    void VM::fmvr32()
+    void VM::mvr8()
     {
         Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
 
-        r0.f32 = r1.f32;
+        r0.u8 = r1.u8;
     }
-    
-    void VM::fmvr64()
+
+    void VM::mvr16()
     {
         Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
 
-        r0.f64 = r1.f64;
+        r0.u16 = r1.u16;
     }
     
-    void VM::fpsh32()
+    void VM::mvr32()
     {
         Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        push((uint8_t *)&r0.f32, 4);
+        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+
+        r0.u32 = r1.u32;
     }
     
-    void VM::fpsh64()
+    void VM::mvr64()
     {
         Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        push((uint8_t *)&r0.f64, 8);
+        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+
+        r0.u64 = r1.u64;
     }
 
-    void VM::fpop32()
+    void VM::psh8()
     {
         Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        r0.f32 = *(float *)pop(4);
+        push((uint8_t *)&r0.u8, 1);
     }
     
-    void VM::fpop64()
+    void VM::psh16()
     {
         Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        r0.f64 = *(double *)pop(8);
+        push((uint8_t *)&r0.u16, 2);
+    }
+    
+    void VM::psh32()
+    {
+        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        push((uint8_t *)&r0.u32, 4);
+    }
+    
+    void VM::psh64()
+    {
+        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        push((uint8_t *)&r0.u64, 8);
+    }
+
+    void VM::pop8()
+    {
+        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        r0.u8 = *(uint8_t *)pop(1);
+    }
+    
+    void VM::pop16()
+    {
+        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        r0.u16 = *(uint16_t *)pop(2);
+    }
+    
+    void VM::pop32()
+    {
+        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        r0.u32 = *(uint32_t *)pop(4);
+    }
+    
+    void VM::pop64()
+    {
+        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        r0.u64 = *(uint64_t *)pop(8);
     }
     
     void VM::pshstr()

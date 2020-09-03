@@ -13,11 +13,6 @@ namespace Falcon
             SECTION = 128,
             IDENTIFIER,
 
-            // Debug section tokens
-            META,
-            MAP,
-            LOCAL,
-
             // Code section tokens
             INSTRUCTION,
             REGISTER,

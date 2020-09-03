@@ -34,12 +34,6 @@ namespace Falcon
             UISE8, UISE16, UISE32, UISE64,
             UNEQ8, UNEQ16, UNEQ32, UNEQ64,
 
-            UMOV8, UMOV16, UMOV32, UMOV64,
-            UMVR8, UMVR16, UMVR32, UMVR64,
-
-            UPSH8, UPSH16, UPSH32, UPSH64,
-            UPOP8, UPOP16, UPOP32, UPOP64,
-
             IADD8, IADD16, IADD32, IADD64,
             ISUB8, ISUB16, ISUB32, ISUB64,
             IMUL8, IMUL16, IMUL32, IMUL64,
@@ -62,12 +56,6 @@ namespace Falcon
             IISE8, IISE16, IISE32, IISE64,
             INEQ8, INEQ16, INEQ32, INEQ64,
 
-            IMOV8, IMOV16, IMOV32, IMOV64,
-            IMVR8, IMVR16, IMVR32, IMVR64,
-
-            IPSH8, IPSH16, IPSH32, IPSH64,
-            IPOP8, IPOP16, IPOP32, IPOP64,
-
             FADD32, FADD64,
             FSUB32, FSUB64,
             FMUL32, FMUL64,
@@ -82,11 +70,11 @@ namespace Falcon
             FISE32, FISE64,
             FNEQ32, FNEQ64,
 
-            FMOV32, FMOV64,
-            FMVR32, FMVR64,
+            PSH8, PSH16, PSH32, PSH64,
+            POP8, POP16, POP32, POP64,
 
-            FPSH32, FPSH64,
-            FPOP32, FPOP64,
+            MOV8, MOV16, MOV32, MOV64,
+            MVR8, MVR16, MVR32, MVR64,
 
             PSHSTR,
 

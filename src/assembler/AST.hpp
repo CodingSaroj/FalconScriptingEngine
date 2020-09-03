@@ -119,10 +119,45 @@ namespace Falcon
             std::vector<DebugRoutineNode> Routines;
         };
 
+        struct ReflectionFunctionNode : public ASTNode
+        {
+            std::string              Name;
+            std::string              ReturnType;
+            std::vector<std::string> Parameters;
+
+            ReflectionFunctionNode(const std::string & name, const std::string & retType, std::vector<std::string> params);
+        };
+
+        struct ReflectionStructureNode : public ASTNode
+        {
+            using Member = std::pair<std::string, std::string>;
+
+            std::string Name;
+            std::vector<Member> Members;
+
+            ReflectionStructureNode(const std::string & name, std::vector<Member> members);
+        };
+
+        struct ReflectionAliasNode : public ASTNode
+        {
+            std::string Name;
+            std::string Base;
+
+            ReflectionAliasNode(const std::string & name, const std::string & base);
+        };
+
+        struct ReflectionSectionNode : public ASTNode
+        {
+            std::vector<ReflectionFunctionNode>  Functions;
+            std::vector<ReflectionStructureNode> Structures;
+            std::vector<ReflectionAliasNode>     Aliases;
+        };
+
         struct ModuleNode : public ASTNode
         {
-            CodeSectionNode CodeSection;
-            DebugSectionNode DebugSection;
+            CodeSectionNode       CodeSection;
+            DebugSectionNode      DebugSection;
+            ReflectionSectionNode ReflectionSection;
         };
     }
 }
