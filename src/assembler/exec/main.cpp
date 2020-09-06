@@ -3,6 +3,7 @@
 #include <iterator>
 
 #include "../SemanticAnalyzer.hpp"
+#include "../Combiner.hpp"
 #include "../Generator.hpp"
 #include "../Serialize.hpp"
 
@@ -14,18 +15,19 @@ static struct
         bool LogTokens = false, LogAST = false;
     #endif
 
-    std::string InputName = "a.fasm";
+    std::vector<std::string> InputNames{"a.fasm"};
     std::string TargetName = "a.fali";
 } s_State;
 
 void printHelp()
 {
-    std::cout<<"Usage: fali [COMMAND_LINE_OPTIONS]\n\n";
+    std::cout<<"Usage: fasm [COMMAND_LINE_OPTIONS] [FILE(s)]\n\n";
     std::cout<<"COMMAND_LINE_OPTIONS:\n";
     std::cout<<"    -h or --help                  : Print this help and exit.\n";
-    std::cout<<"    -i [FILE] or --input=[FILE]   : Set the input file as FILE. Default is a.fasm.\n";
     std::cout<<"    -o [FILE] or --output=[FILE]  : Set the output file as FILE. Default is a.fali.\n";
     std::cout<<"    -dbg or --debug               : Write debug data to the output.\n";
+    std::cout<<"FILE(s):\n";
+    std::cout<<"    Add FILE to input files. No input file sets input file as a.fasm.\n";
 }
 
 void parseCmdArgs(int argc, char * argv[])
@@ -59,28 +61,6 @@ void parseCmdArgs(int argc, char * argv[])
                 s_State.LogAST = true;
             }
         #endif
-        else if (str == "-i")
-        {
-            if (i == argc - 1)
-            {
-                std::cout<<"Command line option `-i` should have filename after it.\n";
-                printHelp();
-                exit(2);
-            }
-
-            s_State.InputName = argv[++i];
-        }
-        else if (str.find("--in=") != std::string::npos)
-        {
-            if (str.size() == 5)
-            {
-                std::cout<<"Command line option `--in=` should have filename after it.\n";
-                printHelp();
-                exit(2);
-            }
-
-            s_State.InputName = str.substr(5);
-        }
         else if (str == "-o")
         {
             if (i == argc - 1)
@@ -105,9 +85,19 @@ void parseCmdArgs(int argc, char * argv[])
         }
         else
         {
-            std::cout<<"Invalid command line option `"<<str<<"`.\n";
-            printHelp();
-            exit(2);
+            if (str[0] == '-')
+            {
+                std::cout<<"Invalid command line option `"<<str<<"`.\n";
+                printHelp();
+                exit(2);
+            }
+
+            if (s_State.InputNames[0] == "a.fasm")
+            {
+                s_State.InputNames.erase(s_State.InputNames.begin());
+            }
+
+            s_State.InputNames.emplace_back(str);
         }
     }
 }
@@ -115,55 +105,62 @@ void parseCmdArgs(int argc, char * argv[])
 int main(int argc, char * argv[])
 {
     parseCmdArgs(argc, argv);
+    
+    std::vector<Falcon::Assembler::ASTNode *> asts;
 
-    std::ifstream in(s_State.InputName);
-
-    if (!in)
+    for (auto filename : s_State.InputNames)
     {
-        std::cout<<"Input file error: "<<strerror(errno)<<"\n";
-        exit(2);
+        std::ifstream in(filename);
+
+        if (!in)
+        {
+            std::cout<<"Input file error in `"<<filename<<"`: "<<strerror(errno)<<"\n";
+            exit(2);
+        }
+
+        in>>std::noskipws;
+
+        std::istream_iterator<char> eos;
+
+        std::istream_iterator<char> it(in);
+
+        std::string inStr(it, eos);
+
+        in.close();
+
+        #ifdef DEBUG
+            if (s_State.LogTokens)
+            {
+                Falcon::Assembler::Lexer lexer(inStr);
+
+                Falcon::Assembler::Token token((Falcon::Assembler::TokenType)'\0');
+
+                while ((token = lexer.lex()).Type != (Falcon::Assembler::TokenType)'\0')
+                {
+                    Falcon::Assembler::Serialize(token);
+                }
+            }
+        #endif
+
+        Falcon::Assembler::Lexer lexer(inStr);
+
+        Falcon::Assembler::Parser parser(std::bind(&Falcon::Assembler::Lexer::lex, &lexer), std::bind(&Falcon::Assembler::Lexer::peek, &lexer));
+
+        asts.emplace_back(parser.parse());
     }
 
-    in>>std::noskipws;
-
-    std::istream_iterator<char> eos;
-
-    std::istream_iterator<char> it(in);
-
-    std::string inStr(it, eos);
-
-    in.close();
-
-    #ifdef DEBUG
-        if (s_State.LogTokens)
-        {
-            Falcon::Assembler::Lexer lexer(inStr);
-
-            Falcon::Assembler::Token token((Falcon::Assembler::TokenType)'\0');
-
-            while ((token = lexer.lex()).Type != (Falcon::Assembler::TokenType)'\0')
-            {
-                Serialize(token);
-            }
-        }
-    #endif
-
-    Falcon::Assembler::Lexer lexer(inStr);
-
-    Falcon::Assembler::Parser parser(std::bind(&Falcon::Assembler::Lexer::lex, &lexer), std::bind(&Falcon::Assembler::Lexer::peek, &lexer));
+    Falcon::Assembler::Combiner combiner(asts);
 
     #ifdef DEBUG
         if (s_State.LogAST)
         {
-            Falcon::Assembler::Lexer lexer(inStr);
+            Falcon::Assembler::Combiner combiner(asts);
 
-            Falcon::Assembler::Parser p(std::bind(&Falcon::Assembler::Lexer::lex, &lexer), std::bind(&Falcon::Assembler::Lexer::peek, &lexer));
-
-            Serialize(p.parse());
+            Falcon::Assembler::Serialize(combiner.combine());
         }
     #endif
 
-    Falcon::Assembler::SemanticAnalyzer semanticAnalyzer(parser.parse());
+    Falcon::Assembler::SemanticAnalyzer semanticAnalyzer(combiner.combine());
 
     Falcon::Assembler::Generator generator(semanticAnalyzer.analyze(), s_State.Debug);
 

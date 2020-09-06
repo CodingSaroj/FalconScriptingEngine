@@ -1,0 +1,76 @@
+#include "Combiner.hpp"
+
+namespace Falcon
+{
+    namespace Assembler
+    {
+        Combiner::Combiner(std::vector<ASTNode *> asts)
+            : m_ASTs(asts)
+        {
+        }
+
+        ASTNode * Combiner::combine(ASTNode * ast1, ASTNode * ast2)
+        {
+            if (auto module1 = dynamic_cast<ModuleNode *>(ast1))
+            {
+                if (auto module2 = dynamic_cast<ModuleNode *>(ast2))
+                {
+                    module1->CodeSection.Routines.insert(
+                        module1->CodeSection.Routines.begin(),
+                        module2->CodeSection.Routines.begin(),
+                        module2->CodeSection.Routines.end()
+                    );
+
+                    module1->DebugSection.Routines.insert(
+                        module1->DebugSection.Routines.begin(),
+                        module2->DebugSection.Routines.begin(),
+                        module2->DebugSection.Routines.end()
+                    );
+
+                    module1->ReflectionSection.Functions.insert(
+                        module1->ReflectionSection.Functions.begin(),
+                        module2->ReflectionSection.Functions.begin(),
+                        module2->ReflectionSection.Functions.end()
+                    );
+                    
+                    module1->ReflectionSection.Structures.insert(
+                        module1->ReflectionSection.Structures.begin(),
+                        module2->ReflectionSection.Structures.begin(),
+                        module2->ReflectionSection.Structures.end()
+                    );
+
+                    module1->ReflectionSection.Aliases.insert(
+                        module1->ReflectionSection.Aliases.begin(),
+                        module2->ReflectionSection.Aliases.begin(),
+                        module2->ReflectionSection.Aliases.end()
+                    );
+                }
+            }
+
+            return ast1;
+        }
+
+        ASTNode * Combiner::combine()
+        {
+            if (m_ASTs.size() == 0)
+            {
+                return nullptr;
+            }
+            else if (m_ASTs.size() == 1)
+            {
+                return m_ASTs[0];
+            }
+            else
+            {
+                ASTNode * current = m_ASTs[0];
+
+                for (uint64_t i = 0; i < m_ASTs.size(); i++)
+                {
+                    current = combine(current, m_ASTs[i]);
+                }
+
+                return current;
+            }
+        }
+    }
+}
