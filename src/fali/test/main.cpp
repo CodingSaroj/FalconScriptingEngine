@@ -12,7 +12,7 @@ int main()
 {
     Reader reader("hello.fali");
 
-    Context ctxt(reader.GetCode());
+    FALI::Context ctxt(reader.GetCode());
 
     vec2 vc1{2.0, 3.0}, vc2{3.0, 2.0};
 

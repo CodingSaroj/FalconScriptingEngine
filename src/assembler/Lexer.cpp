@@ -65,13 +65,13 @@ namespace Falcon
                 this->advance();
             }
 
-            if (isFloat) { return Token(TokenType::FLOAT, std::strtod(number.c_str(), NULL)); }
+            if (isFloat) { return Token(TokenType::FLOAT, (double)std::strtod(number.c_str(), NULL)); }
 
-            if (base == OCT) { return Token(TokenType::UINT, std::strtoul(number.c_str(), NULL, 8)); }
+            if (base == OCT) { return Token(TokenType::UINT, (uint64_t)std::strtoul(number.c_str(), NULL, 8)); }
             
-            else if (base == DEC) { return Token(sign ? TokenType::INT : TokenType::UINT, std::strtol(number.c_str(), NULL, 10)); }
+            else if (base == DEC) { return sign ? Token(TokenType::INT, (int64_t)std::strtol(number.c_str(), NULL, 10)) : Token(TokenType::UINT, (uint64_t)std::strtoul(number.c_str(), NULL, 10)); }
             
-            else { return Token(TokenType::UINT, std::strtoul(number.c_str(), NULL, 16)); }
+            else { return Token(TokenType::UINT, (uint64_t)std::strtoul(number.c_str(), NULL, 16)); }
         }
 
         Token Lexer::lexChar()

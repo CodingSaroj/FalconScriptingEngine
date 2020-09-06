@@ -1,6 +1,8 @@
 #ifndef FALCON_ASM_SEMANTIC_ANALYZER_HPP
 #define FALCON_ASM_SEMANTIC_ANALYZER_HPP
 
+#include <array>
+
 #include "Parser.hpp"
 
 namespace Falcon

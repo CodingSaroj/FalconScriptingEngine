@@ -3,7 +3,7 @@
 #include <csignal>
 #include <cstdio>
 #include <cstdlib>
-#include <x86_64-linux-gnu/bits/stdint-uintn.h>
+#include <cstdint>
 
 #include "Context.hpp"
 

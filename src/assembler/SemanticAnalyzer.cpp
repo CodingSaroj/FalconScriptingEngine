@@ -1,5 +1,4 @@
 #include "SemanticAnalyzer.hpp"
-#include "AST.hpp"
 
 namespace Falcon
 {

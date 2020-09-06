@@ -15,16 +15,16 @@ int main()
 
         OpCode::FUNC,
 
-        OpCode::UMOV64, RegisterType::R1, 0x14, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        OpCode::UPSH64, RegisterType::R1,
+        OpCode::MOV64, RegisterType::R1, 0x14, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        OpCode::PSH64, RegisterType::R1,
         OpCode::CALL,   0x08, 0x00, 0x00, 0x00, 'f', 'a', 'c', 't', 0x00,
         OpCode::STOP,
 
         OpCode::FUNC,
 
-        OpCode::UMOV64, RegisterType::R1, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        OpCode::UPSH64, RegisterType::R1,
-        OpCode::UPSH64, RegisterType::R1,
+        OpCode::MOV64, RegisterType::R1, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        OpCode::PSH64, RegisterType::R1,
+        OpCode::PSH64, RegisterType::R1,
 
         OpCode::LODREF, RegisterType::R1, 0x10, 0x00, 0x00, 0x00,
         OpCode::LODREF, RegisterType::R2, 0x00, 0x00, 0x00, 0x00,

@@ -1,1 +1,1 @@
-.\premake5\premake5.exe $1
+.\premake5\premake5.exe vs2019
