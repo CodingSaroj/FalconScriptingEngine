@@ -2,6 +2,11 @@
 #define FALCON_FALI_FUNCTION_HPP
 
 #include <functional>
+#include <string>
+#include <unordered_map>
+#include <vector>
+
+#include <cstdint>
 
 namespace Falcon
 {
@@ -9,31 +14,59 @@ namespace Falcon
     {
         class Function
         {
-            public:
-                Function() = default;
+        public:
+            struct FunctionData
+            {
+                std::string              ReturnType;
+                std::string              Name;
+                std::vector<std::string> ParameterTypes;
 
-                template <typename ReturnType, typename... Args>
-                Function(ReturnType( * function)(Args...))
-                    : m_Function((void *)function)
+                Function * Base;
+            };
+
+            using FunctionIterator = std::unordered_map<std::string, FunctionData>::iterator;
+
+        private:
+            struct Iterable
+            {
+                inline FunctionIterator begin()
                 {
+                    return s_Functions.begin();
                 }
 
-                template <typename ReturnType, typename... Args>
-                ReturnType call(Args... args)
+                inline FunctionIterator end()
                 {
-                    auto function = (ReturnType( * )(Args...))m_Function;
-
-                    if constexpr (!std::is_void_v<ReturnType>)
-                    {
-                        return function(std::forward<Args>(args)...);
-                    }
-                    
-                    function(std::forward<Args>(args)...);
+                    return s_Functions.end();
                 }
+            };
 
-            private:
-                void * m_Function;
+        public:
+            using FunctionType = std::function<void *(std::vector<void *>)>;
+
+            Function() = default;
+
+            Function(FunctionType function);
+
+            void * call(std::vector<void *> args);
+            
+            static void AddFunction(const std::string & retType, const std::string & name, std::vector<std::string> paramTypes);
+            static void AddFunction(const std::string & retType, const std::string & name, std::vector<std::string> paramTypes, Function base);
+            
+            static void SetBase(const std::string & name, Function base);
+
+            static inline bool IsValid(const std::string & name) { return s_Functions.count(name) != 0; }
+
+            static inline Function & Get(const std::string & name) { return *s_Functions[name].Base; }
+            static inline Iterable   GetIterable() { return Iterable(); }
+        private:
+            static std::unordered_map<std::string, FunctionData> s_Functions;
+
+            FunctionType m_Function;
+
+            friend class Context;
         };
+
+        
     }
 }
 

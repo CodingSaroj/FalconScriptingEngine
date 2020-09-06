@@ -29,6 +29,10 @@ namespace Falcon
 
             std::string m_Bytecode;
 
+            std::string m_CodeSection;
+            std::string m_DebugSection;
+            std::string m_ReflectionSection;
+
             std::string generateSymbolTable();
 
             void generateInstruction(InstructionNode * inst);

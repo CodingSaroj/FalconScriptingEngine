@@ -36,7 +36,7 @@ namespace Falcon
                 }
             }
 
-            m_Bytecode += type;
+            m_CodeSection += type;
 
             for (int i = 0; i < inst->Args.size(); i++)
             {
@@ -44,17 +44,17 @@ namespace Falcon
                 {
                     if (type >= OpCode::JMP && type <= OpCode::JMF)
                     {
-                        m_UnresolvedSymbols.emplace_back(m_Bytecode.size(), inst->Args[i].Str);
+                        m_UnresolvedSymbols.emplace_back(m_CodeSection.size(), inst->Args[i].Str);
 
                         for (int i = 0; i < 8; i++)
                         {
-                            m_Bytecode += '\0';
+                            m_CodeSection += '\0';
                         }
                     }
                     else
                     {
-                        m_Bytecode += inst->Args[i].Str;
-                        m_Bytecode += '\0';
+                        m_CodeSection += inst->Args[i].Str;
+                        m_CodeSection += '\0';
                     }
                 }
                 else if (inst->Args[i].Type == AtomNode::AtomType::REGISTER)
@@ -92,25 +92,25 @@ namespace Falcon
                     if (at) { typeU8 |= 0b00000100; }
                     if (ref) { typeU8 |= 0b00001000; }
 
-                    m_Bytecode += type;
+                    m_CodeSection += type;
                 }
                 else
                 {
                     if (type == OpCode::MOV8)
                     {
-                        m_Bytecode += inst->Args[i].Char;
+                        m_CodeSection += inst->Args[i].Char;
                     }
                     else if (type == OpCode::MOV16)
                     {
-                        m_Bytecode.append((char *)&inst->Args[i].Uint, 2);
+                        m_CodeSection.append((char *)&inst->Args[i].Uint, 2);
                     }
                     else if (type == OpCode::MOV32 || (type >= OpCode::LOAD8 && type <= OpCode::LODREF) || type == OpCode::CALL || type == OpCode::RET || type == OpCode::POPNUL)
                     {
-                        m_Bytecode.append((char *)&inst->Args[i].Uint, 4);
+                        m_CodeSection.append((char *)&inst->Args[i].Uint, 4);
                     }
                     else if (type == OpCode::MOV64 || type == OpCode::JMP || type == OpCode::JMT || type == OpCode::JMF)
                     {
-                        m_Bytecode.append((char *)&inst->Args[i].Uint, 8);
+                        m_CodeSection.append((char *)&inst->Args[i].Uint, 8);
                     }
                 }
             }
@@ -118,11 +118,11 @@ namespace Falcon
 
         void Generator::generateRoutine(RoutineNode * routine)
         {
-            m_Bytecode += (char)OpCode::FUNC;
+            m_CodeSection += (char)OpCode::FUNC;
 
             for (auto & label : routine->Labels)
             {
-                m_LabelAddresses[label.Name] = m_Bytecode.size();
+                m_LabelAddresses[label.Name] = m_CodeSection.size();
 
                 for (auto & inst : label.Instructions)
                 {
@@ -130,25 +130,25 @@ namespace Falcon
                 }
             }
 
-            m_Bytecode += OpCode::FUNC;
+            m_CodeSection += OpCode::FUNC;
         }
 
         void Generator::generateCodeSection(CodeSectionNode * code)
         {
-            m_Bytecode += "CODE";
+            m_CodeSection += "CODE";
 
-            uint64_t sizeStart = m_Bytecode.size();
+            uint64_t sizeStart = m_CodeSection.size();
 
             for (int i = 0; i < 8; i++)
             {
-                m_Bytecode += '\0';
+                m_CodeSection += '\0';
             }
 
-            uint64_t codeSectionStart = m_Bytecode.size();
+            uint64_t codeSectionStart = m_CodeSection.size();
 
             for (auto & routine : code->Routines)
             {
-                m_Symbols[routine.Name] = m_Bytecode.size();
+                m_Symbols[routine.Name] = m_CodeSection.size() - 12;
 
                 generateRoutine(&routine);
             }
@@ -162,146 +162,157 @@ namespace Falcon
 
                 for (int i = 0; i < 8; i++)
                 {
-                    m_Bytecode[location + i] = ((char *)&address)[i];
+                    m_CodeSection[location + i] = ((char *)&address)[i];
                 }
             }
 
-            m_Bytecode.insert(codeSectionStart, generateSymbolTable());
+            m_CodeSection.insert(codeSectionStart, generateSymbolTable());
             
-            uint64_t codeSectionSize = (m_Bytecode.size() - codeSectionStart) + 1;
+            uint64_t codeSectionSize = (m_CodeSection.size() - codeSectionStart) + 1;
 
             for (int i = 0; i < 8; i++)
             {
-                m_Bytecode[sizeStart + i] = ((char *)&codeSectionSize)[i];
+                m_CodeSection[sizeStart + i] = ((char *)&codeSectionSize)[i];
             }
 
-            m_Bytecode += '\377';
+            m_CodeSection += '\377';
         }
 
         void Generator::generateDebugRoutine(DebugRoutineNode * routine)
         {
-            m_Bytecode += routine->Name;
-            m_Bytecode += '\0';
+            m_DebugSection += routine->Name;
+            m_DebugSection += '\0';
 
-            m_Bytecode += 'M';
-            m_Bytecode += routine->MetaData.Signature;
-            m_Bytecode += '\0';
+            m_DebugSection += 'M';
+            m_DebugSection += routine->MetaData.Signature;
+            m_DebugSection += '\0';
+            
+            for (int i = 0; i < 16; i++)
+            {
+                m_DebugSection += ((char *)&routine->MetaData.StartLine)[i];
+            }
 
-            m_Bytecode += 'L';
+            m_DebugSection += 'L';
 
             for (auto lineMap : routine->LineMaps)
             {
                 for (int i = 0; i < 16; i++)
                 {
-                    m_Bytecode += ((char *)&lineMap.StartLocation)[i];
+                    m_DebugSection += ((char *)&lineMap.StartLocation)[i];
                 }
 
-                m_Bytecode += lineMap.LineData;
-                m_Bytecode += '\0';
+                m_DebugSection += lineMap.LineData;
+                m_DebugSection += '\0';
             }
 
-            m_Bytecode += 'V';
+            m_DebugSection += 'V';
 
             for (auto localVar : routine->LocalVariables)
             {
-                m_Bytecode += localVar.Name;
-                m_Bytecode += '\0';
+                m_DebugSection += localVar.Name;
+                m_DebugSection += '\0';
 
-                m_Bytecode += localVar.Type;
-                m_Bytecode += '\0';
+                m_DebugSection += localVar.Type;
+                m_DebugSection += '\0';
                 
                 for (int i = 0; i < 8; i++)
                 {
-                    m_Bytecode += ((char *)&localVar.StackOffset)[i];
+                    m_DebugSection += ((char *)&localVar.StackOffset)[i];
                 }
             }
 
-            m_Bytecode += 'E';
+            m_DebugSection += 'E';
         }
 
         void Generator::generateDebugSection(DebugSectionNode * dbg)
         {
-            m_Bytecode += "DEBG";
+            m_DebugSection += "DEBG";
 
-            uint64_t sizeStart = m_Bytecode.size();
+            uint64_t sizeStart = m_DebugSection.size();
 
             for (int i = 0; i < 8; i++)
             {
-                m_Bytecode += '\0';
+                m_DebugSection += '\0';
             }
 
-            uint64_t debugSectionStart = m_Bytecode.size();
+            uint64_t debugSectionStart = m_DebugSection.size();
 
             for (auto & routine : dbg->Routines)
             {
                 generateDebugRoutine(&routine);
             }
 
-            uint64_t debugSectionSize = m_Bytecode.size() - debugSectionStart;
+            uint64_t debugSectionSize = m_DebugSection.size() - debugSectionStart;
 
             for (int i = 0; i < 8; i++)
             {
-                m_Bytecode[sizeStart + i] = ((char *)&debugSectionSize)[i];
+                m_DebugSection[sizeStart + i] = ((char *)&debugSectionSize)[i];
             }
         }
         
         void Generator::generateReflectionFunction(ReflectionFunctionNode * function)
         {
-            m_Bytecode += "F";
+            m_ReflectionSection += 'F';
 
-            m_Bytecode += function->ReturnType;
-            m_Bytecode += '\0';
+            m_ReflectionSection += function->ReturnType;
+            m_ReflectionSection += '\0';
 
-            m_Bytecode += function->Name;
-            m_Bytecode += '\0';
+            m_ReflectionSection += function->Name;
+            m_ReflectionSection += '\0';
 
             for (auto param : function->Parameters)
             {
-                m_Bytecode += param;
-                m_Bytecode += '\0';
+                m_ReflectionSection += param;
+                m_ReflectionSection += '\0';
             }
+
+            m_ReflectionSection += 'E';
         }
 
         void Generator::generateReflectionStructure(ReflectionStructureNode * structure)
         {
-            m_Bytecode += "S";
+            m_ReflectionSection += 'S';
 
-            m_Bytecode += structure->Name;
-            m_Bytecode += '\0';
+            m_ReflectionSection += structure->Name;
+            m_ReflectionSection += '\0';
 
             for (auto member : structure->Members)
             {
-                m_Bytecode += member.first;
-                m_Bytecode += '\0';
+                m_ReflectionSection += member.first;
+                m_ReflectionSection += '\0';
 
-                m_Bytecode += member.second;
-                m_Bytecode += '\0';
+                m_ReflectionSection += member.second;
+                m_ReflectionSection += '\0';
             }
+
+            m_ReflectionSection += 'E';
         }
 
         void Generator::generateReflectionAlias(ReflectionAliasNode * alias)
         {
-            m_Bytecode += "A";
+            m_ReflectionSection += 'A';
 
-            m_Bytecode += alias->Name;
-            m_Bytecode += '\0';
+            m_ReflectionSection += alias->Name;
+            m_ReflectionSection += '\0';
 
-            m_Bytecode += alias->Base;
-            m_Bytecode += '\0';
+            m_ReflectionSection += alias->Base;
+            m_ReflectionSection += '\0';
+
+            m_ReflectionSection += 'E';
         }
 
         void Generator::generateReflectionSection(ReflectionSectionNode * refl)
         {
-            m_Bytecode += "REFL";
+            m_ReflectionSection += "REFL";
 
-            uint64_t sizeStart = m_Bytecode.size();
+            uint64_t sizeStart = m_ReflectionSection.size();
 
             for (int i = 0; i < 8; i++)
             {
-                m_Bytecode += '\0';
+                m_ReflectionSection += '\0';
             }
 
-            uint64_t reflectionSectionStart = m_Bytecode.size();
+            uint64_t reflectionSectionStart = m_ReflectionSection.size();
 
             for (auto & function : refl->Functions)
             {
@@ -318,31 +329,34 @@ namespace Falcon
                 generateReflectionAlias(&alias);
             }
 
-            uint64_t reflectionSectionSize = m_Bytecode.size() - reflectionSectionStart;
+            uint64_t reflectionSectionSize = m_ReflectionSection.size() - reflectionSectionStart;
 
             for (int i = 0; i < 8; i++)
             {
-                m_Bytecode[sizeStart + i] = ((char *)&reflectionSectionSize)[i];
+                m_ReflectionSection[sizeStart + i] = ((char *)&reflectionSectionSize)[i];
             }
         }
        
         void Generator::generateModule(ModuleNode * module)
         {
             generateCodeSection(&module->CodeSection);
+            m_Bytecode += m_CodeSection;
 
             if (m_Debug)
             {
                 generateDebugSection(&module->DebugSection);
+                m_Bytecode += m_DebugSection;
             }
 
             generateReflectionSection(&module->ReflectionSection);
+            m_Bytecode += m_ReflectionSection;
         }
 
         std::string Generator::generate()
         {
             if (auto module = dynamic_cast<ModuleNode *>(m_Node)) { generateModule(module); }
 
-            return "FLCN" + m_Bytecode;
+            return "FALI" + m_Bytecode;
         }
     }
 }

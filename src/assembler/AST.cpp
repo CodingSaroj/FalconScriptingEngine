@@ -66,8 +66,8 @@ namespace Falcon
         {
         }
 
-        DebugMetaNode::DebugMetaNode(const std::string & signature)
-            : Signature(signature)
+        DebugMetaNode::DebugMetaNode(const std::string & signature, uint64_t startLine, uint64_t endLine)
+            : Signature(signature), StartLine(startLine), EndLine(endLine)
         {
         }
 
@@ -81,8 +81,8 @@ namespace Falcon
         {
         }
 
-        DebugRoutineNode::DebugRoutineNode(const std::string & name, const std::string & signature)
-            : Name(name), MetaData(signature)
+        DebugRoutineNode::DebugRoutineNode(const std::string & name, const std::string & signature, uint64_t startLine, uint64_t endLine)
+            : Name(name), MetaData(signature, startLine, endLine)
         {
         }
 

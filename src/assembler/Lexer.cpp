@@ -4,7 +4,7 @@ namespace Falcon
 {
     namespace Assembler
     {
-        static const std::string identChars("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_@$");
+        static const std::string identChars("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_@#$%");
         static const std::string operators("@[]");
         static const std::string whiteSpaces(" \n\t");
         static const std::string octDigits("01234567");

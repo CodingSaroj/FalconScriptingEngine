@@ -8,7 +8,7 @@
 
 namespace Falcon
 {
-    struct DebuggerData
+    struct DebugData
     {
         struct DebuggerFunction
         {

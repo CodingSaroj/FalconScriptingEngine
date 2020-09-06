@@ -2,6 +2,9 @@
 #define FALCON_FALI_CONTEXT_HPP
 
 #include "../vm/VM.hpp"
+#include "../vm/Debugger.hpp"
+
+#include "Object.hpp"
 
 namespace Falcon
 {

@@ -1875,6 +1875,11 @@ namespace Falcon
         m_SP = *(uint64_t *)pop(8);
 
         push(retData, retSize);
+
+        if (m_FP == 0)
+        {
+            m_Running = false;
+        }
     }
     
     void VM::push(uint8_t * data, uint64_t size)

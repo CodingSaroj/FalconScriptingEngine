@@ -82,8 +82,9 @@ namespace Falcon
         struct DebugMetaNode : public ASTNode
         {
             std::string Signature;
+            uint64_t StartLine, EndLine;
 
-            DebugMetaNode(const std::string & signature);
+            DebugMetaNode(const std::string & signature, uint64_t startLine, uint64_t endLine);
         };
 
         struct DebugLineMapNode : public ASTNode
@@ -111,7 +112,7 @@ namespace Falcon
             std::vector<DebugLineMapNode>  LineMaps;
             std::vector<DebugLocalVarNode> LocalVariables;
 
-            DebugRoutineNode(const std::string & name, const std::string & signature);
+            DebugRoutineNode(const std::string & name, const std::string & signature, uint64_t startLine, uint64_t endLine);
         };
 
         struct DebugSectionNode : public ASTNode

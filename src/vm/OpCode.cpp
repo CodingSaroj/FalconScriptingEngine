@@ -151,11 +151,11 @@ namespace Falcon
             BIN_REG_REG, BIN_REG_REG,
             BIN_REG_REG, BIN_REG_REG,
 
+            UN_REG, UN_REG, UN_REG, UN_REG,
+            UN_REG, UN_REG, UN_REG, UN_REG,
+            
             BIN_MOV, BIN_MOV, BIN_MOV, BIN_MOV,
             BIN_REG_REG, BIN_REG_REG, BIN_REG_REG, BIN_REG_REG,
-
-            UN_REG, UN_REG, UN_REG, UN_REG,
-            UN_REG, UN_REG, UN_REG, UN_REG,
 
             UN_STR,
 

@@ -3,10 +3,16 @@
 
 #include <fstream>
 #include <iostream>
+#include <iterator>
 #include <sstream>
 #include <string>
+#include <vector>
 
 #include <cstring>
+
+#include "../vm/DebugData.hpp"
+
+#include "Object.hpp"
 
 namespace Falcon
 {
@@ -18,9 +24,15 @@ namespace Falcon
             Reader(const std::string & fileName);
 
             uint8_t * GetCode();
+            DebugData GetDebugData();
 
         private:
             uint8_t * m_Code;
+            DebugData m_DebugData;
+
+            void readCodeSection(uint8_t * start, uint64_t size);
+            void readDebugSection(uint8_t * start, uint64_t size);
+            void readReflectionSection(uint8_t * start, uint64_t size);
         };
     }
 }

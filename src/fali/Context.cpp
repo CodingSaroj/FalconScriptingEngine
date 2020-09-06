@@ -108,6 +108,34 @@ namespace Falcon
                                                 {
                                                     exit(status);
                                                 });
+
+            for (auto & function : Function::GetIterable())
+            {
+                if (!function.second.Base)
+                {
+                    function.second.Base = new Function((Function::FunctionType)[&](std::vector<void *> args)->void *
+                    {
+                        if (args.size() != function.second.ParameterTypes.size())
+                        {
+                            std::cout<<"Function `"<<function.first<<"` requires "<<function.second.ParameterTypes.size()<<" arguments, "<<args.size()<<" provided.\n";
+                            exit(2);
+                        }
+                    
+                        uint64_t argsSize = 0;
+                        
+                        for (int i = 0; i < function.second.ParameterTypes.size(); i++)
+                        {
+                            argsSize += Object::GetObjectData(function.second.ParameterTypes[i]).Size;
+
+                            m_VM.push((uint8_t *)args[i], Object::GetObjectData(function.second.ParameterTypes[i]).Size);
+                        }
+
+                        m_VM.run(function.second.Name, argsSize);
+
+                        return (void *)m_VM.pop(Object::GetObjectData(function.second.ReturnType).Size);
+                    });
+                }
+            }
         }
     }
 }

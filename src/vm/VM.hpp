@@ -54,7 +54,8 @@ namespace Falcon
             void run(std::string function = std::string("main"), uint64_t argSize = 0);
 
         private:
-            friend Debugger;
+            friend class Debugger;
+            friend class Context;
 
             bool      m_Running = false;
 

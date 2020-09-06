@@ -2,8 +2,8 @@
 
 namespace Falcon
 {
-    Debugger::Debugger(uint8_t * code, const DebuggerData & debugData, PrintVarFunction printVarFunction)
-        : VM(code), m_DebugData(debugData), m_Next(false), m_Continue(false), m_Finish(false), m_IC(0), m_PrintVarFunction(printVarFunction)
+    Debugger::Debugger(uint8_t * code, const DebugData & debugData, const std::string & debuggerName, PrintVarFunction printVarFunction)
+        : VM(code), m_DebugData(debugData), m_Next(false), m_Continue(false), m_Finish(false), m_IC(0), m_DebuggerName(debuggerName), m_PrintVarFunction(printVarFunction)
     {
         disassemble();
     }
@@ -70,70 +70,29 @@ namespace Falcon
             {
                 uint8_t reg = m_Code[++ip];
 
-                if (op == OpCode::UMOV8)
+                if (op == OpCode::MOV8)
                 {
                     uint8_t num = m_Code[++ip];
 
                     m_Disassembly[currentIP] = OpCode::s_Names[m_Code[currentIP]] + " " + disassembleRegister(reg) + " " + std::to_string(+num);
                 }
-                else if (op == OpCode::IMOV8)
-                {
-                    int8_t num = (int8_t)m_Code[++ip];
-
-                    m_Disassembly[currentIP] = OpCode::s_Names[m_Code[currentIP]] + " " + disassembleRegister(reg) + " " + std::to_string(+num);
-                }
-                else if (op == OpCode::UMOV16)
+                else if (op == OpCode::MOV16)
                 {
                     uint16_t num = *(uint16_t *)&m_Code[++ip];
                     ip++;
 
                     m_Disassembly[currentIP] = OpCode::s_Names[m_Code[currentIP]] + " " + disassembleRegister(reg) + " " + std::to_string(num);
                 }
-                else if (op == OpCode::IMOV16)
-                {
-                    int16_t num = *(int16_t *)&m_Code[++ip];
-                    ip++;
-
-                    m_Disassembly[currentIP] = OpCode::s_Names[m_Code[currentIP]] + " " + disassembleRegister(reg) + " " + std::to_string(num);
-                }
-                else if (op == OpCode::UMOV32 || (op >= OpCode::LOAD8 && op <= OpCode::LODREF))
+                else if (op == OpCode::MOV32 || (op >= OpCode::LOAD8 && op <= OpCode::LODREF))
                 {
                     uint32_t num = *(uint32_t *)&m_Code[++ip];
                     ip += 3;
 
                     m_Disassembly[currentIP] = OpCode::s_Names[m_Code[currentIP]] + " " + disassembleRegister(reg) + " " + std::to_string(num);
                 }
-                else if (op == OpCode::IMOV32)
-                {
-                    int32_t num = *(int32_t *)&m_Code[++ip];
-                    ip += 3;
-
-                    m_Disassembly[currentIP] = OpCode::s_Names[m_Code[currentIP]] + " " + disassembleRegister(reg) + " " + std::to_string(num);
-                }
-                else if (op == OpCode::FMOV32)
-                {
-                    float num = *(float *)&m_Code[++ip];
-                    ip += 3;
-
-                    m_Disassembly[currentIP] = OpCode::s_Names[m_Code[currentIP]] + " " + disassembleRegister(reg) + " " + std::to_string(num);
-                }
-                else if (op == OpCode::UMOV64)
+                else if (op == OpCode::MOV64)
                 {
                     uint64_t num = *(uint64_t *)&m_Code[++ip];
-                    ip += 7;
-
-                    m_Disassembly[currentIP] = OpCode::s_Names[m_Code[currentIP]] + " " + disassembleRegister(reg) + " " + std::to_string(num);
-                }
-                else if (op == OpCode::IMOV64)
-                {
-                    int64_t num = *(int64_t *)&m_Code[++ip];
-                    ip += 7;
-
-                    m_Disassembly[currentIP] = OpCode::s_Names[m_Code[currentIP]] + " " + disassembleRegister(reg) + " " + std::to_string(num);
-                }
-                else if (op == OpCode::FMOV64)
-                {
-                    double num = *(double *)&m_Code[++ip];
                     ip += 7;
 
                     m_Disassembly[currentIP] = OpCode::s_Names[m_Code[currentIP]] + " " + disassembleRegister(reg) + " " + std::to_string(num);
@@ -232,17 +191,50 @@ namespace Falcon
         }
     }
 
+    void Debugger::setBreakpoint(uint64_t pos)
+    {
+        if (std::find(m_Breakpoints.begin(), m_Breakpoints.end(), pos) == m_Breakpoints.end())
+        {
+            m_Breakpoints.emplace_back(pos);
+        }
+        else
+        {
+            std::cout<<"Breakpoint "<<m_Breakpoints.size()<<" already at Instruction Counter: "<<std::hex<<"\033[0;1;34m0x"<<pos<<std::dec<<"\033[0;0m.\n";
+        }
+
+        std::cout<<"Breakpoint "<<m_Breakpoints.size()<<" set at Instruction Counter: "<<std::hex<<"\033[0;1;34m0x"<<pos<<std::dec<<"\033[0;0m.\n";
+    }
+
+    void Debugger::clearBreakpoint(uint64_t pos)
+    {
+        auto iter = m_Breakpoints.end();
+
+        if ((iter = std::find(m_Breakpoints.begin(), m_Breakpoints.end(), pos)) != m_Breakpoints.end())
+        {
+            m_Breakpoints.erase(iter);
+            std::cout<<"Cleared breakpoint "<<m_Breakpoints.size()<<" at Instruction Counter: "<<std::hex<<"\033[0;1;34m0x"<<pos<<std::dec<<"\033[0;0m.\n";
+        }
+        else
+        {
+            std::cout<<"No breakpoint set at Instruction Counter: "<<std::hex<<"\033[0;1;34m0x"<<pos<<std::dec<<"\033[0;0m.\n";
+        }
+    }
+    
     void Debugger::shell()
     {
         while (true)
         {
-            std::cout<<"> ";
+            std::cout<<m_DebuggerName<<"> ";
 
             std::string cmd;
 
             std::cin>>cmd;
 
-            if (cmd == "n" || cmd == "next")
+            if (cmd == "run")
+            {
+                run("main#");
+            }
+            else if (cmd == "n" || cmd == "next")
             {
                 m_Next = true;
                 return;
@@ -429,35 +421,6 @@ namespace Falcon
         }
     }
 
-    void Debugger::setBreakpoint(uint64_t pos)
-    {
-        if (std::find(m_Breakpoints.begin(), m_Breakpoints.end(), pos) == m_Breakpoints.end())
-        {
-            m_Breakpoints.emplace_back(pos);
-        }
-        else
-        {
-            std::cout<<"Breakpoint "<<m_Breakpoints.size()<<" already at Instruction Counter: "<<std::hex<<"\033[0;1;34m0x"<<pos<<std::dec<<"\033[0;0m.\n";
-        }
-
-        std::cout<<"Breakpoint "<<m_Breakpoints.size()<<" set at Instruction Counter: "<<std::hex<<"\033[0;1;34m0x"<<pos<<std::dec<<"\033[0;0m.\n";
-    }
-
-    void Debugger::clearBreakpoint(uint64_t pos)
-    {
-        auto iter = m_Breakpoints.end();
-
-        if ((iter = std::find(m_Breakpoints.begin(), m_Breakpoints.end(), pos)) != m_Breakpoints.end())
-        {
-            m_Breakpoints.erase(iter);
-            std::cout<<"Cleared breakpoint "<<m_Breakpoints.size()<<" at Instruction Counter: "<<std::hex<<"\033[0;1;34m0x"<<pos<<std::dec<<"\033[0;0m.\n";
-        }
-        else
-        {
-            std::cout<<"No breakpoint set at Instruction Counter: "<<std::hex<<"\033[0;1;34m0x"<<pos<<std::dec<<"\033[0;0m.\n";
-        }
-    }
-
     void Debugger::run(const std::string & function, uint64_t argsSize)
     {
         m_IP = m_Functions[function] + 1;
@@ -504,7 +467,7 @@ namespace Falcon
                 
                 uint64_t currentLC = m_LC;
 
-                while (m_LC == currentLC)
+                while (m_LC == currentLC && m_Running)
                 {
                     (this->*m_Operators[(uint8_t)op])();
                     

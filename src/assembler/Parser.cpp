@@ -180,15 +180,35 @@ namespace Falcon
         {
             m_CurrentToken = m_FetchToken();
 
-            if (m_CurrentToken.Type == TokenType::IDENTIFIER)
+            if (m_CurrentToken.Type != TokenType::IDENTIFIER)
             {
-                return DebugMetaNode(m_CurrentToken.Str);
-            }
-            else
-            {
-                Log(LogLevel::ERR, "Expected identifier|str as 1st argument to `meta`.\n");
+                Log(LogLevel::ERR, "Expected identifier|str as 1st argument to `meta`.");
                 exit(2);
             }
+
+            std::string signature(m_CurrentToken.Str);
+
+            m_CurrentToken = m_FetchToken();
+
+            if (m_CurrentToken.Type != TokenType::UINT)
+            {
+                Log(LogLevel::ERR, "Expected uint as 2nd argument to `meta`.");
+                exit(2);
+            }
+
+            uint64_t startLine = m_CurrentToken.Uint;
+
+            m_CurrentToken = m_FetchToken();
+
+            if (m_CurrentToken.Type != TokenType::UINT)
+            {
+                Log(LogLevel::ERR, "Expected uint as 3rd argument to `meta`.");
+                exit(2);
+            }
+
+            uint64_t endLine = m_CurrentToken.Uint;
+
+            return DebugMetaNode(signature, startLine, endLine);
         }
 
         DebugLineMapNode Parser::parseDebugLineMap()
@@ -204,7 +224,7 @@ namespace Falcon
             }
             else
             {
-                Log(LogLevel::ERR, "Expected uint as 1st argument to `map`.\n");
+                Log(LogLevel::ERR, "Expected uint as 1st argument to `map`.");
                 exit(2);
             }
             
@@ -216,7 +236,7 @@ namespace Falcon
             }
             else
             {
-                Log(LogLevel::ERR, "Expected uint as 2nd argument to `map`.\n");
+                Log(LogLevel::ERR, "Expected uint as 2nd argument to `map`.");
                 exit(2);
             }
 
@@ -228,7 +248,7 @@ namespace Falcon
             }
             else
             {
-                Log(LogLevel::ERR, "Expected identifier|str as 3rd argument to `map`.\n");
+                Log(LogLevel::ERR, "Expected identifier|str as 3rd argument to `map`.");
                 exit(2);
             }
 
@@ -285,7 +305,7 @@ namespace Falcon
         {
             std::string & name = m_CurrentToken.Str;
 
-            DebugRoutineNode routine(name, "");
+            DebugRoutineNode routine(name, "", 0, 0);
 
             routine.Line = Context::Line;
             routine.Character = Context::Character;
@@ -360,66 +380,76 @@ namespace Falcon
         
         ReflectionFunctionNode Parser::parseReflectionFunction()
         {
-             std::string name, retType;
-             std::vector<std::string> params;
+            std::string name, retType;
+            std::vector<std::string> params;
 
-             m_CurrentToken = m_FetchToken();
+            m_CurrentToken = m_FetchToken();
 
-             if (m_CurrentToken.Type == TokenType::IDENTIFIER)
-             {
-                 retType = m_CurrentToken.Str;
-             }
-             else
-             {
-                 Log(LogLevel::ERR, "Expected return type after `function` in reflection section.");
-                 exit(2);
-             }                   
+            if (m_CurrentToken.Type == TokenType::IDENTIFIER)
+            {
+                retType = m_CurrentToken.Str;
+            }
+            else
+            {
+                Log(LogLevel::ERR, "Expected return type after `function` in reflection section.");
+                exit(2);
+            }                   
 
-             m_CurrentToken = m_FetchToken();
+            m_CurrentToken = m_FetchToken();
 
-             if (m_CurrentToken.Type == TokenType::IDENTIFIER)
-             {
-                 name = m_CurrentToken.Str;
-             }
-             else
-             {
-                 Log(LogLevel::ERR, "Expected function name after return type in reflection section.");
-                 exit(2);
-             }
+            if (m_CurrentToken.Type == TokenType::IDENTIFIER)
+            {
+                name = m_CurrentToken.Str;
+            }
+            else
+            {
+                Log(LogLevel::ERR, "Expected function name after return type in reflection section.");
+                exit(2);
+            }
 
-             m_CurrentToken = m_FetchToken();
+            m_CurrentToken = m_FetchToken();
 
-             if (m_CurrentToken.Type != (TokenType)'(')
-             {
-                 Log(LogLevel::ERR, "Expected `(` after function name in reflection section.");
-                 exit(2);
-             }
+            if (m_CurrentToken.Type != (TokenType)'(')
+            {
+                Log(LogLevel::ERR, "Expected `(` after function name in reflection section.");
+                exit(2);
+            }
 
-             m_CurrentToken = m_FetchToken();
+            m_CurrentToken = m_FetchToken();
 
-             while (m_CurrentToken.Type == TokenType::IDENTIFIER)
-             {
-                 params.emplace_back(m_CurrentToken.Str);
+            while (m_CurrentToken.Type == TokenType::IDENTIFIER)
+            {
+                params.emplace_back(m_CurrentToken.Str);
 
-                 m_CurrentToken = m_FetchToken();
+                m_CurrentToken = m_FetchToken();
 
-                 skipNewlines();
+                skipNewlines();
 
-                 if (m_CurrentToken.Type != (TokenType)',' && m_CurrentToken.Type != (TokenType)')')
-                 {
-                     Log(LogLevel::ERR, "Expected `,` or `)` after parameter type.");
-                     exit(2);
-                 }
+                if (m_CurrentToken.Type != (TokenType)',' && m_CurrentToken.Type != (TokenType)')')
+                {
+                    Log(LogLevel::ERR, "Expected `,` or `)` after parameter type.");
+                    exit(2);
+                }
+                
+                if (m_CurrentToken.Type == (TokenType)')')
+                {
+                    break;
+                }
 
-                 if (m_CurrentToken.Type == (TokenType)')')
-                 {
-                     break;
-                 }
+                m_CurrentToken = m_FetchToken();
 
-                 skipNewlines();
-             }
+                skipNewlines();
+            }
+            
+            if (m_CurrentToken.Type != (TokenType)')')
+            {
+                Log(LogLevel::ERR, "Expected `)` after parameters in reflection section.");
+                exit(2);
+            }
 
-             return ReflectionFunctionNode(name, retType, params);
+            m_CurrentToken = m_FetchToken();
+
+            return ReflectionFunctionNode(name, retType, params);
         }
 
         ReflectionStructureNode Parser::parseReflectionStructure()
@@ -457,15 +487,6 @@ namespace Falcon
 
                 if (m_CurrentToken.Type == TokenType::IDENTIFIER)
                 {
-                    members[members.size() - 1].first = m_CurrentToken.Str;
-                }
-
-                m_CurrentToken = m_FetchToken();
-
-                skipNewlines();
-
-                if (m_CurrentToken.Type == TokenType::IDENTIFIER)
-                {
                     members[members.size() - 1].second = m_CurrentToken.Str;
                 }
 
@@ -473,16 +494,19 @@ namespace Falcon
 
                 skipNewlines();
 
-                if (m_CurrentToken.Type != (TokenType)',' || m_CurrentToken.Type != (TokenType)'}')
+                if (m_CurrentToken.Type != (TokenType)',' && m_CurrentToken.Type != (TokenType)'}')
                 {
-                    Log(LogLevel::ERR, "Expected `,` or `}` after parameter type in reflection section.");
+                    Log(LogLevel::ERR, "Expected `,` or `}` after member name in reflection section.");
                     exit(2);
                 }
 
                 if (m_CurrentToken.Type == (TokenType)'}')
                 {
+                    m_CurrentToken = m_FetchToken();
                     break;
                 }
+
+                m_CurrentToken = m_FetchToken();
 
                 skipNewlines();
             }
