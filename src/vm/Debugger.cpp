@@ -233,7 +233,28 @@ namespace Falcon
 
             if (cmd == "r" || cmd == "run")
             {
-                run(m_DebuggerFunctions.FunctionMangleFn("main", {"uint32", "ptr"}));
+                uint32_t argc;
+                std::vector<std::string> argv;
+                
+                std::cin>>argc;
+
+                argv.reserve(argc);
+
+                for (uint32_t i = 0; i < argc; i++)
+                {
+                    std::string str;
+
+                    std::cin>>str;
+
+                    argv.emplace_back(std::move(str));
+                }
+
+                uint8_t * rawArgv = (uint8_t *)argv.data();
+
+                push((uint8_t *)&argc, 4);
+                push((uint8_t *)&rawArgv, 8);
+
+                run(m_DebuggerFunctions.FunctionMangleFn("main", {"uint32", "ptr"}), 12);
             }
             else if (cmd == "n" || cmd == "next")
             {
@@ -426,7 +447,7 @@ namespace Falcon
 
                 if (data.LocalVariables.count(var) == 1)
                 {
-                    if (data.LocalVariables[var].second < m_SP)
+                    if (data.LocalVariables[var].second < m_SP - m_FP)
                     {
                         if (m_PrintVarFunction)
                         {

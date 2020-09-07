@@ -1,0 +1,57 @@
+sect code:
+    factorial#uint64#:
+    .factorial#uint64#_start:
+        mov64 r1 0x1
+        psh64 r1
+        psh64 r1
+        lodref r1 0x10
+        lodref r2 0x08
+        lodref r3 0x00
+
+    .factorial#uint64#_cmp:
+        ulse64 @r1 @r3
+        jmt factorial#uint64#_loop
+        popnul 0x08
+        ret 0x08
+
+    .factorial#uint64#_loop:
+        umul64 @r2 @r1
+        uinc64 @r1
+        jmp factorial#uint64#_cmp
+
+    main#uint32#ptr#:
+    .main#uint32#ptr#:
+        load32 r1 0x00
+        psh64 r1
+        call 0x08 factorial#uint64#
+
+        popnul 0x04
+
+        ret 0x04
+
+sect debug:
+    factorial#uint64#:
+        meta "uint64 factorial(uint64 value)" 0x01 0x0D
+
+        local "value" "uint64" 0x00
+        local "result" "uint64" 0x08
+        local "i" "uint64" 0x10
+
+        map 0x01 0x03 "    uint64 result = 1;"
+        map 0x07 0x04 "    for (uint64 i = 1; i < value; i++)"
+        map 0x09 0x08 "    return result;"
+        map 0x0B 0x06 "        result *= i;"
+        map 0x0C 0x04 "    for (uint64 i = 1; i < value; i++)"
+
+    main#uint32#ptr#:
+        meta "int32 main(uint32 argc, ptr argv)" 0x10 0x14
+
+        local "argc" "uint32" 0x00
+        local "argv" "ptr" 0x04
+
+        map 0x10 0x0D "    return factorial(argc);"
+
+sect reflection:
+    function uint64 factorial ( uint64 )
+    function int32 factorial ( uint32 , ptr )
+

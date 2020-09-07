@@ -122,7 +122,7 @@ namespace Falcon
 
             for (auto & label : routine->Labels)
             {
-                m_LabelAddresses[label.Name] = m_CodeSection.size();
+                m_LabelAddresses[label.Name] = m_CodeSection.size() - 12;
 
                 for (auto & inst : label.Instructions)
                 {

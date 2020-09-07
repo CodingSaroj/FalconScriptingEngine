@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <array>
+#include <chrono>
 #include <fstream>
 #include <iostream>
 #include <iterator>
@@ -12,6 +13,7 @@
 static struct
 {
     bool InputInitialized = false;
+    bool ShowExecutionTime = false;
     bool ShowExitStatus = false;
 
     std::string InputName = "a.fali";
@@ -24,6 +26,7 @@ void printHelp()
     std::cout<<"Usage: falcon [COMMAND_LINE_OPTIONS] [FILE] [ARGS]\n\n";
     std::cout<<"COMMAND_LINE_OPTIONS:\n";
     std::cout<<"    -h or --help        : Display this help and exit.\n";
+    std::cout<<"    -t or --exec-time   : Show the execution time.\n";
     std::cout<<"    -e or --exit-status : Show the exit status.\n";
     std::cout<<"FILE:\n";
     std::cout<<"    FALI file to be executed.\n";
@@ -47,6 +50,10 @@ void parseCmdArgs(int argc, char * argv[])
         {
             printHelp();
             exit(2);
+        }
+        else if (str == "-t" || str == "--exec-time")
+        {
+            s_State.ShowExecutionTime = true;
         }
         else if (str == "-e" || str == "--exit-status")
         {
@@ -75,14 +82,32 @@ int main(int argc, char * argv[])
 
     Falcon::FALI::Context ctxt(reader.GetCode());
 
+    int32_t exitStatus = 0;
+
+    if (s_State.ShowExecutionTime)
+    {
+        auto s = std::chrono::high_resolution_clock::now();
+
+        exitStatus = ctxt.call<int>(Falcon::FALI::MangleFunction("main", {"uint32", "ptr"}), (uint32_t)s_State.Args.size(), (uint64_t)s_State.Args.data());
+
+        auto e = std::chrono::high_resolution_clock::now();
+        auto d = e - s;
+
+        std::cout<<"Execution time: "<<d.count()<<"ns.\n";
+    }
+    else
+    {
+        exitStatus = ctxt.call<int32_t>(Falcon::FALI::MangleFunction("main", {"uint32", "ptr"}), (uint32_t)s_State.Args.size(), (uint64_t)s_State.Args.data());
+    }
+
     if (s_State.ShowExitStatus)
     {
-        std::cout<<"Exited with status "<<ctxt.call<int>(Falcon::FALI::MangleFunction("main", {"uint", "ptr"}), (uint32_t)s_State.Args.size(), (uint64_t)s_State.Args.data())<<".\n";
+        std::cout<<"Exited with status "<<exitStatus<<".\n";
 
         return 0;
     }
     else
     {
-        return ctxt.call<int>(Falcon::FALI::MangleFunction("main", {"uint", "ptr"}), (uint32_t)s_State.Args.size(), (uint64_t)s_State.Args.data());
+        return exitStatus;
     }
 }

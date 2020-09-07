@@ -11,4 +11,3 @@ Makefile
 # Testing files
 test
 *.fali
-*.fasm
