@@ -25,6 +25,9 @@ project "FalconASM"
         symbols "Off"
         optimize "Full"
 
+    filter "platforms:Windows*"
+        system "Linux"
+
     filter "platforms:Linux*"
         system "linux"
 
@@ -74,6 +77,9 @@ project "FalconASMBin"
     filter "configurations:Release"
         symbols "Off"
         optimize "Full"
+
+    filter "platforms:Windows*"
+        system "Linux"
 
     filter "platforms:Linux*"
         system "linux"
