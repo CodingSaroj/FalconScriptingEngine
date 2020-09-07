@@ -23,6 +23,9 @@ project "FalconFALI"
         symbols "Off"
         optimize "Full"
 
+    filter "platforms:Windows*"
+        system "Linux"
+
     filter "platforms:Linux*"
         system "Linux"
 
@@ -68,6 +71,9 @@ project "FalconBin"
     filter "configurations:Release"
         symbols "Off"
         optimize "Full"
+
+    filter "platforms:Windows*"
+        system "Linux"
 
     filter "platforms:Linux*"
         system "Linux"
@@ -116,6 +122,9 @@ project "FalconFLDB"
         symbols "Off"
         optimize "Full"
 
+    filter "platforms:Windows*"
+        system "Linux"
+
     filter "platforms:Linux*"
         system "Linux"
 
@@ -161,6 +170,9 @@ project "FalconFALITest"
     filter "configurations:Release"
         symbols "Off"
         optimize "Full"
+
+    filter "platforms:Windows*"
+        system "Linux"
 
     filter "platforms:Linux*"
         system "Linux"

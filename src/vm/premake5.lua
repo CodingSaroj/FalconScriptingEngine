@@ -24,6 +24,9 @@ project "FalconVM"
         symbols "Off"
         optimize "Full"
 
+    filter "platforms:Windows*"
+        system "Linux"
+
     filter "platforms:Linux*"
         system "Linux"
 
@@ -68,6 +71,9 @@ project "FalconVMTest"
     filter "configurations:Release"
         symbols "Off"
         optimize "Full"
+
+    filter "platforms:Windows*"
+        system "Linux"
 
     filter "platforms:Linux*"
         system "Linux"
