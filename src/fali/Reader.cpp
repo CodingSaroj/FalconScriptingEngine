@@ -232,6 +232,10 @@ namespace Falcon
                     offset += base.size() + 1;
 
                     offset++;
+
+                    Object::New(name, true);
+
+                    Object::AddMember(name, base, "base");
                 }
             }
         }

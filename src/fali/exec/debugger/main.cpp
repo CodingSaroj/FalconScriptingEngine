@@ -113,14 +113,21 @@ static std::string printVar(const std::string & type, void * data, const std::st
     }
     else if (Falcon::FALI::Object::IsValid(type))
     {
-        output = "{\n";
-
-        for (auto member : Falcon::FALI::Object::GetMemberIterable(type))
+        if (Falcon::FALI::Object::GetObjectData(type).MemberOffsets.count("base") == 1)
         {
-            output += padding + "    " + member.first + " = " + printVar(member.second.first, ((uint8_t *)data) + member.second.second, padding + "    ") + "\n";
+            output = printVar(Falcon::FALI::Object::GetObjectData(type).MemberOffsets["base"].first, data);
         }
-        
-        output += padding + "}";
+        else
+        {
+            output = "{\n";
+
+            for (auto member : Falcon::FALI::Object::GetMemberIterable(type))
+            {
+                output += padding + "    " + member.first + " = " + printVar(member.second.first, ((uint8_t *)data) + member.second.second, padding + "    ") + "\n";
+            }
+            
+            output += padding + "}";
+        }
     }
     else if (type.find_first_of('[') != std::string::npos)
     {

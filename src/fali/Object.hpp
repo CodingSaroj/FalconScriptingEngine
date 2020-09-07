@@ -20,6 +20,7 @@ namespace Falcon
         private:
             struct ObjectData
             {
+                bool Alias;
                 uint64_t Size;
                 std::unordered_map<std::string, std::pair<std::string, uint64_t>> MemberOffsets;
             };
@@ -98,7 +99,7 @@ namespace Falcon
                 }
             }
             
-            static void New(const std::string & name);
+            static void New(const std::string & name, bool alias = false);
             static void AddMember(const std::string & objectType, const std::string & memberType, const std::string & memberName);
 
             static inline bool           IsValid(const std::string & objectName) { return s_ObjectTypes.count(objectName) != 0; }

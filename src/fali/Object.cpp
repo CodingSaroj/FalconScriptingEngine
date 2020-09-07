@@ -6,25 +6,38 @@ namespace Falcon
     {
         std::unordered_map<std::string, Object::ObjectData> Object::s_ObjectTypes =
         {
-            {"void",    {0, {}}},
-            {"ptr",     {8, {{"base", {"ulong", 0}}}}},
+            {"void",    {false, 0, {}}},
             
-            {"char",    {1, {{"base", {"char", 0}}}}},
-            {"uchar",   {1, {{"base", {"uchar", 0}}}}},
-            {"short",   {2, {{"base", {"short", 0}}}}},
-            {"ushort",  {2, {{"base", {"ushort", 0}}}}},
-            {"int",     {4, {{"base", {"int", 0}}}}},
-            {"uint",    {4, {{"base", {"uint", 0}}}}},
-            {"long",    {8, {{"base", {"long", 0}}}}},
-            {"ulong",   {8, {{"base", {"ulong", 0}}}}},
+            {"char",    {false, 1, {{"base", {"char", 0}}}}},
+            {"uchar",   {false, 1, {{"base", {"uchar", 0}}}}},
+            {"short",   {false, 2, {{"base", {"short", 0}}}}},
+            {"ushort",  {false, 2, {{"base", {"ushort", 0}}}}},
+            {"int",     {false, 4, {{"base", {"int", 0}}}}},
+            {"uint",    {false, 4, {{"base", {"uint", 0}}}}},
+            {"long",    {false, 8, {{"base", {"long", 0}}}}},
+            {"ulong",   {false, 8, {{"base", {"ulong", 0}}}}},
 
-            {"float",   {4, {{"base", {"float", 0}}}}},
-            {"double",  {8, {{"base", {"double", 0}}}}}
+            {"float",   {false, 4, {{"base", {"float", 0}}}}},
+            {"double",  {false, 8, {{"base", {"double", 0}}}}},
+
+            {"ptr",     {true, 8, {{"base", {"ulong", 0}}}}},
+
+            {"int8",    {true, 1, {{"base", {"char", 0}}}}},
+            {"uint8",   {true, 1, {{"base", {"uchar", 0}}}}},
+            {"int16",   {true, 2, {{"base", {"short", 0}}}}},
+            {"uint16",  {true, 2, {{"base", {"ushort", 0}}}}},
+            {"int32",   {true, 4, {{"base", {"int", 0}}}}},
+            {"uint32",  {true, 4, {{"base", {"uint", 0}}}}},
+            {"int64",   {true, 8, {{"base", {"long", 0}}}}},
+            {"uint64",  {true, 8, {{"base", {"ulong", 0}}}}},
+
+            {"float32", {true, 4, {{"base", {"float", 0}}}}},
+            {"float64", {true, 8, {{"base", {"double", 0}}}}},
         };
 
-        void Object::New(const std::string & name)
+        void Object::New(const std::string & name, bool alias)
         {
-            s_ObjectTypes[name] = {};
+            s_ObjectTypes[name] = {alias};
         }
 
         void Object::AddMember(const std::string & objectType, const std::string & memberType, const std::string & memberName)
