@@ -23,7 +23,7 @@ void printHelp()
 {
     std::cout<<"Usage: fasm [COMMAND_LINE_OPTIONS] [FILE(s)]\n\n";
     std::cout<<"COMMAND_LINE_OPTIONS:\n";
-    std::cout<<"    -h or --help                  : Print this help and exit.\n";
+    std::cout<<"    -h or --help                  : Display this help and exit.\n";
     std::cout<<"    -o [FILE] or --output=[FILE]  : Set the output file as FILE. Default is a.fali.\n";
     std::cout<<"    -dbg or --debug               : Write debug data to the output.\n";
     std::cout<<"FILE(s):\n";

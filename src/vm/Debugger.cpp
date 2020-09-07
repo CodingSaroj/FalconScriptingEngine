@@ -3,7 +3,7 @@
 namespace Falcon
 {
     Debugger::Debugger(uint8_t * code, const DebugData & debugData, const std::string & debuggerName, PrintVarFunction printVarFunction)
-        : VM(code), m_DebugData(debugData), m_Next(false), m_Continue(false), m_Finish(false), m_IC(0), m_DebuggerName(debuggerName), m_PrintVarFunction(printVarFunction)
+        : VM(code), m_DebugData(debugData), m_Next(false), m_NextI(false), m_Continue(false), m_Finish(false), m_IC(0), m_LastReturnSize(0), m_DebuggerName(debuggerName), m_PrintVarFunction(printVarFunction)
     {
         disassemble();
     }
@@ -239,6 +239,11 @@ namespace Falcon
                 m_Next = true;
                 return;
             }
+            else if (cmd == "ni" || cmd == "nexti")
+            {
+                m_NextI = true;
+                return;
+            }
             else if (cmd == "c" || cmd == "continue")
             {
                 m_Continue = true;
@@ -384,7 +389,19 @@ namespace Falcon
                         std::cout<<"    ";
                     }
 
-                    std::cout<<"+["<<iter->first<<"]\t"<<iter->second<<"\n";
+                    uint64_t ic = 0;
+
+                    for (auto & inst : m_Disassembly)
+                    {
+                        if (inst.first == iter->first)
+                        {
+                            break;
+                        }
+
+                        ic++;
+                    }
+
+                    std::cout<<std::setfill(' ')<<"+["<<std::setw(4)<<ic<<std::setw(0)<<"] +["<<std::setw(4)<<iter->first<<std::setw(0)<<"]\t\t"<<iter->second<<"\n";
                 }
             }
             else if (cmd == "p" || cmd == "print")
@@ -485,6 +502,11 @@ namespace Falcon
                     break;
                 }
             }
+            
+            if (op == OpCode::RET)
+            {
+                m_LastReturnSize = *(uint32_t *)&m_Code[m_IP + 1];
+            }
 
             (this->*m_Operators[(uint8_t)op])();
 
@@ -494,7 +516,12 @@ namespace Falcon
                 {
                     m_Finish = false;
 
-                    std::cout<<"Finished.";
+                    std::cout<<"Finished `"<<m_DebugData.FunctionData[m_CurrentFunction].Signature<<"`.\n";
+
+                    std::string returnType(m_DebugData.FunctionData[m_CurrentFunction].Signature.substr(0, m_DebugData.FunctionData[m_CurrentFunction].Signature.find_first_of(' ')));
+
+                    std::cout<<"Value returned = "<<m_PrintVarFunction(returnType, &m_Stack[m_SP - m_LastReturnSize])<<"\n";
+
                     shell();
 
                     if (!m_Running)
@@ -505,8 +532,15 @@ namespace Falcon
             }
 
             op = (OpCode::OpCode)m_Code[++m_IP];
-
+            
             updateDebuggerState();
+            
+            if (m_NextI)
+            {
+                m_NextI = false;
+
+                shell();
+            }
         }
     }
 }

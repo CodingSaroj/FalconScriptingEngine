@@ -28,11 +28,14 @@ namespace Falcon
         DebugData m_DebugData;
 
         bool m_Next;
+        bool m_NextI;
         bool m_Continue;
         bool m_Finish;
 
         uint64_t m_IC;
         uint64_t m_LC;
+
+        uint32_t m_LastReturnSize;
 
         std::string m_CurrentLine;
         std::string m_CurrentFunction;

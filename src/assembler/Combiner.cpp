@@ -21,6 +21,26 @@ namespace Falcon
                         module2->CodeSection.Routines.end()
                     );
 
+                    uint64_t module2CodeSectionSize = 0;
+
+                    for (auto & routine : module2->CodeSection.Routines)
+                    {
+                        for (auto & label : routine.Labels)
+                        {
+                            module2CodeSectionSize += label.Instructions.size();
+                        }
+
+                        module2CodeSectionSize += 2;
+                    }
+
+                    for (auto & routine : module1->DebugSection.Routines)
+                    {
+                        for (auto & lineMap : routine.LineMaps)
+                        {
+                            lineMap.StartLocation += module2CodeSectionSize;
+                        }
+                    }
+
                     module1->DebugSection.Routines.insert(
                         module1->DebugSection.Routines.begin(),
                         module2->DebugSection.Routines.begin(),
@@ -64,7 +84,7 @@ namespace Falcon
             {
                 ASTNode * current = m_ASTs[0];
 
-                for (uint64_t i = 0; i < m_ASTs.size(); i++)
+                for (uint64_t i = 1; i < m_ASTs.size(); i++)
                 {
                     current = combine(current, m_ASTs[i]);
                 }

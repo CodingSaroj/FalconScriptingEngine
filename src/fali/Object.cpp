@@ -7,10 +7,17 @@ namespace Falcon
         std::unordered_map<std::string, Object::ObjectData> Object::s_ObjectTypes =
         {
             {"void",    {0, {}}},
+            {"ptr",     {8, {{"base", {"ulong", 0}}}}},
+            
             {"char",    {1, {{"base", {"char", 0}}}}},
+            {"uchar",   {1, {{"base", {"uchar", 0}}}}},
             {"short",   {2, {{"base", {"short", 0}}}}},
+            {"ushort",  {2, {{"base", {"ushort", 0}}}}},
             {"int",     {4, {{"base", {"int", 0}}}}},
+            {"uint",    {4, {{"base", {"uint", 0}}}}},
             {"long",    {8, {{"base", {"long", 0}}}}},
+            {"ulong",   {8, {{"base", {"ulong", 0}}}}},
+
             {"float",   {4, {{"base", {"float", 0}}}}},
             {"double",  {8, {{"base", {"double", 0}}}}}
         };

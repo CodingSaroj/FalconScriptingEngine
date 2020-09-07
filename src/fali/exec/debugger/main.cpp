@@ -21,7 +21,7 @@ void printHelp()
 {
     std::cout<<"Usage: fldb [COMMAND_LINE_OPTIONS] [FILE]\n\n";
     std::cout<<"COMMAND_LINE_OPTIONS:\n";
-    std::cout<<"    -h or --help    : Print this help and exit.\n";
+    std::cout<<"    -h or --help    : Display this help and exit.\n";
     std::cout<<"FILE:\n";
     std::cout<<"    FALI file to be debugged.\n";
 }
