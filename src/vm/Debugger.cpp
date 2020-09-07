@@ -233,7 +233,7 @@ namespace Falcon
 
             if (cmd == "r" || cmd == "run")
             {
-                run("main#");
+                run(m_DebuggerFunctions.FunctionMangleFn("main", {"uint32", "ptr"}));
             }
             else if (cmd == "n" || cmd == "next")
             {
