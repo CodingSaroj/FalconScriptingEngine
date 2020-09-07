@@ -13,9 +13,22 @@ namespace Falcon
     class Debugger : public VM
     {
     public:
+        using FunctionMangleFunction = std::string( * )(const std::string &, std::vector<std::string>);
+        using FunctionDemangleFunction = std::string( * )(const std::string &);
+        using IdentifierMangleFunction = std::string( * )(const std::string &);
+        using IdentifierDemangleFunction = std::string( * )(const std::string &);
         using PrintVarFunction = std::string( * )(const std::string &, void *);
 
-        Debugger(uint8_t * code, const DebugData & debugData, const std::string & debuggerName = "", PrintVarFunction printVarFunction = nullptr);
+        struct DebuggerFunctions
+        {
+            FunctionMangleFunction FunctionMangleFn;
+            FunctionDemangleFunction FunctionDemangleFn;
+
+            IdentifierMangleFunction IdentifierMangleFn;
+            IdentifierDemangleFunction IdentifierDemangleFn;
+        };
+
+        Debugger(uint8_t * code, const DebugData & debugData, DebuggerFunctions functions, const std::string & debuggerName = "", PrintVarFunction printVarFunction = nullptr);
 
         void setBreakpoint(uint64_t ip);
         void clearBreakpoint(uint64_t ip);
@@ -40,12 +53,15 @@ namespace Falcon
         std::string m_CurrentLine;
         std::string m_CurrentFunction;
 
+        std::vector<std::string> m_StackTrace;
+
         std::map<uint64_t, std::string> m_Disassembly;
 
         std::vector<uint64_t> m_Breakpoints;
 
         std::string m_DebuggerName;
 
+        DebuggerFunctions m_DebuggerFunctions;
         PrintVarFunction m_PrintVarFunction;
 
         void disassemble();

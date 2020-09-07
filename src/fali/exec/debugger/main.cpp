@@ -10,7 +10,7 @@
 
 #include "../../Reader.hpp"
 
-static std::array<std::string, 11> builtinTypes{"void", "char", "uchar", "short", "ushort", "int", "uint", "long", "ulong", "float", "double"};
+static std::array<std::string, 12> builtinTypes{"void", "ptr", "char", "uchar", "short", "ushort", "int", "uint", "long", "ulong", "float", "double"};
 
 static struct
 {
@@ -56,7 +56,15 @@ static std::string printVar(const std::string & type, void * data, const std::st
     
     if (std::find(builtinTypes.begin(), builtinTypes.end(), type) != builtinTypes.end())
     {
-        if (type == "char")
+        if (type == "ptr")
+        {
+            std::stringstream ss;
+
+            ss<<std::hex<<*(uint64_t *)data;
+
+            output = "0x" + ss.str();
+        }
+        else if (type == "char")
         {
             output = std::to_string(+*(char *)data) + " ";
             output += "'" + std::string((char *)data) + "'";
@@ -114,6 +122,30 @@ static std::string printVar(const std::string & type, void * data, const std::st
         
         output += padding + "}";
     }
+    else if (type.find_first_of('[') != std::string::npos)
+    {
+        std::string rawType(type.begin(), type.begin() + (type.find_first_of('[') - 1));
+
+        if (!Falcon::FALI::Object::IsValid(rawType))
+        {
+            output = "Invalid type `" + rawType + "`";
+
+            return output;
+        }
+
+        std::string sizeStr(type.begin() + (type.find_first_of('[') + 1), type.begin() + (type.find_first_of(']') - 1));
+
+        uint64_t size = strtoul(sizeStr.c_str(), nullptr, 10);
+
+        output = "[\n";
+
+        for (uint64_t i = 0; i < size; i++)
+        {
+            output += padding + "    [" + std::to_string(i) + "] = " + printVar(rawType, ((uint8_t *)data) + (i * Falcon::FALI::Object::GetObjectData(rawType).Size), padding + "    ") + "\n";
+        }
+        
+        output += padding + "]";
+    }
     else
     {
         output = "Invalid type `" + type + "`";
@@ -128,7 +160,16 @@ int main(int argc, char * argv[])
 
     Falcon::FALI::Reader reader(s_State.InputName);
 
-    Falcon::Debugger debugger(reader.GetCode(), reader.GetDebugData(), "fldb", [](const std::string & type, void * data)->std::string { return printVar(type, data); });
+    Falcon::Debugger debugger(
+        reader.GetCode(),
+        reader.GetDebugData(),
+        Falcon::Debugger::DebuggerFunctions{Falcon::FALI::MangleFunction, Falcon::FALI::DemangleFunction, Falcon::FALI::MangleIdentifier, Falcon::FALI::DemangleIdentifier},
+        "fldb",
+        [](const std::string & type, void * data)->std::string
+        {
+            return printVar(type, data);
+        }
+    );
 
     debugger.shell();
 }

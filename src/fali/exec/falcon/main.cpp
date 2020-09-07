@@ -12,6 +12,7 @@
 static struct
 {
     bool InputInitialized = false;
+    bool ShowExitStatus = false;
 
     std::string InputName = "a.fali";
 
@@ -22,7 +23,8 @@ void printHelp()
 {
     std::cout<<"Usage: falcon [COMMAND_LINE_OPTIONS] [FILE] [ARGS]\n\n";
     std::cout<<"COMMAND_LINE_OPTIONS:\n";
-    std::cout<<"    -h or --help    : Display this help and exit.\n";
+    std::cout<<"    -h or --help        : Display this help and exit.\n";
+    std::cout<<"    -e or --exit-status : Show the exit status.\n";
     std::cout<<"FILE:\n";
     std::cout<<"    FALI file to be executed.\n";
     std::cout<<"ARGS:\n";
@@ -45,6 +47,10 @@ void parseCmdArgs(int argc, char * argv[])
         {
             printHelp();
             exit(2);
+        }
+        else if (str == "-e" || str == "--exit-status")
+        {
+            s_State.ShowExitStatus = true;
         }
         else
         {
@@ -69,5 +75,14 @@ int main(int argc, char * argv[])
 
     Falcon::FALI::Context ctxt(reader.GetCode());
 
-    return ctxt.call<int>(Falcon::FALI::MangleFunction("main", {"uint", "ptr"}), (uint32_t)s_State.Args.size(), (uint64_t)s_State.Args.data());
+    if (s_State.ShowExitStatus)
+    {
+        std::cout<<"Exited with status "<<ctxt.call<int>(Falcon::FALI::MangleFunction("main", {"uint", "ptr"}), (uint32_t)s_State.Args.size(), (uint64_t)s_State.Args.data())<<".\n";
+
+        return 0;
+    }
+    else
+    {
+        return ctxt.call<int>(Falcon::FALI::MangleFunction("main", {"uint", "ptr"}), (uint32_t)s_State.Args.size(), (uint64_t)s_State.Args.data());
+    }
 }

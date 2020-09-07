@@ -2,8 +2,9 @@
 
 namespace Falcon
 {
-    Debugger::Debugger(uint8_t * code, const DebugData & debugData, const std::string & debuggerName, PrintVarFunction printVarFunction)
-        : VM(code), m_DebugData(debugData), m_Next(false), m_NextI(false), m_Continue(false), m_Finish(false), m_IC(0), m_LastReturnSize(0), m_DebuggerName(debuggerName), m_PrintVarFunction(printVarFunction)
+    Debugger::Debugger(uint8_t * code, const DebugData & debugData, DebuggerFunctions functions, const std::string & debuggerName, PrintVarFunction printVarFunction)
+        : VM(code), m_DebugData(debugData), m_Next(false), m_NextI(false), m_Continue(false), m_Finish(false), m_IC(0), m_LastReturnSize(0),
+          m_DebuggerFunctions(functions), m_DebuggerName(debuggerName), m_PrintVarFunction(printVarFunction)
     {
         disassemble();
     }
@@ -230,7 +231,7 @@ namespace Falcon
 
             std::cin>>cmd;
 
-            if (cmd == "run")
+            if (cmd == "r" || cmd == "run")
             {
                 run("main#");
             }
@@ -275,7 +276,7 @@ namespace Falcon
 
                 clearBreakpoint(location);
             }
-            else if (cmd == "r" || cmd == "registers")
+            else if (cmd == "reg" || cmd == "registers")
             {
                 for (uint8_t i = 0; i < RegisterType::s_Names.size(); i++)
                 {
@@ -330,6 +331,17 @@ namespace Falcon
                 std::cout<<"\033[0;1;33mSP: \033[0;1;34m0x"<<std::hex<<m_SP<<"\033[0;0m "<<std::dec<<m_SP<<".\n";
                 std::cout<<"\033[0;1;33mFP: \033[0;1;34m0x"<<std::hex<<m_FP<<"\033[0;0m "<<std::dec<<m_FP<<".\n";
                 std::cout<<"\033[0;1;33mFLAGS: \033[0;0m{ "<<(m_Cmp[0] ? "true" : "false")<<", "<<(m_Cmp[1] ? "true" : "false")<<" }.\n";
+            }
+            else if (cmd == "t" || cmd == "trace")
+            {
+                std::cout<<"Trace:\n";
+
+                size_t depth = 0;
+
+                for (auto iter = m_StackTrace.rbegin(); iter != m_StackTrace.rend(); iter++)
+                {
+                    std::cout<<"    #"<<depth++<<": "<<*iter<<"\n";
+                }
             }
             else if (cmd == "dsasm" || cmd == "disassembly")
             {
@@ -418,7 +430,7 @@ namespace Falcon
                     {
                         if (m_PrintVarFunction)
                         {
-                            std::cout<<"'"<<var<<"' = "<<m_PrintVarFunction(data.LocalVariables[var].first, (void *)&m_Stack[m_FP + data.LocalVariables[var].second])<<"\n";
+                            std::cout<<data.LocalVariables[var].first<<" '"<<var<<"' = "<<m_PrintVarFunction(data.LocalVariables[var].first, (void *)&m_Stack[m_FP + data.LocalVariables[var].second])<<"\n";
                         }
                         else
                         {
@@ -440,6 +452,9 @@ namespace Falcon
 
     void Debugger::run(const std::string & function, uint64_t argsSize)
     {
+        m_StackTrace.emplace_back("base");
+        m_StackTrace.emplace_back(m_DebugData.FunctionData[function].Signature);
+
         m_IP = m_Functions[function] + 1;
 
         uint8_t * args = new uint8_t[argsSize];
@@ -486,6 +501,19 @@ namespace Falcon
 
                 while (m_LC == currentLC && m_Running)
                 {
+                    if (op == OpCode::CALL)
+                    {
+                        std::string functionName((char *)&m_Code[m_IP + 5]);
+
+                        m_StackTrace.emplace_back(m_DebugData.FunctionData[functionName].Signature);
+                    }
+                    else if (op == OpCode::RET)
+                    {
+                        m_StackTrace.pop_back();
+
+                        m_LastReturnSize = *(uint32_t *)&m_Code[m_IP + 1];
+                    }
+
                     (this->*m_Operators[(uint8_t)op])();
                     
                     op = (OpCode::OpCode)m_Code[++m_IP];
@@ -503,8 +531,16 @@ namespace Falcon
                 }
             }
             
-            if (op == OpCode::RET)
+            if (op == OpCode::CALL)
             {
+                std::string functionName((char *)&m_Code[m_IP + 5]);
+
+                m_StackTrace.emplace_back(m_DebugData.FunctionData[functionName].Signature);
+            }
+            else if (op == OpCode::RET)
+            {
+                m_StackTrace.pop_back();
+
                 m_LastReturnSize = *(uint32_t *)&m_Code[m_IP + 1];
             }
 
@@ -542,5 +578,7 @@ namespace Falcon
                 shell();
             }
         }
+
+        m_StackTrace.clear();
     }
 }
