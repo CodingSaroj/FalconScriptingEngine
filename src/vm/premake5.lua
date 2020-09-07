@@ -7,6 +7,7 @@ project "FalconVM"
 
     files
     {
+        "../common/*.cpp",
         "*.cpp"
     }
 

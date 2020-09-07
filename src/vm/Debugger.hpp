@@ -5,6 +5,8 @@
 #include <iomanip>
 #include <map>
 
+#include "../common/CLIColors.hpp"
+
 #include "DebugData.hpp"
 #include "VM.hpp"
 

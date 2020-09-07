@@ -200,10 +200,10 @@ namespace Falcon
         }
         else
         {
-            std::cout<<"Breakpoint "<<m_Breakpoints.size()<<" already at Instruction Counter: "<<std::hex<<"\033[0;1;34m0x"<<pos<<std::dec<<"\033[0;0m.\n";
+            std::cout<<"Breakpoint "<<m_Breakpoints.size()<<" already at Instruction Counter: "<<std::hex<<(Common::Colors::Blue | Common::Colors::Bold)<<"0x"<<pos<<std::dec<<Common::Colors::White<<".\n";
         }
 
-        std::cout<<"Breakpoint "<<m_Breakpoints.size()<<" set at Instruction Counter: "<<std::hex<<"\033[0;1;34m0x"<<pos<<std::dec<<"\033[0;0m.\n";
+        std::cout<<"Breakpoint "<<m_Breakpoints.size()<<" set at Instruction Counter: "<<std::hex<<(Common::Colors::Blue | Common::Colors::Bold)<<"0x"<<pos<<std::dec<<Common::Colors::White<<".\n";
     }
 
     void Debugger::clearBreakpoint(uint64_t pos)
@@ -213,11 +213,11 @@ namespace Falcon
         if ((iter = std::find(m_Breakpoints.begin(), m_Breakpoints.end(), pos)) != m_Breakpoints.end())
         {
             m_Breakpoints.erase(iter);
-            std::cout<<"Cleared breakpoint "<<m_Breakpoints.size()<<" at Instruction Counter: "<<std::hex<<"\033[0;1;34m0x"<<pos<<std::dec<<"\033[0;0m.\n";
+            std::cout<<"Cleared breakpoint "<<m_Breakpoints.size()<<" at Instruction Counter: "<<std::hex<<(Common::Colors::Blue | Common::Colors::Bold)<<"0x"<<pos<<std::dec<<Common::Colors::White<<".\n";
         }
         else
         {
-            std::cout<<"No breakpoint set at Instruction Counter: "<<std::hex<<"\033[0;1;34m0x"<<pos<<std::dec<<"\033[0;0m.\n";
+            std::cout<<"No breakpoint set at Instruction Counter: "<<std::hex<<(Common::Colors::Blue | Common::Colors::Bold)<<"0x"<<pos<<std::dec<<Common::Colors::White<<".\n";
         }
     }
     
@@ -282,7 +282,7 @@ namespace Falcon
                 {
                     Register & reg = getRegister((RegisterType::RegisterType)i);
 
-                    std::cout<<"\033[0;1;33m"<<RegisterType::s_Names[i]<<":\033[0;0m\n";
+                    std::cout<<(Common::Colors::Yellow | Common::Colors::Bold)<<RegisterType::s_Names[i]<<":"<<Common::Colors::White<<"\n";
                     std::cout<<"    u8:  "<<+reg.u8<<"\tu16: "<<reg.u16<<"\tu32: "<<reg.u32<<"\tu64: "<<reg.u64<<"\n\n";
                     std::cout<<"    i8:  "<<+reg.i8<<"\ti16: "<<reg.i16<<"\ti32: "<<reg.i32<<"\ti64: "<<reg.i64<<"\n\n";
                     std::cout<<"    f32: "<<reg.f32<<"\tf64: "<<reg.f64<<"\n";
@@ -296,13 +296,13 @@ namespace Falcon
 
                 uint64_t lineCount = size / 16;
 
-                std::cout<<"\033[0;1;33mStacktrace:\n";
+                std::cout<<(Common::Colors::Yellow | Common::Colors::Bold)<<"Stacktrace:\n";
                 
                 uint64_t offset = m_FP;
 
                 for (int i = 0; i < lineCount; i++)
                 {
-                    std::cout<<"    \033[0;1;34m0x"<<std::hex<<std::setfill('0')<<std::setw(6)<<offset<<std::dec<<std::setw(0)<<"\033[0;0m ";
+                    std::cout<<"    "<<(Common::Colors::Blue | Common::Colors::Bold)<<"0x"<<std::hex<<std::setfill('0')<<std::setw(6)<<offset<<std::dec<<std::setw(0)<<Common::Colors::White<<" ";
 
                     offset += 16;
                     
@@ -316,7 +316,7 @@ namespace Falcon
                 {
                     uint64_t rem = size % 16;
 
-                    std::cout<<"    \033[0;1;34m0x"<<std::hex<<std::setfill('0')<<std::setw(6)<<offset<<std::dec<<std::setw(0)<<"\033[0;0m ";
+                    std::cout<<"    "<<(Common::Colors::Blue | Common::Colors::Bold)<<"0x"<<std::hex<<std::setfill('0')<<std::setw(6)<<offset<<std::dec<<std::setw(0)<<Common::Colors::White<<" ";
 
                     for (int i = 0; i < rem; i++)
                     {
@@ -326,11 +326,11 @@ namespace Falcon
             }
             else if (cmd == "stt" || cmd == "state")
             {
-                std::cout<<"\033[0;1;33mIC: \033[0;1;34m0x"<<std::hex<<m_IC<<"\033[0;0m "<<std::dec<<m_IC<<".\n";
-                std::cout<<"\033[0;1;33mIP: \033[0;1;34m0x"<<std::hex<<m_IP<<"\033[0;0m "<<std::dec<<m_IP<<".\n";
-                std::cout<<"\033[0;1;33mSP: \033[0;1;34m0x"<<std::hex<<m_SP<<"\033[0;0m "<<std::dec<<m_SP<<".\n";
-                std::cout<<"\033[0;1;33mFP: \033[0;1;34m0x"<<std::hex<<m_FP<<"\033[0;0m "<<std::dec<<m_FP<<".\n";
-                std::cout<<"\033[0;1;33mFLAGS: \033[0;0m{ "<<(m_Cmp[0] ? "true" : "false")<<", "<<(m_Cmp[1] ? "true" : "false")<<" }.\n";
+                std::cout<<(Common::Colors::Yellow | Common::Colors::Bold)<<"IC: "<<(Common::Colors::Blue | Common::Colors::Bold)<<"0x"<<std::hex<<m_IC<<Common::Colors::White<<" "<<std::dec<<m_IC<<".\n";
+                std::cout<<(Common::Colors::Yellow | Common::Colors::Bold)<<"IP: "<<(Common::Colors::Blue | Common::Colors::Bold)<<"0x"<<std::hex<<m_IP<<Common::Colors::White<<" "<<std::dec<<m_IP<<".\n";
+                std::cout<<(Common::Colors::Yellow | Common::Colors::Bold)<<"SP: "<<(Common::Colors::Blue | Common::Colors::Bold)<<"0x"<<std::hex<<m_SP<<Common::Colors::White<<" "<<std::dec<<m_SP<<".\n";
+                std::cout<<(Common::Colors::Yellow | Common::Colors::Bold)<<"FP: "<<(Common::Colors::Blue | Common::Colors::Bold)<<"0x"<<std::hex<<m_FP<<Common::Colors::White<<" "<<std::dec<<m_FP<<".\n";
+                std::cout<<(Common::Colors::Yellow | Common::Colors::Bold)<<"FLAGS: "<<Common::Colors::White<<"{ "<<(m_Cmp[0] ? "true" : "false")<<", "<<(m_Cmp[1] ? "true" : "false")<<" }.\n";
             }
             else if (cmd == "t" || cmd == "trace")
             {
@@ -345,7 +345,7 @@ namespace Falcon
             }
             else if (cmd == "dsasm" || cmd == "disassembly")
             {
-                std::cout<<"\033[0;1;33m"<<"Disassembly:"<<"\033[0;0m\n";
+                std::cout<<(Common::Colors::Yellow | Common::Colors::Bold)<<"Disassembly:"<<Common::Colors::White<<"\n";
 
                 auto tmp = m_Disassembly.emplace(m_IP, "").first;
 
@@ -387,14 +387,14 @@ namespace Falcon
                         {
                             if (f.second == iter->first)
                             {
-                                std::cout<<"    \033[0;32m["<<f.first<<"]\033[0;0m\n";
+                                std::cout<<"    "<<Common::Colors::Green<<"["<<f.first<<"]"<<Common::Colors::White<<"\n";
                             }
                         }
                     }
 
                     if (iter->first == m_IP)
                     {
-                        std::cout<<" \033[0;1;31m>>\033[0;0m ";
+                        std::cout<<" "<<Common::Colors::Red<<">>"<<Common::Colors::White<<" ";
                     }
                     else
                     {
@@ -483,8 +483,8 @@ namespace Falcon
             if (std::find(m_Breakpoints.begin(), m_Breakpoints.end(), m_IC) != m_Breakpoints.end())
             {
                 m_Continue = false;
-                std::cout<<"Breakpoint hit at Instruction Counter \033[0;1;34m0x"<<std::hex<<m_IC<<std::dec<<"\033[0;0m:\n";
-                std::cout<<"    \033[0;1;33mLine "<<m_LC<<": \033[0;0m"<<m_CurrentLine<<"\n";
+                std::cout<<"Breakpoint hit at Instruction Counter "<<(Common::Colors::Blue | Common::Colors::Bold)<<"0x"<<std::hex<<m_IC<<std::dec<<Common::Colors::White<<":\n";
+                std::cout<<"    "<<(Common::Colors::Yellow | Common::Colors::Bold)<<"Line "<<m_LC<<": "<<Common::Colors::White<<m_CurrentLine<<"\n";
                 shell();
 
                 if (!m_Running)
@@ -521,7 +521,7 @@ namespace Falcon
                     updateDebuggerState();
                 }
 
-                std::cout<<"\033[0;1;33mLine "<<m_LC<<": \033[0;0m"<<m_CurrentLine<<"\n";
+                std::cout<<(Common::Colors::Yellow | Common::Colors::Bold)<<"Line "<<m_LC<<": "<<Common::Colors::White<<m_CurrentLine<<"\n";
 
                 shell();
                 

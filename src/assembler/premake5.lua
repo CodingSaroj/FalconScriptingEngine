@@ -9,6 +9,7 @@ project "FalconASM"
     {
         "../vm/OpCode.cpp",
         "../vm/Register.cpp",
+        "../common/*.cpp",
         "*.cpp"
     }
 

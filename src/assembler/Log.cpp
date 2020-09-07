@@ -9,19 +9,19 @@ namespace Falcon
             switch(level)
             {
                 case LogLevel::INF:
-                    std::cout<<"Info:";
+                    std::cout<<(Common::Colors::White | Common::Colors::Bold)<<"Info";
                     break;
 
                 case LogLevel::WRN:
-                    std::cout<<"Warning:";
+                    std::cout<<(Common::Colors::Yellow | Common::Colors::Bold)<<"Warning";
                     break;
 
                 case LogLevel::ERR:
-                    std::cout<<"Error:";
+                    std::cout<<(Common::Colors::Red | Common::Colors::Bold)<<"Error";
                     break;
             }
 
-            std::cout<<line<<":"<<character<<": "<<log<<"\n";
+            std::cout<<Common::Colors::White<<":"<<line<<":"<<character<<": "<<log<<"\n";
         }
     }
 }

@@ -3,6 +3,8 @@
 
 #include <iostream>
 
+#include "../common/CLIColors.hpp"
+
 #include "LogLevel.hpp"
 #include "Context.hpp"
 
