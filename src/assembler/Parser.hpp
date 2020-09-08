@@ -3,9 +3,8 @@
 
 #include <functional>
 
-#include "Lexer.hpp"
-
-#include "AST.hpp"
+#include "assembler/Lexer.hpp"
+#include "assembler/AST.hpp"
 
 namespace Falcon
 {

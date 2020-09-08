@@ -7,11 +7,9 @@
 
 #include <cstring>
 
-#include "ObjectSpace.hpp"
-
-#include "Mangle.hpp"
-
-#include "Function.hpp"
+#include "fali/ObjectSpace.hpp"
+#include "fali/Mangle.hpp"
+#include "fali/Function.hpp"
 
 namespace Falcon
 {

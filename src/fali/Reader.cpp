@@ -40,6 +40,8 @@ namespace Falcon
 
                 uint64_t codeSectionSize = *(uint64_t *)&fileData[offset];
 
+                Endian::LittleToSystem(codeSectionSize);
+
                 offset += 8;
 
                 readCodeSection(&fileData[offset], codeSectionSize);
@@ -53,6 +55,8 @@ namespace Falcon
 
                 uint64_t debugSectionSize = *(uint64_t *)&fileData[offset];
 
+                Endian::LittleToSystem(debugSectionSize);
+                
                 offset += 8;
 
                 readDebugSection(&fileData[offset], debugSectionSize);
@@ -65,6 +69,8 @@ namespace Falcon
                 offset += 4;
 
                 uint64_t reflSectionSize = *(uint64_t *)&fileData[offset];
+
+                Endian::LittleToSystem(reflSectionSize);
 
                 offset += 8;
 
@@ -101,11 +107,15 @@ namespace Falcon
 
                     uint64_t startLine = *(uint64_t *)&start[offset];
 
+                    Endian::LittleToSystem(startLine);
+
                     m_DebugData.FunctionData[functionName].StartLine = startLine;
 
                     offset += 8;
 
                     uint64_t endLine = *(uint64_t *)&start[offset];
+                    
+                    Endian::LittleToSystem(endLine);
 
                     m_DebugData.FunctionData[functionName].EndLine = endLine;
 
@@ -118,9 +128,13 @@ namespace Falcon
                 {
                     uint64_t startLoc = *(uint64_t *)&start[offset];
 
+                    Endian::LittleToSystem(startLoc);
+
                     offset += 8;
                     
                     uint64_t lineNum = *(uint64_t *)&start[offset];
+
+                    Endian::LittleToSystem(lineNum);
 
                     offset += 8;
 
@@ -144,6 +158,8 @@ namespace Falcon
                     offset += type.size() + 1;
 
                     uint64_t stackOffset = *(uint64_t *)&start[offset];
+
+                    Endian::LittleToSystem(stackOffset);
 
                     offset += 8;
 

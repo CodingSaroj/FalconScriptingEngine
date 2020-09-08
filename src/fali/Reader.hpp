@@ -10,9 +10,11 @@
 
 #include <cstring>
 
-#include "../vm/DebugData.hpp"
+#include "common/Endian.hpp"
 
-#include "Object.hpp"
+#include "vm/DebugData.hpp"
+
+#include "fali/Object.hpp"
 
 namespace Falcon
 {

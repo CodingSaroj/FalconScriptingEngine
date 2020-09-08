@@ -3,7 +3,7 @@
 
 #include <vector>
 
-#include "AST.hpp"
+#include "assembler/AST.hpp"
 
 namespace Falcon
 {

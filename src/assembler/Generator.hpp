@@ -5,7 +5,9 @@
 
 #include <cstring>
 
-#include "Parser.hpp"
+#include "common/Endian.hpp"
+
+#include "assembler/Parser.hpp"
 
 namespace Falcon
 {

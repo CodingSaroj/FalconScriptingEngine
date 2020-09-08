@@ -5,10 +5,10 @@
 #include <iomanip>
 #include <map>
 
-#include "../common/CLIColors.hpp"
+#include "common/CLIColors.hpp"
 
-#include "DebugData.hpp"
-#include "VM.hpp"
+#include "vm/DebugData.hpp"
+#include "vm/VM.hpp"
 
 namespace Falcon
 {

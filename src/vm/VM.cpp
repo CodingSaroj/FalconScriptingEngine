@@ -1595,6 +1595,8 @@ namespace Falcon
         m_IP += 2;
 
         r0.u16 = *(uint16_t *)bytes;
+
+        Endian::LittleToSystem(r0.u16);
     }
     
     void VM::mov32()
@@ -1606,6 +1608,8 @@ namespace Falcon
         m_IP += 4;
 
         r0.u32 = *(uint32_t *)bytes;
+
+        Endian::LittleToSystem(r0.u32);
     }
     
     void VM::mov64()
@@ -1617,6 +1621,8 @@ namespace Falcon
         m_IP += 8;
 
         r0.u64 = *(uint64_t *)bytes;
+
+        Endian::LittleToSystem(r0.u64);
     }
 
     void VM::mvr8()
@@ -1729,7 +1735,7 @@ namespace Falcon
     void VM::load8()
     {
         Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-
+        
         memcpy((uint8_t *)&r0, &m_Stack[m_FP + *(uint32_t *)&m_Code[++m_IP]], 1);
         m_IP += 3;
     }
@@ -1737,31 +1743,48 @@ namespace Falcon
     void VM::load16()
     {
         Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        uint32_t offset = *(uint32_t *)&m_Code[++m_IP];
 
-        memcpy((uint8_t *)&r0, &m_Stack[m_FP + *(uint32_t *)&m_Code[++m_IP]], 2);
+        Endian::LittleToSystem(offset);
+
         m_IP += 3;
+
+        memcpy((uint8_t *)&r0, &m_Stack[m_FP + offset], 2);
     }
 
     void VM::load32()
     {
         Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        uint32_t offset = *(uint32_t *)&m_Code[++m_IP];
 
-        memcpy((uint8_t *)&r0, &m_Stack[m_FP + *(uint32_t *)&m_Code[++m_IP]], 4);
+        Endian::LittleToSystem(offset);
+        
         m_IP += 3;
+
+        memcpy((uint8_t *)&r0, &m_Stack[m_FP + offset], 4);
     }
 
     void VM::load64()
     {
         Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        uint32_t offset = *(uint32_t *)&m_Code[++m_IP];
 
-        memcpy((uint8_t *)&r0, &m_Stack[m_FP + *(uint32_t *)&m_Code[++m_IP]], 8);
+        Endian::LittleToSystem(offset);
+        
         m_IP += 3;
+
+        memcpy((uint8_t *)&r0, &m_Stack[m_FP + offset], 8);
     }
 
     void VM::lodref()
     {
         Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        uint64_t address = (uint64_t)&m_Stack[m_FP + *(uint32_t *)&m_Code[++m_IP]];
+        uint32_t offset = *(uint32_t *)&m_Code[++m_IP];
+
+        Endian::LittleToSystem(offset);
+
+        uint64_t address = (uint64_t)&m_Stack[m_FP + offset];
+
         m_IP += 3;
 
         memcpy((uint8_t *)&r0, &address, 8);
@@ -1770,6 +1793,9 @@ namespace Falcon
     void VM::pshnul()
     {
         uint32_t size = *(uint32_t *)&m_Code[++m_IP];
+
+        Endian::LittleToSystem(size);
+
         m_SP += size;
 
         m_IP += 3;
@@ -1786,6 +1812,9 @@ namespace Falcon
     void VM::jmp()
     {
         m_IP = *(uint64_t *)&m_Code[++m_IP];
+
+        Endian::LittleToSystem(m_IP);
+
         m_IP--;
     }
 
@@ -1816,6 +1845,8 @@ namespace Falcon
     void VM::call()
     {
         uint32_t argsSize = *(uint32_t *)&m_Code[++m_IP];
+
+        Endian::LittleToSystem(argsSize);
 
         m_IP += 3;
 
@@ -1866,6 +1897,9 @@ namespace Falcon
     void VM::ret()
     {
         uint64_t retSize = *(uint32_t *)&m_Code[++m_IP];
+        
+        Endian::LittleToSystem(retSize);
+
         uint8_t * retData = pop(retSize);
 
         m_SP = m_FP;

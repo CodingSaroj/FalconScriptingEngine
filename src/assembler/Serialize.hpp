@@ -3,8 +3,8 @@
 
 #include <iostream>
 
-#include "Token.hpp"
-#include "AST.hpp"
+#include "assembler/Token.hpp"
+#include "assembler/AST.hpp"
 
 namespace Falcon
 {

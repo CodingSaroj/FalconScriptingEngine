@@ -3,10 +3,10 @@
 
 #include <iostream>
 
-#include "../common/CLIColors.hpp"
+#include "common/CLIColors.hpp"
 
-#include "LogLevel.hpp"
-#include "Context.hpp"
+#include "assembler/LogLevel.hpp"
+#include "assembler/Context.hpp"
 
 namespace Falcon
 {

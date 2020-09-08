@@ -9,8 +9,10 @@
 #include <cstdlib>
 #include <cstring>
 
-#include "OpCode.hpp"
-#include "Register.hpp"
+#include "common/Endian.hpp"
+
+#include "common/OpCode.hpp"
+#include "common/Register.hpp"
 
 #ifndef FALCON_VM_STACK_SIZE
     #define FALCON_VM_STACK_SIZE 65536

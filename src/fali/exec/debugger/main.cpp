@@ -4,11 +4,10 @@
 #include <iostream>
 #include <iterator>
 
-#include "../../../vm/Debugger.hpp"
+#include "vm/Debugger.hpp"
 
-#include "../../Object.hpp"
-
-#include "../../Reader.hpp"
+#include "fali/Object.hpp"
+#include "fali/Reader.hpp"
 
 static std::array<std::string, 12> builtinTypes{"void", "ptr", "char", "uchar", "short", "ushort", "int", "uint", "long", "ulong", "float", "double"};
 

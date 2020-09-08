@@ -17,6 +17,9 @@ namespace Falcon
             {
                 symbols += sym.first;
                 symbols += '\0';
+
+                Endian::SystemToLittle(sym.second);
+
                 symbols.append((char *)&sym.second, 8);
             }
 
@@ -102,14 +105,20 @@ namespace Falcon
                     }
                     else if (type == OpCode::MOV16)
                     {
+                        Endian::SystemToLittle(inst->Args[i]);
+                        
                         m_CodeSection.append((char *)&inst->Args[i].Uint, 2);
                     }
                     else if (type == OpCode::MOV32 || (type >= OpCode::LOAD8 && type <= OpCode::LODREF) || type == OpCode::CALL || type == OpCode::RET || type == OpCode::POPNUL)
                     {
+                        Endian::SystemToLittle(inst->Args[i]);
+
                         m_CodeSection.append((char *)&inst->Args[i].Uint, 4);
                     }
                     else if (type == OpCode::MOV64 || type == OpCode::JMP || type == OpCode::JMT || type == OpCode::JMF)
                     {
+                        Endian::SystemToLittle(inst->Args[i]);
+
                         m_CodeSection.append((char *)&inst->Args[i].Uint, 8);
                     }
                 }
@@ -160,6 +169,8 @@ namespace Falcon
 
                 uint64_t address = m_LabelAddresses[name];
 
+                Endian::SystemToLittle(address);
+
                 for (int i = 0; i < 8; i++)
                 {
                     m_CodeSection[location + i] = ((char *)&address)[i];
@@ -169,6 +180,8 @@ namespace Falcon
             m_CodeSection.insert(codeSectionStart, generateSymbolTable());
             
             uint64_t codeSectionSize = (m_CodeSection.size() - codeSectionStart) + 1;
+
+            Endian::SystemToLittle(codeSectionSize);
 
             for (int i = 0; i < 8; i++)
             {
@@ -187,6 +200,9 @@ namespace Falcon
             m_DebugSection += routine->MetaData.Signature;
             m_DebugSection += '\0';
             
+            Endian::SystemToLittle(routine->MetaData.StartLine);
+            Endian::SystemToLittle(routine->MetaData.EndLine);
+
             for (int i = 0; i < 16; i++)
             {
                 m_DebugSection += ((char *)&routine->MetaData.StartLine)[i];
@@ -196,6 +212,9 @@ namespace Falcon
 
             for (auto lineMap : routine->LineMaps)
             {
+                Endian::SystemToLittle(lineMap.StartLocation);
+                Endian::SystemToLittle(lineMap.LineNumber);
+
                 for (int i = 0; i < 16; i++)
                 {
                     m_DebugSection += ((char *)&lineMap.StartLocation)[i];
@@ -215,6 +234,8 @@ namespace Falcon
                 m_DebugSection += localVar.Type;
                 m_DebugSection += '\0';
                 
+                Endian::SystemToLittle(localVar.StackOffset);
+
                 for (int i = 0; i < 8; i++)
                 {
                     m_DebugSection += ((char *)&localVar.StackOffset)[i];
@@ -243,6 +264,8 @@ namespace Falcon
             }
 
             uint64_t debugSectionSize = m_DebugSection.size() - debugSectionStart;
+
+            Endian::SystemToLittle(debugSectionSize);
 
             for (int i = 0; i < 8; i++)
             {
@@ -330,6 +353,8 @@ namespace Falcon
             }
 
             uint64_t reflectionSectionSize = m_ReflectionSection.size() - reflectionSectionStart;
+
+            Endian::SystemToLittle(reflectionSectionSize);
 
             for (int i = 0; i < 8; i++)
             {

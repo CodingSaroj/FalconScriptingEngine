@@ -5,10 +5,9 @@
 #include <iostream>
 #include <iterator>
 
-#include "../../Object.hpp"
-
-#include "../../Context.hpp"
-#include "../../Reader.hpp"
+#include "fali/Object.hpp"
+#include "fali/Context.hpp"
+#include "fali/Reader.hpp"
 
 static struct
 {

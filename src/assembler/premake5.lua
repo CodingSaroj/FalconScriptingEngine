@@ -7,10 +7,18 @@ project "FalconASM"
 
     files
     {
-        "../vm/OpCode.cpp",
-        "../vm/Register.cpp",
         "../common/*.cpp",
         "*.cpp"
+    }
+    
+    includedirs
+    {
+        IncludeDirs
+    }
+
+    libdirs
+    {
+        LibDirs
     }
 
     filter "configurations:Debug"
@@ -53,12 +61,12 @@ project "FalconASMBin"
 
     includedirs
     {
-        "."
+        IncludeDirs
     }
 
     libdirs
     {
-        "../../lib/%{cfg.buildcfg}/%{cfg.platform}/"
+        LibDirs
     }
 
     links

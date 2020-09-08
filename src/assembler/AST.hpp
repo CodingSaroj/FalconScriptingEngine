@@ -7,7 +7,7 @@
 
 #include <cstdint>
 
-#include "../vm/Register.hpp"
+#include "common/Register.hpp"
 
 namespace Falcon
 {

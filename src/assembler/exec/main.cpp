@@ -2,10 +2,10 @@
 #include <iostream>
 #include <iterator>
 
-#include "../SemanticAnalyzer.hpp"
-#include "../Combiner.hpp"
-#include "../Generator.hpp"
-#include "../Serialize.hpp"
+#include "assembler/SemanticAnalyzer.hpp"
+#include "assembler/Combiner.hpp"
+#include "assembler/Generator.hpp"
+#include "assembler/Serialize.hpp"
 
 static struct
 {

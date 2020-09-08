@@ -5,13 +5,12 @@
 #include <iostream>
 #include <vector> 
 
-#include "../vm/OpCode.hpp"
-#include "../vm/Register.hpp"
+#include "common/OpCode.hpp"
+#include "common/Register.hpp"
 
-#include "Context.hpp"
-#include "Log.hpp"
-
-#include "Token.hpp"
+#include "assembler/Context.hpp"
+#include "assembler/Log.hpp"
+#include "assembler/Token.hpp"
 
 namespace Falcon
 {
