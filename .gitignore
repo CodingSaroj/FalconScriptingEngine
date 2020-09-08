@@ -1,3 +1,6 @@
+# Development files
+.clangd
+
 # Build folder
 bin
 lib
