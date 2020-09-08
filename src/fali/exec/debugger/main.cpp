@@ -8,6 +8,7 @@
 
 #include "fali/Object.hpp"
 #include "fali/Reader.hpp"
+#include "fali/DebugContext.hpp"
 
 static std::array<std::string, 12> builtinTypes{"void", "ptr", "char", "uchar", "short", "ushort", "int", "uint", "long", "ulong", "float", "double"};
 
@@ -166,7 +167,7 @@ int main(int argc, char * argv[])
 
     Falcon::FALI::Reader reader(s_State.InputName);
 
-    Falcon::Debugger debugger(
+    Falcon::FALI::DebugContext ctxt(
         reader.GetCode(),
         reader.GetDebugData(),
         Falcon::Debugger::DebuggerFunctions{Falcon::FALI::MangleFunction, Falcon::FALI::DemangleFunction, Falcon::FALI::MangleIdentifier, Falcon::FALI::DemangleIdentifier},
@@ -177,5 +178,5 @@ int main(int argc, char * argv[])
         }
     );
 
-    debugger.shell();
+    ctxt.shell();
 }

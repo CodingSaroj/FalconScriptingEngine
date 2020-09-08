@@ -60,7 +60,6 @@ namespace Falcon
                 }
 
                 m_Disassembly[currentIP] = OpCode::s_Names[m_Code[currentIP]] + " " + str;
-                ip++;
             }
             else if (layout == OpCode::Layout::BIN_REG_REG)
             {
