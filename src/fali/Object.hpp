@@ -7,6 +7,8 @@
 
 #include <cstring>
 
+#include "ObjectSpace.hpp"
+
 #include "Mangle.hpp"
 
 #include "Function.hpp"
@@ -111,10 +113,10 @@ namespace Falcon
         private:
             static std::unordered_map<std::string, ObjectData> s_ObjectTypes;
 
-            bool         m_Temparory;
+            bool              m_Temparory;
             const std::string m_ObjectType;
-            ObjectData * m_ObjectData;
-            uint8_t *    m_Data;
+            ObjectData *      m_ObjectData;
+            uint8_t *         m_Data;
         };
 
         template <typename ReturnType, typename... Args, uint32_t... Ints>

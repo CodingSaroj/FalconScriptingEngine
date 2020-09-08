@@ -8,7 +8,7 @@ workspace "Falcon"
     platforms
     {
         "Windows32",
-        "Windows64"
+        "Windows64",
         "Linux32",
         "Linux64"
     }

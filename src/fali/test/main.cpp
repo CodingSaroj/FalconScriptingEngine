@@ -6,25 +6,32 @@
 using namespace Falcon;
 using namespace Falcon::FALI;
 
+static bool Record = false;
+static size_t Usage = 0;
+
 struct vec2 { double x, y; };
+
+void * operator new(size_t size)
+{
+    if (Record)
+    {
+        Usage += size;
+    }
+
+    return malloc(size);
+}
 
 int main()
 {
-    Reader reader("hello.fali");
+    Object::New("vec2");
+    Object::AddMember("vec2", "float32", "x");
+    Object::AddMember("vec2", "float32", "y");
 
-    FALI::Context ctxt(reader.GetCode());
+    float x = 1.0, y = 2.0;
 
-    vec2 vc1{2.0, 3.0}, vc2{3.0, 2.0};
+    Record = true;
+    Object obj("vec2");
+    Record = false;
 
-    Object v1("vec2", &vc1), v2("vec2", &vc2);
-
-    std::cout<<"Before:\n";
-    std::cout<<"    v1: "<<v1.get<double>("x")<<", "<<v1.get<double>("y")<<"\n";
-    std::cout<<"    v2: "<<v2.get<double>("x")<<", "<<v2.get<double>("y")<<"\n";
-
-    memcpy(v1.self(), v1.callMember("vec2", "vec2$add", {&v2}).self(), sizeof(vec2));
-    
-    std::cout<<"After:\n";
-    std::cout<<"    v1: "<<v1.get<double>("x")<<", "<<v1.get<double>("y")<<"\n";
-    std::cout<<"    v2: "<<v2.get<double>("x")<<", "<<v2.get<double>("y")<<"\n";
+    std::cout<<Usage<<" bytes used.\n";
 }

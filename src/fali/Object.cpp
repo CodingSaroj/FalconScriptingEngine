@@ -47,7 +47,7 @@ namespace Falcon
         }
 
         Object::Object(const std::string & type)
-            : m_Temparory(true), m_ObjectType(type), m_ObjectData(&s_ObjectTypes[type]), m_Data(new uint8_t[s_ObjectTypes[type].Size])
+            : m_Temparory(false), m_ObjectType(type), m_ObjectData(&s_ObjectTypes[type]), m_Data((uint8_t *)ObjectSpace::New(s_ObjectTypes[type].Size))
         {
         }
         
@@ -57,7 +57,7 @@ namespace Falcon
         }
         
         Object::Object(const std::string & type, const std::string & constructor, std::vector<void *> args)
-            : m_ObjectType(type), m_ObjectData(&s_ObjectTypes[type]), m_Data(new uint8_t[s_ObjectTypes[type].Size])
+            : m_Temparory(false), m_ObjectType(type), m_ObjectData(&s_ObjectTypes[type]), m_Data((uint8_t *)ObjectSpace::New(s_ObjectTypes[type].Size))
         {
             memcpy(m_Data, Function::Get(constructor).call(args), m_ObjectData->Size);
         }
@@ -66,7 +66,7 @@ namespace Falcon
         {
             if (!m_Temparory)
             {
-                delete[] m_Data;
+                ObjectSpace::Delete(m_Data);
             }
         }
         

@@ -1,0 +1,41 @@
+sect code:
+    main#uint32#ptr#:
+    .main#uint32#ptr#:
+        mov8 r1 0x0
+        psh64 r1
+        extrn initGlobalMemory
+        
+        pshstr "Hello World!"
+        mov16 r1 0x000A
+        psh16 r1
+        lodref r1 0x0C
+        psh64 r1
+
+        mov8 r2 0x01
+        psh64 r2
+
+        mov8 r2 0x0E
+        psh64 r2
+
+        mov8 r2 0x08
+        psh64 r2
+        extrn getGlobalAddress
+        pop64 r2
+        psh64 @r2
+ 
+        extrn fwrite
+
+        popnul 0x04
+        ret 0x04
+
+sect debug:
+    main#uint32#ptr#:
+        meta "int32 main(uint32 argc, ptr argv)" 0x01 0x14
+
+        local "argc" "uint32" 0x00
+        local "argv" "ptr" 0x04
+
+        ;map 0x01 0x03 "    return fwrite("Hello World!\n", 1, 14, stdout);"
+    
+sect reflection:
+    function int32 main ( uint32 , ptr )
