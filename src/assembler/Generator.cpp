@@ -273,6 +273,22 @@ namespace Falcon
             }
         }
         
+        void Generator::generateReflectionAttribute(ReflectionAttributeNode * attrib)
+        {
+            m_ReflectionSection += 'T';
+
+            m_ReflectionSection += attrib->Name;
+            m_ReflectionSection += '\0';
+
+            for (auto & attrName : attrib->Attributes)
+            {
+                m_ReflectionSection += attrName;
+                m_ReflectionSection += '\0';
+            }
+
+            m_ReflectionSection += 'E';
+        }
+
         void Generator::generateReflectionFunction(ReflectionFunctionNode * function)
         {
             m_ReflectionSection += 'F';
@@ -283,7 +299,7 @@ namespace Falcon
             m_ReflectionSection += function->Name;
             m_ReflectionSection += '\0';
 
-            for (auto param : function->Parameters)
+            for (auto & param : function->Parameters)
             {
                 m_ReflectionSection += param;
                 m_ReflectionSection += '\0';
@@ -299,7 +315,7 @@ namespace Falcon
             m_ReflectionSection += structure->Name;
             m_ReflectionSection += '\0';
 
-            for (auto member : structure->Members)
+            for (auto & member : structure->Members)
             {
                 m_ReflectionSection += member.first;
                 m_ReflectionSection += '\0';
@@ -336,6 +352,11 @@ namespace Falcon
             }
 
             uint64_t reflectionSectionStart = m_ReflectionSection.size();
+
+            for (auto & attrib : refl->Attributes)
+            {
+                generateReflectionAttribute(&attrib);
+            }
 
             for (auto & function : refl->Functions)
             {

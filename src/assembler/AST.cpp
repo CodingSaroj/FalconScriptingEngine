@@ -86,6 +86,12 @@ namespace Falcon
         {
         }
 
+
+        ReflectionAttributeNode::ReflectionAttributeNode(const std::string & name, std::vector<std::string> attribs)
+            : Name(name), Attributes(attribs)
+        {
+        }
+
         ReflectionFunctionNode::ReflectionFunctionNode(const std::string & name, const std::string & retType, std::vector<std::string> params)
             : Name(name), ReturnType(retType), Parameters(params) 
         {

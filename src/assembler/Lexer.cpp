@@ -173,6 +173,10 @@ namespace Falcon
             {
                 return Token(TokenType::IDENTIFIER, toUpper(str));
             }
+            else if (toUpper(str) == "ATTRIBUTE")
+            {
+                return Token(TokenType::IDENTIFIER, toUpper(str));
+            }
             else if (toUpper(str) == "FUNCTION")
             {
                 return Token(TokenType::IDENTIFIER, toUpper(str));

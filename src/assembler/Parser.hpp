@@ -40,6 +40,7 @@ namespace Falcon
                 DebugRoutineNode  parseDebugRoutine();
                 DebugSectionNode  parseDebugSection();
 
+                ReflectionAttributeNode parseReflectionAttribute();
                 ReflectionFunctionNode  parseReflectionFunction();
                 ReflectionStructureNode parseReflectionStructure();
                 ReflectionAliasNode     parseReflectionAlias();

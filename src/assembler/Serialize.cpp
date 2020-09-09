@@ -178,6 +178,17 @@ namespace Falcon
                     Serialize(&routine, padding + "\t");
                 }
             }
+            else if (auto * attrib = dynamic_cast<ReflectionAttributeNode *>(node))
+            {
+                std::cout<<padding<<"ReflectionAttributeNode:\n";
+
+                std::cout<<padding + "\tTarget:\t"<<attrib->Name<<"\n";
+
+                for (auto attr : attrib->Attributes)
+                {
+                    std::cout<<padding + "\tAttribute:\t"<<attr<<"\n";
+                }
+            }
             else if (auto * function = dynamic_cast<ReflectionFunctionNode *>(node))
             {
                 std::cout<<padding<<"ReflectionFunctionNode:\n";

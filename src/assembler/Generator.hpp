@@ -44,6 +44,7 @@ namespace Falcon
             void generateDebugRoutine(DebugRoutineNode * routine);
             void generateDebugSection(DebugSectionNode * dbg);
 
+            void generateReflectionAttribute(ReflectionAttributeNode * attrib);
             void generateReflectionFunction(ReflectionFunctionNode * function);
             void generateReflectionStructure(ReflectionStructureNode * structure);
             void generateReflectionAlias(ReflectionAliasNode * alias);

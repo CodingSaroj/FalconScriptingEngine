@@ -14,6 +14,7 @@
 
 #include "vm/DebugData.hpp"
 
+#include "fali/Attribute.hpp"
 #include "fali/Object.hpp"
 
 namespace Falcon

@@ -378,6 +378,68 @@ namespace Falcon
             return dbg;
         }
         
+        ReflectionAttributeNode Parser::parseReflectionAttribute()
+        {
+            std::string name;
+            std::vector<std::string> attributes;
+
+            m_CurrentToken = m_FetchToken();
+
+            if (m_CurrentToken.Type == TokenType::IDENTIFIER)
+            {
+                name = m_CurrentToken.Str;
+            }
+            else
+            {
+                Log(LogLevel::ERR, "Expected identifier after `attribute` in reflection section.");
+                exit(2);
+            }
+
+            m_CurrentToken = m_FetchToken();
+            
+            if (m_CurrentToken.Type != TokenType::IDENTIFIER || m_CurrentToken.Str != "[")
+            {
+                Log(LogLevel::ERR, "Expected `[` after target name in reflection section.");
+                exit(2);
+            }
+
+            m_CurrentToken = m_FetchToken();
+
+            while (m_CurrentToken.Type == TokenType::IDENTIFIER)
+            {
+                attributes.emplace_back(m_CurrentToken.Str);
+
+                m_CurrentToken = m_FetchToken();
+
+                skipNewlines();
+
+                if (m_CurrentToken.Type != (TokenType)',' && (m_CurrentToken.Type != TokenType::IDENTIFIER || m_CurrentToken.Str != "]"))
+                {
+                    Log(LogLevel::ERR, "Expected `,` or `]` after attribute.");
+                    exit(2);
+                }
+                
+                if (m_CurrentToken.Type == TokenType::IDENTIFIER && m_CurrentToken.Str == "]")
+                {
+                    break;
+                }
+
+                m_CurrentToken = m_FetchToken();
+
+                skipNewlines();
+            }
+            
+            if (m_CurrentToken.Type != TokenType::IDENTIFIER || m_CurrentToken.Str != "]")
+            {
+                Log(LogLevel::ERR, "Expected `]` after attributes in reflection section.");
+                exit(2);
+            }
+
+            m_CurrentToken = m_FetchToken();
+
+            return ReflectionAttributeNode(name, attributes);
+        }
+
         ReflectionFunctionNode Parser::parseReflectionFunction()
         {
             std::string name, retType;
@@ -550,9 +612,13 @@ namespace Falcon
 
             m_CurrentToken = m_FetchToken();
 
-            while (m_CurrentToken.Type == TokenType::IDENTIFIER && (m_CurrentToken.Str == "FUNCTION" || m_CurrentToken.Str == "STRUCT" || m_CurrentToken.Str == "ALIAS"))
+            while (m_CurrentToken.Type == TokenType::IDENTIFIER && (m_CurrentToken.Str == "ATTRIBUTE" || m_CurrentToken.Str == "FUNCTION" || m_CurrentToken.Str == "STRUCT" || m_CurrentToken.Str == "ALIAS"))
             {
-                if (m_CurrentToken.Str == "FUNCTION")
+                if (m_CurrentToken.Str == "ATTRIBUTE")
+                {
+                    refl.Attributes.emplace_back(std::move(parseReflectionAttribute()));
+                }
+                else if (m_CurrentToken.Str == "FUNCTION")
                 {
                     refl.Functions.emplace_back(std::move(parseReflectionFunction())); 
                 }

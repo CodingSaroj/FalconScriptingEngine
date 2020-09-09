@@ -176,7 +176,30 @@ namespace Falcon
 
             while (offset < size)
             {
-                if (start[offset] == 'F')
+                if (start[offset] == 'T')
+                {
+                    offset++;
+
+                    std::string name((char *)&start[offset]);
+
+                    offset += name.size() + 1;
+
+                    std::vector<std::string> attribs;
+
+                    while (start[offset] != 'T')
+                    {
+                        std::string attrib((char *)&start[offset]);
+
+                        attribs.emplace_back(attrib);
+
+                        offset += attrib.size() + 1;
+                    }
+
+                    offset++;
+
+                    AttributeTable::New(name, attribs);
+                }
+                else if (start[offset] == 'F')
                 {
                     offset++;
 

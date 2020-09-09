@@ -47,6 +47,12 @@ namespace Falcon
                         module2->DebugSection.Routines.end()
                     );
 
+                    module1->ReflectionSection.Attributes.insert(
+                        module1->ReflectionSection.Attributes.begin(),
+                        module2->ReflectionSection.Attributes.begin(),
+                        module2->ReflectionSection.Attributes.end()
+                    );
+ 
                     module1->ReflectionSection.Functions.insert(
                         module1->ReflectionSection.Functions.begin(),
                         module2->ReflectionSection.Functions.begin(),

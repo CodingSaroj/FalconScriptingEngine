@@ -120,6 +120,14 @@ namespace Falcon
             std::vector<DebugRoutineNode> Routines;
         };
 
+        struct ReflectionAttributeNode : public ASTNode
+        {
+            std::string Name;
+            std::vector<std::string> Attributes;
+
+            ReflectionAttributeNode(const std::string & name, std::vector<std::string> attribs);
+        };
+
         struct ReflectionFunctionNode : public ASTNode
         {
             std::string              Name;
@@ -149,6 +157,7 @@ namespace Falcon
 
         struct ReflectionSectionNode : public ASTNode
         {
+            std::vector<ReflectionAttributeNode> Attributes;
             std::vector<ReflectionFunctionNode>  Functions;
             std::vector<ReflectionStructureNode> Structures;
             std::vector<ReflectionAliasNode>     Aliases;
