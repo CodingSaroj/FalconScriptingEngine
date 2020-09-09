@@ -5,6 +5,9 @@
 #include <iostream>
 #include <iterator>
 
+#include "vm/Signal.hpp"
+#include "vm/SignalImplement.hpp"
+
 #include "fali/Object.hpp"
 #include "fali/Context.hpp"
 #include "fali/Reader.hpp"
@@ -77,9 +80,13 @@ int main(int argc, char * argv[])
 {
     parseCmdArgs(argc, argv);
 
+    Falcon::ImplementSignals();
+
     Falcon::FALI::Reader reader(s_State.InputName);
 
     Falcon::FALI::Context ctxt(reader.GetCode());
+
+    Falcon::Signal::SetTargetVM(&ctxt.getVM());
 
     int32_t exitStatus = 0;
 

@@ -3,7 +3,7 @@
 namespace Falcon
 {
     VM::VM(uint8_t * code)
-        : m_Code(code), m_IP(0), m_SP(0), m_FP(0)
+        : m_Code(code), m_IP(0), m_SP(0), m_FP(0), m_InstructionStart(0)
     {
         m_Operators[OpCode::UADD8] = &VM::uadd8;
         m_Operators[OpCode::UADD16] = &VM::uadd16;
@@ -309,6 +309,42 @@ namespace Falcon
         }
 
         m_Code += m_IP;
+    }
+
+    void VM::dumpState()
+    {
+        std::cout<<(Common::Colors::Yellow | Common::Colors::Bold)<<"State Dump"<<Common::Colors::White<<":\n";
+        std::cout<<"    Instruction              : "<<Disassembler::DisassembleInstruction(&m_Code[m_InstructionStart])<<"\n";
+        std::cout<<std::hex<<std::setfill('0');
+        std::cout<<"    Instruction Pointer (IP) : 0x"<<std::setw(16)<<m_IP<<"\n";
+        std::cout<<"    Stack Pointer (SP)       : 0x"<<std::setw(16)<<m_SP<<"\n";
+        std::cout<<"    Frame Pointer (FP)       : 0x"<<std::setw(16)<<m_FP<<"\n\n";
+        
+        for (uint16_t i = 0; i < 4; i++)
+        {
+            auto reg = m_Registers[i];
+
+            std::cout<<std::setfill('0');
+
+            std::cout<<"    R"<<i + 1<<":\n";
+
+            std::cout<<"        u8  : 0x"<<std::setw(2)<<(uint16_t)reg.u8<<" '"<<reg.u8<<"'                   i8  : 0x"<<std::setw(2)<<(int16_t)reg.i8<<" '"<<reg.i8<<"' \n";
+
+            std::cout<<"        u16 : 0x"<<std::setw(4)<<reg.u16<<"                    i16 : 0x"<<std::setw(4)<<reg.i16<<" \n";
+
+            std::cout<<"        u32 : 0x"<<std::setw(8)<<reg.u32<<"                i32 : 0x"<<std::setw(8)<<reg.u32<<" \n";
+
+            std::cout<<"        u64 : 0x"<<std::setw(16)<<reg.u64<<"        i64 : 0x"<<std::setw(16)<<reg.u64<<" \n";
+
+            std::cout<<std::setfill(' ');
+
+            std::cout<<std::dec;
+            std::cout<<"        f32 : "<<reg.f32<<" \n";
+            std::cout<<"        f64 : "<<reg.f64<<" \n";
+            std::cout<<std::hex;
+        }
+
+        std::cout<<std::dec;
     }
 
     void VM::uadd8()
@@ -1929,6 +1965,65 @@ namespace Falcon
         return &m_Stack[m_SP];
     }
 
+    std::unordered_map<int, std::function<void(int)>> VM::getSignalHandlers()
+    {
+        return
+        {
+            {
+                SIGABRT,
+                [this](int signal)
+                {
+                    std::cout<<(Common::Colors::Red | Common::Colors::Bold)<<"Runtime Error:"<<Common::Colors::White<<" Aborted.\n";
+                    dumpState();
+                    exit(SIGABRT);
+                }
+            },
+            {
+                SIGILL,
+                [this](int signal)
+                {
+                    std::cout<<(Common::Colors::Red | Common::Colors::Bold)<<"Runtime Error:"<<Common::Colors::White<<" Illegal CPU Instruction.\n";
+                    dumpState();
+                    exit(SIGILL);
+                }
+            },
+            {
+                SIGINT,
+                [this](int signal)
+                {
+                    std::cout<<(Common::Colors::Red | Common::Colors::Bold)<<"Runtime Error:"<<Common::Colors::White<<" Interrupted.\n";
+                    m_Running = false;
+                }
+            },
+            {
+                SIGFPE,
+                [this](int signal)
+                {
+                    std::cout<<(Common::Colors::Red | Common::Colors::Bold)<<"Runtime Error:"<<Common::Colors::White<<" Floating point exception.\n";
+                    dumpState();
+                    exit(SIGFPE);
+                }
+            },
+            {
+                SIGSEGV,
+                [this](int signal)
+                {
+                    std::cout<<(Common::Colors::Red | Common::Colors::Bold)<<"Runtime Error:"<<Common::Colors::White<<" Segmentation fault.\n";
+                    dumpState();
+                    exit(SIGSEGV);
+                }
+            },
+            {
+                SIGTERM,
+                [this](int signal)
+                {
+                    std::cout<<(Common::Colors::Red | Common::Colors::Bold)<<"Runtime Error:"<<Common::Colors::White<<" Terminating.\n";
+                    m_Running = false;
+                }
+            }
+        };
+    }
+
     void VM::externalFunction(const std::string & name, std::function<void(VM&)> function)
     {
         if (m_ExternalFunctions.count(name) == 0)
@@ -1962,6 +2057,8 @@ namespace Falcon
 
         while (m_Running)
         {
+            m_InstructionStart = m_IP;
+
             (this->*m_Operators[(uint8_t)op])();
 
             op = (OpCode::OpCode)m_Code[++m_IP];

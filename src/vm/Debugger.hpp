@@ -5,10 +5,14 @@
 #include <iomanip>
 #include <map>
 
+#include <csignal>
+
 #include "common/CLIColors.hpp"
 
 #include "vm/DebugData.hpp"
 #include "vm/VM.hpp"
+
+#include "vm/Disassembler.hpp"
 
 namespace Falcon
 {
@@ -36,6 +40,8 @@ namespace Falcon
         void clearBreakpoint(uint64_t ip);
 
         void shell();
+
+        std::unordered_map<int, std::function<void(int)>> getSignalHandlers();
 
         void run(const std::string & function = "main", uint64_t argsSize = 0);
 
@@ -67,7 +73,6 @@ namespace Falcon
         PrintVarFunction m_PrintVarFunction;
 
         void disassemble();
-        std::string disassembleRegister(uint8_t reg);
 
         void updateDebuggerState();
     };

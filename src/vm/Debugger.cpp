@@ -16,137 +16,11 @@ namespace Falcon
         while (m_Code[ip] != 255)
         {
             uint64_t currentIP = ip;
-            OpCode::OpCode op = (OpCode::OpCode)m_Code[ip];
-            OpCode::Layout layout = OpCode::s_Layouts[m_Code[ip]];
 
-            if (layout == OpCode::Layout::BASE)
-            {
-                m_Disassembly[ip] = OpCode::s_Names[m_Code[ip]];
-            }
-            else if (layout == OpCode::Layout::UN_REG)
-            {
-                m_Disassembly[currentIP] = OpCode::s_Names[m_Code[currentIP]] + " " + disassembleRegister(m_Code[++ip]);
-            }
-            else if (layout == OpCode::Layout::UN_NUM)
-            {
-                if (op == OpCode::PSHNUL || op == OpCode::POPNUL || op == OpCode::RET)
-                {
-                    uint32_t num = *(uint32_t *)&m_Code[++ip];
-                    ip += 3;
-
-                    m_Disassembly[currentIP] = OpCode::s_Names[m_Code[currentIP]] + " " + std::to_string(num);
-                }
-                else
-                {
-                    uint64_t num = *(uint64_t *)&m_Code[++ip];
-                    ip += 7;
-
-                    m_Disassembly[currentIP] = OpCode::s_Names[m_Code[currentIP]] + " " + std::to_string(num);
-                }
-            }
-            else if (layout == OpCode::Layout::UN_STR)
-            {
-                std::string str;
-
-                char c = 0;
-
-                ip++;
-
-                while ((c = (char)m_Code[ip]))
-                {
-                    str += c;
-
-                    ip++;
-                }
-
-                m_Disassembly[currentIP] = OpCode::s_Names[m_Code[currentIP]] + " " + str;
-            }
-            else if (layout == OpCode::Layout::BIN_REG_REG)
-            {
-                m_Disassembly[currentIP] = OpCode::s_Names[m_Code[currentIP]] + " " + disassembleRegister(m_Code[ip + 1]) + " " + disassembleRegister(m_Code[ip + 2]);
-                ip += 2;
-            }
-            else if (layout == OpCode::Layout::BIN_MOV)
-            {
-                uint8_t reg = m_Code[++ip];
-
-                if (op == OpCode::MOV8)
-                {
-                    uint8_t num = m_Code[++ip];
-
-                    m_Disassembly[currentIP] = OpCode::s_Names[m_Code[currentIP]] + " " + disassembleRegister(reg) + " " + std::to_string(+num);
-                }
-                else if (op == OpCode::MOV16)
-                {
-                    uint16_t num = *(uint16_t *)&m_Code[++ip];
-                    ip++;
-
-                    m_Disassembly[currentIP] = OpCode::s_Names[m_Code[currentIP]] + " " + disassembleRegister(reg) + " " + std::to_string(num);
-                }
-                else if (op == OpCode::MOV32 || (op >= OpCode::LOAD8 && op <= OpCode::LODREF))
-                {
-                    uint32_t num = *(uint32_t *)&m_Code[++ip];
-                    ip += 3;
-
-                    m_Disassembly[currentIP] = OpCode::s_Names[m_Code[currentIP]] + " " + disassembleRegister(reg) + " " + std::to_string(num);
-                }
-                else if (op == OpCode::MOV64)
-                {
-                    uint64_t num = *(uint64_t *)&m_Code[++ip];
-                    ip += 7;
-
-                    m_Disassembly[currentIP] = OpCode::s_Names[m_Code[currentIP]] + " " + disassembleRegister(reg) + " " + std::to_string(num);
-                }
-            }
-            else if (layout == OpCode::Layout::BIN_CALL)
-            {
-                uint32_t num = *(uint32_t *)&m_Code[++ip];
-                ip += 4;
-
-                std::string str;
-
-                char c = 0;
-
-                while ((c = (char)m_Code[ip]))
-                {
-                    str += c;
-
-                    ip++;
-                }
-
-                m_Disassembly[currentIP] = OpCode::s_Names[m_Code[currentIP]] + " " + std::to_string(num) + " " + str;
-            }
+            m_Disassembly[currentIP] = Disassembler::DisassembleInstruction(&m_Code[ip], &ip);
 
             ip++;
         }
-
-        for (auto iter = m_Disassembly.begin(); iter != m_Disassembly.end(); iter++)
-        {
-            for (char & c : iter->second)
-            {
-                c = std::tolower(c);
-            }
-        }
-    }
-
-    std::string Debugger::disassembleRegister(uint8_t reg)
-    {
-        std::string regStr;
-
-        if (reg & 0b00001000)
-        {
-            regStr = "[" + RegisterType::s_Names[reg & 0b00000011] + "]";
-        }
-        else if (reg & 0b00000100)
-        {
-            regStr = "@" + RegisterType::s_Names[reg & 0b00000011];
-        }
-        else
-        {
-            regStr = RegisterType::s_Names[reg];
-        }
-
-        return regStr;
     }
 
     void Debugger::updateDebuggerState()
@@ -468,6 +342,67 @@ namespace Falcon
                 }
             }
         }
+    }
+
+    std::unordered_map<int, std::function<void(int)>> Debugger::getSignalHandlers()
+    {
+        return
+        {
+            {
+                SIGABRT,
+                [this](int signal)
+                {
+                    std::cout<<(Common::Colors::Red | Common::Colors::Bold)<<"Runtime Error:"<<Common::Colors::White<<" Aborted.\n";
+                    shell();
+                    exit(SIGABRT);
+                }
+            },
+            {
+                SIGILL,
+                [this](int signal)
+                {
+                    std::cout<<(Common::Colors::Red | Common::Colors::Bold)<<"Runtime Error:"<<Common::Colors::White<<" Illegal CPU Instruction.\n";
+                    shell();
+                    exit(SIGILL);
+                }
+            },
+            {
+                SIGINT,
+                [this](int signal)
+                {
+                    std::cout<<(Common::Colors::Red | Common::Colors::Bold)<<"Runtime Error:"<<Common::Colors::White<<" Interrupted.\n";
+                    shell();
+                    m_Running = false;
+                }
+            },
+            {
+                SIGFPE,
+                [this](int signal)
+                {
+                    std::cout<<(Common::Colors::Red | Common::Colors::Bold)<<"Runtime Error:"<<Common::Colors::White<<" Floating point exception.\n";
+                    shell();
+                    exit(SIGFPE);
+                }
+            },
+            {
+                SIGSEGV,
+                [this](int signal)
+                {
+                    std::cout<<(Common::Colors::Red | Common::Colors::Bold)<<"Runtime Error:"<<Common::Colors::White<<" Segmentation fault.\n";
+                    shell();
+                    exit(SIGSEGV);
+                }
+            },
+            {
+                SIGTERM,
+                [this](int signal)
+                {
+                    std::cout<<(Common::Colors::Red | Common::Colors::Bold)<<"Runtime Error:"<<Common::Colors::White<<" Terminating.\n";
+                    shell();
+                    m_Running = false;
+                }
+            }
+        };
     }
 
     void Debugger::run(const std::string & function, uint64_t argsSize)

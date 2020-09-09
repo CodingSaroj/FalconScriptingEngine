@@ -70,6 +70,8 @@ namespace Falcon
                 }
             }
 
+            constexpr Debugger & getDebugger() { return m_Debugger; }
+
             void shell();
 
         private:

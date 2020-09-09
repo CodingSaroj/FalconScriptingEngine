@@ -70,6 +70,8 @@ namespace Falcon
                 }
             }
 
+            constexpr VM & getVM() { return m_VM; }
+
         private:
             VM m_VM;
 

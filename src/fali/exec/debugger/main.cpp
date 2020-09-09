@@ -5,6 +5,8 @@
 #include <iterator>
 
 #include "vm/Debugger.hpp"
+#include "vm/Signal.hpp"
+#include "vm/SignalImplement.hpp"
 
 #include "fali/Object.hpp"
 #include "fali/Reader.hpp"
@@ -177,6 +179,10 @@ int main(int argc, char * argv[])
             return printVar(type, data);
         }
     );
+
+    Falcon::Signal::SetTargetVM(&ctxt.getDebugger(), true);
+
+    Falcon::ImplementSignals();
 
     ctxt.shell();
 }

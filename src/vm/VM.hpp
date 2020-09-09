@@ -3,16 +3,20 @@
 
 #include <algorithm>
 #include <functional>
+#include <iomanip>
 #include <unordered_map>
 #include <vector>
 
+#include <csignal>
 #include <cstdlib>
 #include <cstring>
 
+#include "common/CLIColors.hpp"
 #include "common/Endian.hpp"
-
 #include "common/OpCode.hpp"
 #include "common/Register.hpp"
+
+#include "vm/Disassembler.hpp"
 
 #ifndef FALCON_VM_STACK_SIZE
     #define FALCON_VM_STACK_SIZE 65536
@@ -26,6 +30,8 @@ namespace Falcon
     {
         public:
             VM(uint8_t * code);
+
+            constexpr bool isRunning() { return m_Running; }
 
             inline Register & getRegister(RegisterType::RegisterType type)
             {
@@ -51,6 +57,8 @@ namespace Falcon
             void        push(uint8_t * data, uint64_t size);
             uint8_t *   pop(uint64_t size);
 
+            std::unordered_map<int, std::function<void(int)>> getSignalHandlers();
+
             void externalFunction(const std::string & name, std::function<void(VM&)> function);
 
             void run(std::string function = std::string("main"), uint64_t argSize = 0);
@@ -74,11 +82,15 @@ namespace Falcon
 
             void(VM::* m_Operators[(uint8_t)OpCode::STOP + 1])();
 
+            uint64_t m_InstructionStart;
+
             std::unordered_map<std::string, uint64_t>                 m_Functions;
             std::unordered_map<std::string, std::function<void(VM&)>> m_ExternalFunctions;
 
             void stop();
             void collectSymbols();
+
+            void dumpState();
 
             void uadd8();
             void uadd16();
