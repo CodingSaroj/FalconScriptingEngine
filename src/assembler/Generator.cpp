@@ -4,6 +4,8 @@ namespace Falcon
 {
     namespace Assembler
     {
+        
+
         Generator::Generator(ASTNode * node, bool debug)
             : m_Node(node), m_Debug(debug)
         {

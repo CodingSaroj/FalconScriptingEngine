@@ -4,6 +4,131 @@ namespace Falcon
 {
     namespace Assembler
     {
+        static void processEscapeSequences(std::string & str)
+        {
+            size_t backSlashLoc = str.find('\\');
+
+            while (backSlashLoc != std::string::npos)
+            {
+                std::string num;
+
+                switch (str[backSlashLoc + 1])
+                {
+                    case 'a':
+                    {
+                        str.erase(backSlashLoc + 1, 1);
+                        str.replace(backSlashLoc, 1, "\a");
+                        break;
+                    }
+
+                    case 'b':
+                    {
+                        str.erase(backSlashLoc + 1, 1);
+                        str.replace(backSlashLoc, 1, "\b");
+                        break;
+                    }
+
+                    case 'd':
+                    {
+                        str.erase(backSlashLoc + 1, 1);
+                        str.replace(backSlashLoc, 1, "\"");
+                        break;
+                    }
+
+                    case 'n':
+                    {
+                        str.erase(backSlashLoc + 1, 1);
+                        str.replace(backSlashLoc, 1, "\n");
+                        break;
+                    }
+
+                    case 'q':
+                    {
+                        str.erase(backSlashLoc + 1, 1);
+                        str.replace(backSlashLoc, 1, "\'");
+                        break;
+                    }
+
+                    case 'r':
+                    {
+                        str.erase(backSlashLoc + 1, 1);
+                        str.replace(backSlashLoc, 1, "\r");
+                        break;
+                    }
+
+                    case 't':
+                    {
+                        str.erase(backSlashLoc + 1, 1);
+                        str.replace(backSlashLoc, 1, "\t");
+                        break;
+                    }
+
+                    case 'x':
+                    {
+                        for (uint8_t i = 2; i < 4; i++)
+                        {
+                            if ((str[backSlashLoc + i] >= '0' && str[backSlashLoc + i] <= '9')
+                                || (str[backSlashLoc + i] >= 'a' && str[backSlashLoc + i] <= 'f')
+                                || (str[backSlashLoc + i] >= 'A' && str[backSlashLoc + i] <= 'F'))
+                            {
+                                num += str[backSlashLoc + i];
+                            }
+                            else
+                            {
+                                Log(LogLevel::ERR, "Expected 0-9|a-f|A-F after `\\x` in string.");
+                                exit(2);
+                            }
+                        }
+
+                        char data = (char)strtoul(num.c_str(), nullptr, 16);
+
+                        str.erase(backSlashLoc + 1, 3);
+                        str.replace(backSlashLoc, 1, &data);
+                        break;
+                    }
+
+                    case '\\':
+                    {
+                        str.erase(backSlashLoc + 1, 1);
+                        str.replace(backSlashLoc, 1, "\\");
+                        backSlashLoc++;
+                        break;
+                    }
+
+                    case '0':
+                    {
+                        num += '0';
+                        
+                        for (uint8_t i = 2; i < 4; i++)
+                        {
+                            if ((str[backSlashLoc + i] >= '0' && str[backSlashLoc + i] <= '7'))
+                            {
+                                num += str[backSlashLoc + i];
+                            }
+                            else
+                            {
+                                break;
+                            }
+                        }
+
+                        char data = (char)strtoul(num.c_str(), nullptr, 8);
+
+                        str.erase(backSlashLoc + 1, 4);
+                        str.replace(backSlashLoc, 1, &data);
+                        break;
+                    }
+
+                    default:
+                    {
+                        Log(LogLevel::ERR, "Invalid escape sequence `\\" + std::string(&str[backSlashLoc], 1) + "`.");
+                        exit(2);
+                    }
+                }
+
+                backSlashLoc = str.find('\\', backSlashLoc);
+            }
+        }
+
         Parser::Parser(std::function<Token()> fetchToken, std::function<Token()> peek)
             : m_FetchToken(fetchToken), m_Peek(peek), m_CurrentToken(fetchToken())
         {
@@ -23,7 +148,7 @@ namespace Falcon
 
             else if (m_CurrentToken.Type == TokenType::REGISTER) { atom = AtomNode(m_CurrentToken.Str); }
 
-            else if (m_CurrentToken.Type == TokenType::IDENTIFIER) { atom = AtomNode(m_CurrentToken.Str); }
+            else if (m_CurrentToken.Type == TokenType::IDENTIFIER) { atom = AtomNode(m_CurrentToken.Str); processEscapeSequences(atom.Str); }
 
             atom.Line = Context::Line;
             atom.Character = Context::Character;

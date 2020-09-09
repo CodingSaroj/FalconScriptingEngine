@@ -5,16 +5,14 @@ sect code:
         psh64 r1
         extrn initGlobalMemory
         
-        pshstr "Hello World!"
-        mov16 r1 0x000A
-        psh16 r1
+        pshstr "Hello\tWorld!\n\n\\\d\q"
         lodref r1 0x0C
         psh64 r1
 
         mov8 r2 0x01
         psh64 r2
 
-        mov8 r2 0x0E
+        mov8 r2 0x11
         psh64 r2
 
         mov8 r2 0x08
