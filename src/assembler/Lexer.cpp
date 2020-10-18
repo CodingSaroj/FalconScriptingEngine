@@ -4,6 +4,8 @@
  * This file is licensed under the MIT License.
  * See the "LICENSE" file at the root directory or https://mit-license.org for details.
  */
+#include "FalconPCH.hpp"
+
 #include "Lexer.hpp"
 
 namespace Falcon
@@ -91,11 +93,11 @@ namespace Falcon
 
                     if (matchType == "binary")
                     {
-                        m_Tokens.emplace_back(i, strtoul(match.c_str() + 2, nullptr, 2));
+                        m_Tokens.emplace_back(i, (uint64_t)strtoul(match.c_str() + 2, nullptr, 2));
                     }
                     else if (matchType == "octal")
                     {
-                        m_Tokens.emplace_back(i, strtoul(match.c_str() + 1, nullptr, 8));
+                        m_Tokens.emplace_back(i, (uint64_t)strtoul(match.c_str() + 1, nullptr, 8));
                     }
                     else if (matchType == "octal zero")
                     {
@@ -103,19 +105,19 @@ namespace Falcon
                     }
                     else if (matchType == "decimal")
                     {
-                        m_Tokens.emplace_back(i, strtol(match.c_str(), nullptr, 10));
+                        m_Tokens.emplace_back(i, (int64_t)strtol(match.c_str(), nullptr, 10));
                     }
                     else if (matchType == "hexadecimal")
                     {
-                        m_Tokens.emplace_back(i, strtoul(match.c_str(), nullptr, 16));
+                        m_Tokens.emplace_back(i, (uint64_t)strtoul(match.c_str(), nullptr, 16));
                     }
                     else if (matchType == "float")
                     {
-                        m_Tokens.emplace_back(i, strtod(match.c_str(), nullptr));
+                        m_Tokens.emplace_back(i, (double)strtod(match.c_str(), nullptr));
                     }
                     else if (matchType == "float exponent")
                     {
-                        m_Tokens.emplace_back(i, strtod(match.c_str(), nullptr));
+                        m_Tokens.emplace_back(i, (double)strtod(match.c_str(), nullptr));
                     }
                     else if (matchType == "char")
                     {

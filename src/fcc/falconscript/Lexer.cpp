@@ -4,6 +4,8 @@
  * This file is licensed under the MIT License.
  * See the "LICENSE" file at the root directory or https://mit-license.org for details.
  */
+#include "FalconPCH.hpp"
+
 #include "Lexer.hpp"
 
 namespace Falcon
@@ -95,11 +97,11 @@ namespace Falcon
 
                         if (type == "real")
                         {
-                            tokens.emplace_back(i + 1, strtod(iter->str(matchIndex + 1).c_str(), nullptr));
+                            tokens.emplace_back(i + 1, (double)strtod(iter->str(matchIndex + 1).c_str(), nullptr));
                         }
                         else if (type == "int")
                         {
-                            tokens.emplace_back(i + 1, strtol(iter->str(matchIndex + 1).c_str(), nullptr, 10));
+                            tokens.emplace_back(i + 1, (int64_t)strtol(iter->str(matchIndex + 1).c_str(), nullptr, 10));
                         }
                         else if (type == "whole_zero")
                         {
@@ -107,19 +109,19 @@ namespace Falcon
                         }
                         else if (type == "whole_hex")
                         {
-                            tokens.emplace_back(i + 1, strtoul(iter->str(matchIndex + 1).c_str() + 2, nullptr, 16));
+                            tokens.emplace_back(i + 1, (uint64_t)strtoul(iter->str(matchIndex + 1).c_str() + 2, nullptr, 16));
                         }
                         else if (type == "whole_dec")
                         {
-                            tokens.emplace_back(i + 1, strtoul(iter->str(matchIndex + 1).c_str(), nullptr, 10));
+                            tokens.emplace_back(i + 1, (uint64_t)strtoul(iter->str(matchIndex + 1).c_str(), nullptr, 10));
                         }
                         else if (type == "whole_oct")
                         {
-                            tokens.emplace_back(i + 1, strtoul(iter->str(matchIndex + 1).c_str() + 1, nullptr, 8));
+                            tokens.emplace_back(i + 1, (uint64_t)strtoul(iter->str(matchIndex + 1).c_str() + 1, nullptr, 8));
                         }
                         else if (type == "whole_bin")
                         {
-                            tokens.emplace_back(i + 1, strtoul(iter->str(matchIndex + 1).c_str() + 2, nullptr, 2));
+                            tokens.emplace_back(i + 1, (uint64_t)strtoul(iter->str(matchIndex + 1).c_str() + 2, nullptr, 2));
                         }
                         else if (type == "char")
                         {

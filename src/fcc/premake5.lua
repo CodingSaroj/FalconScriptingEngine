@@ -10,6 +10,9 @@ project "FalconFCC"
     targetdir "../../lib/%{cfg.buildcfg}/%{cfg.platform}/"
     objdir "../../obj"
 
+    pchheader "FalconPCH.hpp"
+    pchsource "FalconPCH.cpp"
+
     files
     {
         "falconscript/*.hpp",

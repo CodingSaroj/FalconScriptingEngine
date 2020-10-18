@@ -4,6 +4,8 @@
  * This file is licensed under the MIT License.
  * See the "LICENSE" file at the root directory or https://mit-license.org for details.
  */
+#include "FalconPCH.hpp"
+
 #include "VM.hpp"
 
 namespace Falcon
@@ -11,6 +13,8 @@ namespace Falcon
     VM::VM(uint8_t * code)
         : m_Code(code), m_IP(0), m_SP(0), m_FP(0), m_InstructionStart(0)
     {
+        memset(m_Registers, 0, sizeof(uint64_t) * 17);
+
         m_Operators[OpCode::UADD8] = &VM::uadd8;
         m_Operators[OpCode::UADD16] = &VM::uadd16;
         m_Operators[OpCode::UADD32] = &VM::uadd32;
