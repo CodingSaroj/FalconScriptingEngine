@@ -1,7 +1,7 @@
 #ifndef FALCON_ASM_SEMANTIC_ANALYZER_HPP
 #define FALCON_ASM_SEMANTIC_ANALYZER_HPP
 
-#include <array>
+#include "common/Common.hpp"
 
 #include "assembler/Parser.hpp"
 
@@ -11,23 +11,23 @@ namespace Falcon
     {
         class SemanticAnalyzer
         {
-            public:
-                SemanticAnalyzer(ASTNode * node);
+        public:
+            SemanticAnalyzer(ASTNode * node);
 
-                ASTNode * analyze();
+            ASTNode * Analyze();
 
-            private:
-                ASTNode * m_Node;
+        private:
+            ASTNode * m_Node;
 
-                CodeSectionNode * m_Code;
-                RoutineNode *     m_Routine;
-                
-                bool findInCodeSection(const std::string & name);
-                bool findInRoutine(const std::string & name);
+            CodeSectionNode * m_Code;
+            RoutineNode *     m_Routine;
+            
+            bool FindInCodeSection(const std::string & name);
+            bool FindInRoutine(const std::string & name);
 
-                void analyzeInstruction(InstructionNode * inst);
-                void analyzeRoutine();
-                void analyzeCodeSection();
+            void AnalyzeInstruction(InstructionNode * inst);
+            void AnalyzeRoutine();
+            void AnalyzeCodeSection();
         };
     }
 }

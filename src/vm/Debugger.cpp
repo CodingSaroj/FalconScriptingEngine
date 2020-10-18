@@ -6,10 +6,10 @@ namespace Falcon
         : VM(code), m_DebugData(debugData), m_Next(false), m_NextI(false), m_Continue(false), m_Finish(false), m_IC(0), m_LastReturnSize(0),
           m_DebuggerFunctions(functions), m_DebuggerName(debuggerName), m_PrintVarFunction(printVarFunction)
     {
-        disassemble();
+        Disassemble();
     }
 
-    void Debugger::disassemble()
+    void Debugger::Disassemble()
     {
         uint64_t ip = 0;
 
@@ -23,7 +23,7 @@ namespace Falcon
         }
     }
 
-    void Debugger::updateDebuggerState()
+    void Debugger::UpdateDebuggerState()
     {
         uint64_t i = 0;
 
@@ -65,7 +65,7 @@ namespace Falcon
         }
     }
 
-    void Debugger::setBreakpoint(uint64_t pos)
+    void Debugger::SetBreakpoint(uint64_t pos)
     {
         if (std::find(m_Breakpoints.begin(), m_Breakpoints.end(), pos) == m_Breakpoints.end())
         {
@@ -79,7 +79,7 @@ namespace Falcon
         std::cout<<"Breakpoint "<<m_Breakpoints.size()<<" set at Instruction Counter: "<<std::hex<<(Common::Colors::Blue | Common::Colors::Bold)<<"0x"<<pos<<std::dec<<Common::Colors::White<<".\n";
     }
 
-    void Debugger::clearBreakpoint(uint64_t pos)
+    void Debugger::ClearBreakpoint(uint64_t pos)
     {
         auto iter = m_Breakpoints.end();
 
@@ -94,7 +94,7 @@ namespace Falcon
         }
     }
     
-    void Debugger::shell()
+    void Debugger::Shell()
     {
         while (true)
         {
@@ -124,10 +124,10 @@ namespace Falcon
 
                 uint8_t * rawArgv = (uint8_t *)argv.data();
 
-                push((uint8_t *)&argc, 4);
-                push((uint8_t *)&rawArgv, 8);
+                Push((uint8_t *)&argc, 4);
+                Push((uint8_t *)&rawArgv, 8);
 
-                run(m_DebuggerFunctions.FunctionMangleFn("main", {"uint32", "ptr"}), 12);
+                Run(m_DebuggerFunctions.FunctionMangleFn("main", {"uint32", "ptr"}), 12);
             }
             else if (cmd == "n" || cmd == "next")
             {
@@ -160,7 +160,7 @@ namespace Falcon
 
                 std::cin>>location;
 
-                setBreakpoint(location);
+                SetBreakpoint(location);
             }
             else if (cmd == "cl" || cmd == "clear")
             {
@@ -168,13 +168,13 @@ namespace Falcon
 
                 std::cin>>location;
 
-                clearBreakpoint(location);
+                ClearBreakpoint(location);
             }
             else if (cmd == "reg" || cmd == "registers")
             {
                 for (uint8_t i = 0; i < RegisterType::s_Names.size(); i++)
                 {
-                    Register & reg = getRegister((RegisterType::RegisterType)i);
+                    Register & reg = GetRegister((RegisterType::RegisterType)i);
 
                     std::cout<<(Common::Colors::Yellow | Common::Colors::Bold)<<RegisterType::s_Names[i]<<":"<<Common::Colors::White<<"\n";
                     std::cout<<"    u8:  "<<+reg.u8<<"\tu16: "<<reg.u16<<"\tu32: "<<reg.u32<<"\tu64: "<<reg.u64<<"\n\n";
@@ -344,7 +344,7 @@ namespace Falcon
         }
     }
 
-    std::unordered_map<int, std::function<void(int)>> Debugger::getSignalHandlers()
+    std::unordered_map<int, std::function<void(int)>> Debugger::GetSignalHandlers()
     {
         return
         {
@@ -353,7 +353,7 @@ namespace Falcon
                 [this](int signal)
                 {
                     std::cout<<(Common::Colors::Red | Common::Colors::Bold)<<"Runtime Error:"<<Common::Colors::White<<" Aborted.\n";
-                    shell();
+                    Shell();
                     exit(SIGABRT);
                 }
             },
@@ -362,7 +362,7 @@ namespace Falcon
                 [this](int signal)
                 {
                     std::cout<<(Common::Colors::Red | Common::Colors::Bold)<<"Runtime Error:"<<Common::Colors::White<<" Illegal CPU Instruction.\n";
-                    shell();
+                    Shell();
                     exit(SIGILL);
                 }
             },
@@ -371,7 +371,7 @@ namespace Falcon
                 [this](int signal)
                 {
                     std::cout<<(Common::Colors::Red | Common::Colors::Bold)<<"Runtime Error:"<<Common::Colors::White<<" Interrupted.\n";
-                    shell();
+                    Shell();
                     m_Running = false;
                 }
             },
@@ -380,7 +380,7 @@ namespace Falcon
                 [this](int signal)
                 {
                     std::cout<<(Common::Colors::Red | Common::Colors::Bold)<<"Runtime Error:"<<Common::Colors::White<<" Floating point exception.\n";
-                    shell();
+                    Shell();
                     exit(SIGFPE);
                 }
             },
@@ -389,7 +389,7 @@ namespace Falcon
                 [this](int signal)
                 {
                     std::cout<<(Common::Colors::Red | Common::Colors::Bold)<<"Runtime Error:"<<Common::Colors::White<<" Segmentation fault.\n";
-                    shell();
+                    Shell();
                     exit(SIGSEGV);
                 }
             },
@@ -398,14 +398,14 @@ namespace Falcon
                 [this](int signal)
                 {
                     std::cout<<(Common::Colors::Red | Common::Colors::Bold)<<"Runtime Error:"<<Common::Colors::White<<" Terminating.\n";
-                    shell();
+                    Shell();
                     m_Running = false;
                 }
             }
         };
     }
 
-    void Debugger::run(const std::string & function, uint64_t argsSize)
+    void Debugger::Run(const std::string & function, uint64_t argsSize)
     {
         m_StackTrace.emplace_back("base");
         m_StackTrace.emplace_back(m_DebugData.FunctionData[function].Signature);
@@ -414,21 +414,21 @@ namespace Falcon
 
         uint8_t * args = new uint8_t[argsSize];
 
-        memcpy(args, pop(argsSize), argsSize);
+        memcpy(args, Pop(argsSize), argsSize);
 
         uint64_t returnIP = 0;
 
-        push((uint8_t *)&m_SP, 8);
-        push((uint8_t *)&returnIP, 8);
-        push((uint8_t *)&m_FP, 8);
+        Push((uint8_t *)&m_SP, 8);
+        Push((uint8_t *)&returnIP, 8);
+        Push((uint8_t *)&m_FP, 8);
 
         m_FP = m_SP;
 
-        push(args, argsSize);
+        Push(args, argsSize);
 
         delete[] args;
 
-        updateDebuggerState();
+        UpdateDebuggerState();
 
         m_Running = true;
         OpCode::OpCode op = (OpCode::OpCode)m_Code[m_IP];
@@ -440,7 +440,7 @@ namespace Falcon
                 m_Continue = false;
                 std::cout<<"Breakpoint hit at Instruction Counter "<<(Common::Colors::Blue | Common::Colors::Bold)<<"0x"<<std::hex<<m_IC<<std::dec<<Common::Colors::White<<":\n";
                 std::cout<<"    "<<(Common::Colors::Yellow | Common::Colors::Bold)<<"Line "<<m_LC<<": "<<Common::Colors::White<<m_CurrentLine<<"\n";
-                shell();
+                Shell();
 
                 if (!m_Running)
                 {
@@ -473,12 +473,12 @@ namespace Falcon
                     
                     op = (OpCode::OpCode)m_Code[++m_IP];
 
-                    updateDebuggerState();
+                    UpdateDebuggerState();
                 }
 
                 std::cout<<(Common::Colors::Yellow | Common::Colors::Bold)<<"Line "<<m_LC<<": "<<Common::Colors::White<<m_CurrentLine<<"\n";
 
-                shell();
+                Shell();
                 
                 if (!m_Running)
                 {
@@ -513,7 +513,7 @@ namespace Falcon
 
                     std::cout<<"Value returned = "<<m_PrintVarFunction(returnType, &m_Stack[m_SP - m_LastReturnSize])<<"\n";
 
-                    shell();
+                    Shell();
 
                     if (!m_Running)
                     {
@@ -524,13 +524,13 @@ namespace Falcon
 
             op = (OpCode::OpCode)m_Code[++m_IP];
             
-            updateDebuggerState();
+            UpdateDebuggerState();
             
             if (m_NextI)
             {
                 m_NextI = false;
 
-                shell();
+                Shell();
             }
         }
 

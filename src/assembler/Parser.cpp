@@ -4,7 +4,7 @@ namespace Falcon
 {
     namespace Assembler
     {
-        static void processEscapeSequences(std::string & str)
+        static void ProcessEscapeSequences(std::string & str, uint64_t line)
         {
             size_t backSlashLoc = str.find('\\');
 
@@ -75,8 +75,7 @@ namespace Falcon
                             }
                             else
                             {
-                                Log(LogLevel::ERR, "Expected 0-9|a-f|A-F after `\\x` in string.");
-                                exit(2);
+                                FLCN_REL_ASSERT(false, "Assembler::Parser", "{}: Expected 0-9|a-f|A-F after `\\x` in string.", line);
                             }
                         }
 
@@ -120,8 +119,7 @@ namespace Falcon
 
                     default:
                     {
-                        Log(LogLevel::ERR, "Invalid escape sequence `\\" + std::string(&str[backSlashLoc], 1) + "`.");
-                        exit(2);
+                        FLCN_REL_ASSERT(false, "Assembler::Parser", "{}: Invalid escape sequence `\\{}`.", line, std::string(&str[backSlashLoc], 1));
                     }
                 }
 
@@ -134,44 +132,42 @@ namespace Falcon
         {
         }
 
-        AtomNode Parser::parseAtom()
+        AtomNode Parser::ParseAtom()
         {
             AtomNode atom('\0');
 
-            if (m_CurrentToken.Type == TokenType::CHAR) { atom = AtomNode(m_CurrentToken.Char); }
+            atom.Line = m_CurrentToken.LineNumber;
 
-            else if (m_CurrentToken.Type == TokenType::UINT) { atom = AtomNode(m_CurrentToken.Uint); }
+            if (m_CurrentToken.Char) { atom = AtomNode(*m_CurrentToken.Char); }
 
-            else if (m_CurrentToken.Type == TokenType::INT) { atom = AtomNode(m_CurrentToken.Int); }
+            else if (m_CurrentToken.Uint) { atom = AtomNode(*m_CurrentToken.Uint); }
 
-            else if (m_CurrentToken.Type == TokenType::FLOAT) { atom = AtomNode(m_CurrentToken.Float); }
+            else if (m_CurrentToken.Int) { atom = AtomNode(*m_CurrentToken.Int); }
 
-            else if (m_CurrentToken.Type == TokenType::REGISTER) { atom = AtomNode(m_CurrentToken.Str); }
+            else if (m_CurrentToken.Float) { atom = AtomNode(*m_CurrentToken.Float); }
 
-            else if (m_CurrentToken.Type == TokenType::IDENTIFIER) { atom = AtomNode(m_CurrentToken.Str); processEscapeSequences(atom.Str); }
+            else if (m_CurrentToken.Register) { atom = AtomNode(m_CurrentToken.Register->Name); }
 
-            atom.Line = Context::Line;
-            atom.Character = Context::Character;
+            else if (m_CurrentToken.Str) { atom = AtomNode(*m_CurrentToken.Str); ProcessEscapeSequences(*atom.Str, m_CurrentToken.LineNumber); }
 
-            return atom;
+            return std::move(atom);
         }
 
-        InstructionNode Parser::parseInstruction()
+        InstructionNode Parser::ParseInstruction()
         {
-            InstructionNode inst(m_CurrentToken.Str);
+            InstructionNode inst(m_CurrentToken.Instruction->Name);
 
-            inst.Line = Context::Line;
-            inst.Character = Context::Character;
+            inst.Line = m_CurrentToken.LineNumber;
 
             for (int i = 0; i < 2; i++)
             {
-                TokenType type = m_Peek().Type;
+                Token token = m_Peek();
 
-                if (type == TokenType::IDENTIFIER || type == TokenType::REGISTER || type == TokenType::CHAR || type == TokenType::UINT || type == TokenType::INT || type == TokenType::FLOAT)
+                if (token.Str || token.Register || token.Char || token.Uint || token.Int || token.Float)
                 {
                     m_CurrentToken = m_FetchToken();
 
-                    inst.Args.emplace_back(parseAtom());
+                    inst.Args.emplace_back(std::move(ParseAtom()));
                 }
                 else
                 {
@@ -179,515 +175,405 @@ namespace Falcon
                 }
             }
 
-            return inst;
+            return std::move(inst);
         }
 
-        LabelNode Parser::parseLabel()
+        LabelNode Parser::ParseLabel()
         {
-            std::string name = m_CurrentToken.Str;
+            std::string name = *m_CurrentToken.Str;
 
             LabelNode label(name);
 
-            label.Line = Context::Line;
-            label.Character = Context::Character;
+            label.Line = m_CurrentToken.LineNumber;
 
             m_CurrentToken = m_FetchToken();
 
-            if (m_CurrentToken.Type != (TokenType)':')
-            {
-                Log(LogLevel::ERR, "Expected a `:` after label `" + name + "`.");
-                exit(2);
-            }
+            FLCN_REL_ASSERT(m_CurrentToken.Arbitarory && m_CurrentToken.Arbitarory->Type == ':', "Assembler::Parser", "{}: Expected a `:` after label `{}`.", m_CurrentToken.LineNumber, name);
 
             m_CurrentToken = m_FetchToken();
 
-            if (m_CurrentToken.Type != TokenType::NEWLINE)
-            {
-                Log(LogLevel::ERR, "Expected new line after `:`.");
-                exit(2);
-            }
+            FLCN_REL_ASSERT(m_CurrentToken.NewLine, "Assembler::Parser", "{}: Expected newline after `:`.", m_CurrentToken.LineNumber);
 
-            m_CurrentToken = m_FetchToken();
+            SkipNewlines();
 
             while (true)
             {
-                if (m_CurrentToken.Type != TokenType::INSTRUCTION)
-                {
-                    while (m_CurrentToken.Type == TokenType::NEWLINE)
-                    {
-                        m_CurrentToken = m_FetchToken();
-                    }
+                FLCN_REL_ASSERT(m_CurrentToken.Instruction, "Assembler::Parser", "{}: Expected instruction in label `{}`.", m_CurrentToken.LineNumber, name);
 
-                    if (m_CurrentToken.Type != TokenType::INSTRUCTION)
-                    {
-                        break;
-                    }
-                }
+                label.Instructions.emplace_back(std::move(ParseInstruction()));
                 
-                label.Instructions.emplace_back(parseInstruction());
+                FLCN_REL_ASSERT((m_CurrentToken = m_FetchToken()).NewLine, "Assembler::Parser", "{}: Expected newline after instruction in label `{}`.", m_CurrentToken.LineNumber, name);
 
-                if ((m_CurrentToken = m_FetchToken()).Type != TokenType::NEWLINE)
+                SkipNewlines();
+
+                if (!m_CurrentToken.Instruction)
                 {
-                    Log(LogLevel::ERR, "Expected new line after instruction in label `" + name + "`.");
-                    exit(2);
-                }
-                else
-                {
-                    m_CurrentToken = m_FetchToken();
+                    break;
                 }
             }
 
-            if (!label.Instructions.size()) { Log(LogLevel::WRN, "Empty label `" + name + "`."); }
+            if (label.Instructions.empty())
+            {
+                FLCN_REL_WARNING("Assembler::Parser", "{}: Empty label `{}`.", m_CurrentToken.LineNumber, name);
+            }
 
-            return label;
+            return std::move(label);
         }
 
-        RoutineNode Parser::parseRoutine()
+        RoutineNode Parser::ParseRoutine()
         {
-            std::string & name = m_CurrentToken.Str;
+            std::string & name = *m_CurrentToken.Str;
 
             RoutineNode routine(name);
 
-            routine.Line = Context::Line;
-            routine.Character = Context::Character;
+            routine.Line = m_CurrentToken.LineNumber;
             
             m_CurrentToken = m_FetchToken();
 
-            if (m_CurrentToken.Type != (TokenType)':')
-            {
-                Log(LogLevel::ERR, "Expected a `:` after routine `" + name + "`.");
-                exit(2);
-            }
+            FLCN_REL_ASSERT(m_CurrentToken.Arbitarory && m_CurrentToken.Arbitarory->Type == ':', "Assembler::Parser", "{}: Expected a `:` after routine `{}`.", m_CurrentToken.LineNumber, name);
 
             m_CurrentToken = m_FetchToken();
 
-            if (m_CurrentToken.Type != TokenType::NEWLINE)
-            {
-                Log(LogLevel::ERR, "Expected new line after `:`.");
-                exit(2);
-            }
+            FLCN_REL_ASSERT(m_CurrentToken.NewLine, "Assembler::Parser", "{}: Expected newline after `:`.", m_CurrentToken.LineNumber);
 
-            m_CurrentToken = m_FetchToken();
+            SkipNewlines();
 
-            while (m_CurrentToken.Type == (TokenType)'.')
+            while (m_CurrentToken.Arbitarory && m_CurrentToken.Arbitarory->Type == '.')
             {
                 m_CurrentToken = m_FetchToken();
-                routine.Labels.emplace_back(parseLabel());
+                routine.Labels.emplace_back(std::move(ParseLabel()));
 
-                skipNewlines();
+                SkipNewlines();
             }
 
-            if (!routine.Labels.size()) { Log(LogLevel::WRN, "Empty routine `" + name + "`."); }
+            if (routine.Labels.empty())
+            {
+                FLCN_REL_WARNING("Assembler::Parser", "{}: Empty routine `{}`.", m_CurrentToken.LineNumber, name);
+            }
 
-            return routine;
-        }        
+            return std::move(routine);
+        }
 
-        CodeSectionNode Parser::parseCodeSection()
+        CodeSectionNode Parser::ParseCodeSection()
         {
             CodeSectionNode code;
 
-            code.Line = Context::Line;
-            code.Character = Context::Character;
+            code.Line = m_CurrentToken.LineNumber;
 
             m_CurrentToken = m_FetchToken();
 
-            while (m_CurrentToken.Type == TokenType::IDENTIFIER)
+            while (m_CurrentToken.Str)
             {
-                code.Routines.emplace_back(parseRoutine());
+                SkipNewlines();
 
-                skipNewlines();
+                code.Routines.emplace_back(std::move(ParseRoutine()));
+
+                SkipNewlines();
             }
 
-            return code;
+            return std::move(code);
         }
 
-        DebugMetaNode Parser::parseDebugMeta()
+        DebugMetaNode Parser::ParseDebugMeta()
         {
             m_CurrentToken = m_FetchToken();
 
-            if (m_CurrentToken.Type != TokenType::IDENTIFIER)
-            {
-                Log(LogLevel::ERR, "Expected identifier|str as 1st argument to `meta`.");
-                exit(2);
-            }
+            FLCN_REL_ASSERT(m_CurrentToken.Str, "Assembler::Parser", "{}: Expected identifier|str as 1st argument to `meta`.", m_CurrentToken.LineNumber);
 
-            std::string signature(m_CurrentToken.Str);
+            std::string signature(*m_CurrentToken.Str);
 
             m_CurrentToken = m_FetchToken();
 
-            if (m_CurrentToken.Type != TokenType::UINT)
-            {
-                Log(LogLevel::ERR, "Expected uint as 2nd argument to `meta`.");
-                exit(2);
-            }
+            FLCN_REL_ASSERT(m_CurrentToken.Uint, "Assembler::Parser", "{}: Expected uint as 2st argument to `meta`.", m_CurrentToken.LineNumber);
 
-            uint64_t startLine = m_CurrentToken.Uint;
+            uint64_t startLine = *m_CurrentToken.Uint;
 
             m_CurrentToken = m_FetchToken();
 
-            if (m_CurrentToken.Type != TokenType::UINT)
-            {
-                Log(LogLevel::ERR, "Expected uint as 3rd argument to `meta`.");
-                exit(2);
-            }
+            FLCN_REL_ASSERT(m_CurrentToken.Uint, "Assembler::Parser", "{}: Expected uint as 3rd argument to `meta`.", m_CurrentToken.LineNumber);
 
-            uint64_t endLine = m_CurrentToken.Uint;
+            uint64_t endLine = *m_CurrentToken.Uint;
 
-            return DebugMetaNode(signature, startLine, endLine);
+            DebugMetaNode meta(signature, startLine, endLine);
+
+            meta.Line = m_CurrentToken.LineNumber;
+
+            return std::move(meta);
         }
 
-        DebugLineMapNode Parser::parseDebugLineMap()
+        DebugLineMapNode Parser::ParseDebugLineMap()
         {
             uint64_t startLoc, lineNum;
             std::string lineData;
 
             m_CurrentToken = m_FetchToken();
 
-            if (m_CurrentToken.Type == TokenType::UINT)
-            {
-                startLoc = m_CurrentToken.Uint;
-            }
-            else
-            {
-                Log(LogLevel::ERR, "Expected uint as 1st argument to `map`.");
-                exit(2);
-            }
+            FLCN_REL_ASSERT(m_CurrentToken.Uint, "Assembler::Parser", "{}: Expected uint as 1st argument to `map`.", m_CurrentToken.LineNumber);
+
+            startLoc = *m_CurrentToken.Uint;
             
             m_CurrentToken = m_FetchToken();
 
-            if (m_CurrentToken.Type == TokenType::UINT)
-            {
-                lineNum = m_CurrentToken.Uint;
-            }
-            else
-            {
-                Log(LogLevel::ERR, "Expected uint as 2nd argument to `map`.");
-                exit(2);
-            }
+            FLCN_REL_ASSERT(m_CurrentToken.Uint, "Assembler::Parser", "{}: Expected uint as 2nd argument to `map`.", m_CurrentToken.LineNumber);
+
+            lineNum = *m_CurrentToken.Uint;
 
             m_CurrentToken = m_FetchToken();
 
-            if (m_CurrentToken.Type == TokenType::IDENTIFIER)
-            {
-                lineData = m_CurrentToken.Str;
-            }
-            else
-            {
-                Log(LogLevel::ERR, "Expected identifier|str as 3rd argument to `map`.");
-                exit(2);
-            }
+            FLCN_REL_ASSERT(m_CurrentToken.Str, "Assembler::Parser", "{}: Expected identifier|str as 3rd argument to `map`.", m_CurrentToken.LineNumber);
+
+            lineData = *m_CurrentToken.Str;
+
+            ProcessEscapeSequences(lineData, m_CurrentToken.LineNumber);
 
             m_CurrentToken = m_FetchToken();
 
-            return DebugLineMapNode(startLoc, lineNum, lineData);
+            DebugLineMapNode lineMap(startLoc, lineNum, lineData);
+
+            lineMap.Line = m_CurrentToken.LineNumber;
+
+            return std::move(lineMap);
         }
 
-        DebugLocalVarNode Parser::parseDebugLocalVar()
+        DebugLocalVarNode Parser::ParseDebugLocalVar()
         {
             std::string name, type;
             uint64_t stackOffset;
 
             m_CurrentToken = m_FetchToken();
 
-            if (m_CurrentToken.Type == TokenType::IDENTIFIER)
-            {
-                name = m_CurrentToken.Str;
-            }
-            else
-            {
-                Log(LogLevel::ERR, "Expected identifier|str as 1st argument to `local`.\n");
-                exit(2);
-            }
+            FLCN_REL_ASSERT(m_CurrentToken.Str, "Assembler::Parser", "{}: Expected identifier|str as 1st argument to `local`.", m_CurrentToken.LineNumber);
+
+            name = *m_CurrentToken.Str;
 
             m_CurrentToken = m_FetchToken();
 
-            if (m_CurrentToken.Type == TokenType::IDENTIFIER)
-            {
-                type = m_CurrentToken.Str;
-            }
-            else
-            {
-                Log(LogLevel::ERR, "Expected identifier|str as 2nd argument to `local`.\n");
-                exit(2);
-            }
+            FLCN_REL_ASSERT(m_CurrentToken.Str, "Assembler::Parser", "{}: Expected identifier|str as 2nd argument to `local`.", m_CurrentToken.LineNumber);
+
+            type = *m_CurrentToken.Str;
 
             m_CurrentToken = m_FetchToken();
 
-            if (m_CurrentToken.Type == TokenType::UINT)
-            {
-                stackOffset = m_CurrentToken.Uint;
-            }
-            else
-            {
-                Log(LogLevel::ERR, "Expected uint as 3rd argument to `local`.\n");
-                exit(2);
-            }
+            FLCN_REL_ASSERT(m_CurrentToken.Uint, "Assembler::Parser", "{}: Expected uint as 3rd argument to `local`.", m_CurrentToken.LineNumber);
 
-            return DebugLocalVarNode(name, type, stackOffset);
+            stackOffset = *m_CurrentToken.Uint;
+
+            DebugLocalVarNode localVar(name, type, stackOffset);
+
+            localVar.Line = m_CurrentToken.LineNumber;
+
+            return std::move(localVar);
         }
         
-        DebugRoutineNode Parser::parseDebugRoutine()
+        DebugRoutineNode Parser::ParseDebugRoutine()
         {
-            std::string & name = m_CurrentToken.Str;
+            std::string & name = *m_CurrentToken.Str;
 
             DebugRoutineNode routine(name, "", 0, 0);
 
-            routine.Line = Context::Line;
-            routine.Character = Context::Character;
+            routine.Line = m_CurrentToken.LineNumber;
             
             m_CurrentToken = m_FetchToken();
 
-            if (m_CurrentToken.Type != (TokenType)':')
+            FLCN_REL_ASSERT(m_CurrentToken.Arbitarory && m_CurrentToken.Arbitarory->Type == ':', "Assembler::Parser", "{}: Expected a `:` after routine `{}`.", m_CurrentToken.LineNumber, name);
+
+            m_CurrentToken = m_FetchToken();
+
+            FLCN_REL_ASSERT(m_CurrentToken.NewLine, "Assembler::Parser", "{}: Expected newline after `:`.", m_CurrentToken.LineNumber);
+
+            SkipNewlines();
+
+            if (m_CurrentToken.Str && *m_CurrentToken.Str == "META")
             {
-                Log(LogLevel::ERR, "Expected a `:` after routine `" + name + "`.");
-                exit(2);
+                routine.MetaData = std::move(ParseDebugMeta());
             }
 
             m_CurrentToken = m_FetchToken();
 
-            if (m_CurrentToken.Type != TokenType::NEWLINE)
+            SkipNewlines();
+
+            while (m_CurrentToken.Str && (*m_CurrentToken.Str == "MAP" || *m_CurrentToken.Str == "LOCAL"))
             {
-                Log(LogLevel::ERR, "Expected new line after `:`.");
-                exit(2);
-            }
-
-            m_CurrentToken = m_FetchToken();
-
-            if (m_CurrentToken.Type == TokenType::IDENTIFIER && m_CurrentToken.Str == "META")
-            {
-                routine.MetaData = parseDebugMeta();
-            }
-
-            m_CurrentToken = m_FetchToken();
-
-            skipNewlines();
-
-            while (m_CurrentToken.Type == TokenType::IDENTIFIER && (m_CurrentToken.Str == "MAP" || m_CurrentToken.Str == "LOCAL"))
-            {
-                auto statementType = m_CurrentToken.Type;
-
-                if (m_CurrentToken.Str == "MAP")
+                if (*m_CurrentToken.Str == "MAP")
                 {
-                    routine.LineMaps.emplace_back(parseDebugLineMap());
+                    routine.LineMaps.emplace_back(std::move(ParseDebugLineMap()));
                 }
                 else
                 {
-                    routine.LocalVariables.emplace_back(parseDebugLocalVar());
+                    routine.LocalVariables.emplace_back(std::move(ParseDebugLocalVar()));
                 }
 
                 m_CurrentToken = m_FetchToken();
 
-                skipNewlines();
+                SkipNewlines();
             }
 
-            return routine;
+            return std::move(routine);
 
         }
 
-        DebugSectionNode Parser::parseDebugSection()
+        DebugSectionNode Parser::ParseDebugSection()
         {
             DebugSectionNode dbg;
 
-            dbg.Line = Context::Line;
-            dbg.Character = Context::Character;
+            dbg.Line = m_CurrentToken.LineNumber;
 
             m_CurrentToken = m_FetchToken();
 
-            while (m_CurrentToken.Type == TokenType::IDENTIFIER)
+            while (m_CurrentToken.Str)
             {
-                dbg.Routines.emplace_back(parseDebugRoutine());
+                SkipNewlines();
 
-                skipNewlines();
+                dbg.Routines.emplace_back(std::move(ParseDebugRoutine()));
+
+                SkipNewlines();
             }
 
-            return dbg;
+            return std::move(dbg);
         }
         
-        ReflectionAttributeNode Parser::parseReflectionAttribute()
+        ReflectionAttributeNode Parser::ParseReflectionAttribute()
         {
             std::string name;
             std::vector<std::string> attributes;
 
             m_CurrentToken = m_FetchToken();
 
-            if (m_CurrentToken.Type == TokenType::IDENTIFIER)
-            {
-                name = m_CurrentToken.Str;
-            }
-            else
-            {
-                Log(LogLevel::ERR, "Expected identifier after `attribute` in reflection section.");
-                exit(2);
-            }
+            FLCN_REL_ASSERT(m_CurrentToken.Str, "Assembler::Parser", "{}: Expected identifier|str after `attribute` in reflection section.", m_CurrentToken.LineNumber);
+
+            name = *m_CurrentToken.Str;
 
             m_CurrentToken = m_FetchToken();
             
-            if (m_CurrentToken.Type != TokenType::IDENTIFIER || m_CurrentToken.Str != "[")
-            {
-                Log(LogLevel::ERR, "Expected `[` after target name in reflection section.");
-                exit(2);
-            }
+            FLCN_REL_ASSERT(m_CurrentToken.Arbitarory && m_CurrentToken.Arbitarory->Type == '[', "Assembler::Parser", "{}: Expected `[` after target name in `attribute` in reflection section.", m_CurrentToken.LineNumber);
 
             m_CurrentToken = m_FetchToken();
 
-            while (m_CurrentToken.Type == TokenType::IDENTIFIER)
+            while (m_CurrentToken.Str)
             {
-                attributes.emplace_back(m_CurrentToken.Str);
+                attributes.emplace_back(*m_CurrentToken.Str);
 
                 m_CurrentToken = m_FetchToken();
 
-                skipNewlines();
+                SkipNewlines();
 
-                if (m_CurrentToken.Type != (TokenType)',' && (m_CurrentToken.Type != TokenType::IDENTIFIER || m_CurrentToken.Str != "]"))
-                {
-                    Log(LogLevel::ERR, "Expected `,` or `]` after attribute.");
-                    exit(2);
-                }
+                FLCN_REL_ASSERT(
+                    m_CurrentToken.Arbitarory && (m_CurrentToken.Arbitarory->Type == ',' || m_CurrentToken.Arbitarory->Type == ']'),
+                    "Assembler::Parser", "{}: Expected `,` or `]` after `attribute` in reflection section.", m_CurrentToken.LineNumber
+                );
                 
-                if (m_CurrentToken.Type == TokenType::IDENTIFIER && m_CurrentToken.Str == "]")
+                if (m_CurrentToken.Arbitarory->Type == ']')
                 {
                     break;
                 }
 
                 m_CurrentToken = m_FetchToken();
 
-                skipNewlines();
+                SkipNewlines();
             }
             
-            if (m_CurrentToken.Type != TokenType::IDENTIFIER || m_CurrentToken.Str != "]")
-            {
-                Log(LogLevel::ERR, "Expected `]` after attributes in reflection section.");
-                exit(2);
-            }
-
             m_CurrentToken = m_FetchToken();
 
-            return ReflectionAttributeNode(name, attributes);
+            ReflectionAttributeNode attrib(name, attributes);
+
+            attrib.Line = m_CurrentToken.LineNumber;
+
+            return std::move(attrib);
         }
 
-        ReflectionFunctionNode Parser::parseReflectionFunction()
+        ReflectionFunctionNode Parser::ParseReflectionFunction()
         {
             std::string name, retType;
             std::vector<std::string> params;
 
             m_CurrentToken = m_FetchToken();
 
-            if (m_CurrentToken.Type == TokenType::IDENTIFIER)
-            {
-                retType = m_CurrentToken.Str;
-            }
-            else
-            {
-                Log(LogLevel::ERR, "Expected return type after `function` in reflection section.");
-                exit(2);
-            }                   
+            FLCN_REL_ASSERT(m_CurrentToken.Str, "Assembler::Parser", "{}: Expected identifier|str as return type after `function` in reflection section.", m_CurrentToken.LineNumber);
+
+            retType = *m_CurrentToken.Str;
 
             m_CurrentToken = m_FetchToken();
 
-            if (m_CurrentToken.Type == TokenType::IDENTIFIER)
-            {
-                name = m_CurrentToken.Str;
-            }
-            else
-            {
-                Log(LogLevel::ERR, "Expected function name after return type in reflection section.");
-                exit(2);
-            }
+            FLCN_REL_ASSERT(m_CurrentToken.Str, "Assembler::Parser", "{}: Expected identifier|str as function name in `function` in reflection section.", m_CurrentToken.LineNumber);
+
+            name = *m_CurrentToken.Str;
 
             m_CurrentToken = m_FetchToken();
 
-            if (m_CurrentToken.Type != (TokenType)'(')
-            {
-                Log(LogLevel::ERR, "Expected `(` after function name in reflection section.");
-                exit(2);
-            }
+            FLCN_REL_ASSERT(m_CurrentToken.Arbitarory && m_CurrentToken.Arbitarory->Type == '(', "Assembler::Parser", "{}: Expected `(` after function name in `function` in reflection section.", m_CurrentToken.LineNumber);
 
             m_CurrentToken = m_FetchToken();
 
-            while (m_CurrentToken.Type == TokenType::IDENTIFIER)
+            while (m_CurrentToken.Str)
             {
-                params.emplace_back(m_CurrentToken.Str);
+                params.emplace_back(*m_CurrentToken.Str);
 
                 m_CurrentToken = m_FetchToken();
 
-                skipNewlines();
+                SkipNewlines();
 
-                if (m_CurrentToken.Type != (TokenType)',' && m_CurrentToken.Type != (TokenType)')')
-                {
-                    Log(LogLevel::ERR, "Expected `,` or `)` after parameter type.");
-                    exit(2);
-                }
+                FLCN_REL_ASSERT(
+                    m_CurrentToken.Arbitarory && (m_CurrentToken.Arbitarory->Type == ',' || m_CurrentToken.Arbitarory->Type == ')'),
+                    "Assembler::Parser", "{}: Expected `,` or `)` after `function` in reflection section.", m_CurrentToken.LineNumber
+                );
                 
-                if (m_CurrentToken.Type == (TokenType)')')
+                if (*m_CurrentToken.Char == ')')
                 {
                     break;
                 }
 
                 m_CurrentToken = m_FetchToken();
 
-                skipNewlines();
-            }
-            
-            if (m_CurrentToken.Type != (TokenType)')')
-            {
-                Log(LogLevel::ERR, "Expected `)` after parameters in reflection section.");
-                exit(2);
+                SkipNewlines();
             }
 
             m_CurrentToken = m_FetchToken();
 
-            return ReflectionFunctionNode(name, retType, params);
+            ReflectionFunctionNode function(name, retType, params);
+
+            function.Line = m_CurrentToken.LineNumber;
+
+            return std::move(function);
         }
 
-        ReflectionStructureNode Parser::parseReflectionStructure()
+        ReflectionStructureNode Parser::ParseReflectionStructure()
         {
             std::string name;
             std::vector<std::pair<std::string, std::string>> members;
 
             m_CurrentToken = m_FetchToken();
 
-            if (m_CurrentToken.Type == TokenType::IDENTIFIER)
-            {
-                name = m_CurrentToken.Str;
-            }
-            else
-            {
-                Log(LogLevel::ERR, "Expected struct name after `struct` in reflection section.");
-                exit(2);
-            }
+            FLCN_REL_ASSERT(m_CurrentToken.Str, "Assembler::Parser", "{}: Expected identifier|str as struct name in `struct` in reflection section.", m_CurrentToken.LineNumber);
+
+            name = *m_CurrentToken.Str;
 
             m_CurrentToken = m_FetchToken();
 
-            if (m_CurrentToken.Type != (TokenType)'{')
-            {
-                Log(LogLevel::ERR, "Expected `{` after struct name in reflection section.");
-                exit(2);
-            }
+            FLCN_REL_ASSERT(m_CurrentToken.Arbitarory->Type && m_CurrentToken.Arbitarory->Type == '{', "Assembler::Parser", "{}: Expected `{` after struct name in `struct` in reflection section.", m_CurrentToken.LineNumber);
 
             m_CurrentToken = m_FetchToken();
 
-            while (m_CurrentToken.Type == TokenType::IDENTIFIER)
+            while (m_CurrentToken.Str)
             {
-                members.emplace_back(m_CurrentToken.Str, "");
+                members.emplace_back(*m_CurrentToken.Str, "");
 
                 m_CurrentToken = m_FetchToken();
 
-                if (m_CurrentToken.Type == TokenType::IDENTIFIER)
+                if (m_CurrentToken.Str)
                 {
-                    members[members.size() - 1].second = m_CurrentToken.Str;
+                    members[members.size() - 1].second = *m_CurrentToken.Str;
                 }
 
                 m_CurrentToken = m_FetchToken();
 
-                skipNewlines();
+                SkipNewlines();
 
-                if (m_CurrentToken.Type != (TokenType)',' && m_CurrentToken.Type != (TokenType)'}')
-                {
-                    Log(LogLevel::ERR, "Expected `,` or `}` after member name in reflection section.");
-                    exit(2);
-                }
+                FLCN_REL_ASSERT(
+                    m_CurrentToken.Arbitarory->Type && (m_CurrentToken.Arbitarory->Type == ',' || m_CurrentToken.Arbitarory->Type == '}'),
+                    "Assembler::Parser", "{}: Expected `,` or `}` after member name in `struct` in reflection section.", m_CurrentToken.LineNumber
+                );
 
-                if (m_CurrentToken.Type == (TokenType)'}')
+                if (*m_CurrentToken.Char == '}')
                 {
                     m_CurrentToken = m_FetchToken();
                     break;
@@ -695,174 +581,119 @@ namespace Falcon
 
                 m_CurrentToken = m_FetchToken();
 
-                skipNewlines();
+                SkipNewlines();
             }
-            
-            return ReflectionStructureNode(name, members);
+
+            ReflectionStructureNode structure(name, members);
+
+            structure.Line = m_CurrentToken.LineNumber;
+
+            return std::move(structure);
         }
 
-        ReflectionAliasNode Parser::parseReflectionAlias()
+        ReflectionAliasNode Parser::ParseReflectionAlias()
         {
             std::string name, base;
 
             m_CurrentToken = m_FetchToken();
 
-            if (m_CurrentToken.Type != TokenType::IDENTIFIER)
-            {
-                Log(LogLevel::ERR, "Expected alias name after `alias` in reflection section.");
-                exit(2);
-            }
+            FLCN_REL_ASSERT(m_CurrentToken.Str, "Assembler::Parser", "{}: Expected identifier|str as alias name in `alias` in reflection section.", m_CurrentToken.LineNumber);
 
-            name = m_CurrentToken.Str;
+            name = *m_CurrentToken.Str;
 
             m_CurrentToken = m_FetchToken();
 
-            if (m_CurrentToken.Type != TokenType::IDENTIFIER)
-            {
-                Log(LogLevel::ERR, "Expected base type name after alias name in reflection section.");
-                exit(2);
-            }
+            FLCN_REL_ASSERT(m_CurrentToken.Str, "Assembler::Parser", "{}: Expected identifier|str as base type name in `alias` in reflection section.", m_CurrentToken.LineNumber);
 
-            base = m_CurrentToken.Str;
+            base = *m_CurrentToken.Str;
 
-            return ReflectionAliasNode(name, base);
+            ReflectionAliasNode alias(name, base);
+
+            alias.Line = m_CurrentToken.LineNumber;
+
+            return std::move(alias);
         }
 
-        ReflectionSectionNode Parser::parseReflectionSection()
+        ReflectionSectionNode Parser::ParseReflectionSection()
         {
             ReflectionSectionNode refl;
 
-            refl.Line = Context::Line;
-            refl.Character = Context::Character;
+            refl.Line = m_CurrentToken.LineNumber;
 
             m_CurrentToken = m_FetchToken();
 
-            while (m_CurrentToken.Type == TokenType::IDENTIFIER && (m_CurrentToken.Str == "ATTRIBUTE" || m_CurrentToken.Str == "FUNCTION" || m_CurrentToken.Str == "STRUCT" || m_CurrentToken.Str == "ALIAS"))
+            while (m_CurrentToken.Str && (*m_CurrentToken.Str == "ATTRIBUTE" || *m_CurrentToken.Str == "FUNCTION" || *m_CurrentToken.Str == "STRUCT" || *m_CurrentToken.Str == "ALIAS"))
             {
+                SkipNewlines();
+
                 if (m_CurrentToken.Str == "ATTRIBUTE")
                 {
-                    refl.Attributes.emplace_back(std::move(parseReflectionAttribute()));
+                    refl.Attributes.emplace_back(std::move(ParseReflectionAttribute()));
                 }
                 else if (m_CurrentToken.Str == "FUNCTION")
                 {
-                    refl.Functions.emplace_back(std::move(parseReflectionFunction())); 
+                    refl.Functions.emplace_back(std::move(ParseReflectionFunction())); 
                 }
                 else if(m_CurrentToken.Str == "STRUCT")
                 {
-                    refl.Structures.emplace_back(std::move(parseReflectionStructure()));
+                    refl.Structures.emplace_back(std::move(ParseReflectionStructure()));
                 }
                 else if (m_CurrentToken.Str == "ALIAS")
                 {
-                    refl.Aliases.emplace_back(std::move(parseReflectionAlias()));
+                    refl.Aliases.emplace_back(std::move(ParseReflectionAlias()));
                 }
                 
-                skipNewlines();
+                SkipNewlines();
             }
 
-            return refl;
+            return std::move(refl);
         }
         
-        ASTNode * Parser::parseModule()
+        ASTNode * Parser::ParseModule()
         {
             ModuleNode * module = new ModuleNode();
 
-            if (m_CurrentToken.Type != TokenType::SECTION)
+            auto checkSyntax = [&](const std::string & sectionName)
             {
-                Log(LogLevel::ERR, "Expected `sect` at toplevel.");
-                exit(2);
-            }
+                FLCN_REL_ASSERT(m_CurrentToken.Section, "Assembler::Parser", "{}: Expected `sect` at toplevel.", m_CurrentToken.LineNumber);
 
-            m_CurrentToken = m_FetchToken();
+                m_CurrentToken = m_FetchToken();
 
-            if (m_CurrentToken.Type != TokenType::IDENTIFIER)
-            {
-                Log(LogLevel::ERR, "Expected section name after keyword `sect`.");
-                exit(2);
-            }
+                FLCN_REL_ASSERT(m_CurrentToken.Str, "Assembler::Parser", "{}: Expected identifier|str as section name after `sect`.", m_CurrentToken.LineNumber);
 
-            auto validateSyntax =   [&]()
-                                    {
-                                        if ((m_CurrentToken = m_FetchToken()).Type != (TokenType)':')
-                                        {
-                                            Log(LogLevel::ERR, "Expected `:` after section name.");
-                                            exit(2);
-                                        }
+                FLCN_REL_ASSERT(*m_CurrentToken.Str == sectionName, "Assembler::Parser", "{}: Invalid section name `{}`.", m_CurrentToken.LineNumber, *m_CurrentToken.Str);
 
-                                        if ((m_CurrentToken = m_FetchToken()).Type != TokenType::NEWLINE)
-                                        {
-                                            Log(LogLevel::ERR, "Expected newline after `:`.");
-                                            exit(2);
-                                        }
-                                    };
+                m_CurrentToken = m_FetchToken();
 
-            if (m_CurrentToken.Str != "code")
-            {
-                Log(LogLevel::ERR, "Invalid section name `" + m_CurrentToken.Str + "`.");
-                exit(2);
-            }
-            
-            validateSyntax();
+                FLCN_REL_ASSERT(m_CurrentToken.Arbitarory && m_CurrentToken.Arbitarory->Type == ':', "Assembler::Parser", "{}: Expected a `:` after section name.", m_CurrentToken.LineNumber);
 
-            module->CodeSection = std::move(parseCodeSection());
+                FLCN_REL_ASSERT((m_CurrentToken = m_FetchToken()).NewLine, "Assembler::Parser", "{}: Expected newline after `:`.", m_CurrentToken.LineNumber);
+            };
 
-            skipNewlines();
+            SkipNewlines();
 
-            if (m_CurrentToken.Type != TokenType::SECTION)
-            {
-                Log(LogLevel::ERR, "Expected `sect` at toplevel.");
-                exit(2);
-            }
+            checkSyntax("code");
 
-            m_CurrentToken = m_FetchToken();
+            module->CodeSection = std::move(ParseCodeSection());
 
-            if (m_CurrentToken.Type != TokenType::IDENTIFIER)
-            {
-                Log(LogLevel::ERR, "Expected section name after keyword `sect`.");
-                exit(2);
-            }
+            SkipNewlines();
 
-            if (m_CurrentToken.Str != "debug")
-            {
-                Log(LogLevel::ERR, "Invalid section name `" + m_CurrentToken.Str + "`.");
-                exit(2);
-            }
+            checkSyntax("debug");
 
-            validateSyntax();
+            module->DebugSection = std::move(ParseDebugSection());
 
-            module->DebugSection = std::move(parseDebugSection());
+            SkipNewlines();
 
-            skipNewlines();
+            checkSyntax("reflection");
 
-            if (m_CurrentToken.Type != TokenType::SECTION)
-            {
-                Log(LogLevel::ERR, "Expected `sect` at toplevel.");
-                exit(2);
-            }
-
-            m_CurrentToken = m_FetchToken();
-
-            if (m_CurrentToken.Type != TokenType::IDENTIFIER)
-            {
-                Log(LogLevel::ERR, "Expected section name after keyword `sect`.");
-                exit(2);
-            }
-
-            if (m_CurrentToken.Str != "reflection")
-            {
-                Log(LogLevel::ERR, "Invalid section name `" + m_CurrentToken.Str + "`.");
-                exit(2);
-            }
-
-            validateSyntax();
-
-            module->ReflectionSection = std::move(parseReflectionSection());
+            module->ReflectionSection = std::move(ParseReflectionSection());
 
             return module;
         }
 
-        ASTNode * Parser::parse()
+        ASTNode * Parser::Parse()
         {
-            return parseModule();
+            return ParseModule();
         }
     }
 }

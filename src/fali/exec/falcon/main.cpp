@@ -1,9 +1,4 @@
-#include <algorithm>
-#include <array>
-#include <chrono>
-#include <fstream>
-#include <iostream>
-#include <iterator>
+#include "common/Common.hpp"
 
 #include "vm/Signal.hpp"
 #include "vm/SignalImplement.hpp"
@@ -23,7 +18,9 @@ static struct
     std::vector<std::string> Args;
 } s_State;
 
-void printHelp()
+static const std::string s_MangledMainName = Falcon::FALI::MangleFunction("main", {"uint32", "ptr"});
+
+void PrintHelp()
 {
     std::cout<<"Usage: falcon [COMMAND_LINE_OPTIONS] [FILE] [ARGS]\n\n";
     std::cout<<"COMMAND_LINE_OPTIONS:\n";
@@ -36,11 +33,11 @@ void printHelp()
     std::cout<<"    Arguments to be passed to the `main` functoin.\n";
 }
 
-void parseCmdArgs(int argc, char * argv[])
+void ParseCmdArgs(int argc, char * argv[])
 {
     if (argc == 1)
     {
-        printHelp();
+        PrintHelp();
         exit(2);
     }
 
@@ -50,7 +47,7 @@ void parseCmdArgs(int argc, char * argv[])
 
         if (str == "-h" || str == "--help")
         {
-            printHelp();
+            PrintHelp();
             exit(2);
         }
         else if (str == "-t" || str == "--exec-time")
@@ -78,7 +75,7 @@ void parseCmdArgs(int argc, char * argv[])
 
 int main(int argc, char * argv[])
 {
-    parseCmdArgs(argc, argv);
+    ParseCmdArgs(argc, argv);
 
     Falcon::ImplementSignals();
 
@@ -86,7 +83,7 @@ int main(int argc, char * argv[])
 
     Falcon::FALI::Context ctxt(reader.GetCode());
 
-    Falcon::Signal::SetTargetVM(&ctxt.getVM());
+    Falcon::Signal::SetTargetVM(&ctxt.GetVM());
 
     int32_t exitStatus = 0;
 
@@ -94,7 +91,7 @@ int main(int argc, char * argv[])
     {
         auto s = std::chrono::high_resolution_clock::now();
 
-        exitStatus = ctxt.call<int>(Falcon::FALI::MangleFunction("main", {"uint32", "ptr"}), (uint32_t)s_State.Args.size(), (uint64_t)s_State.Args.data());
+        exitStatus = ctxt.Call<int32_t>(s_MangledMainName, (uint32_t)s_State.Args.size(), (uint64_t)s_State.Args.data());
 
         auto e = std::chrono::high_resolution_clock::now();
         auto d = e - s;
@@ -103,7 +100,7 @@ int main(int argc, char * argv[])
     }
     else
     {
-        exitStatus = ctxt.call<int32_t>(Falcon::FALI::MangleFunction("main", {"uint32", "ptr"}), (uint32_t)s_State.Args.size(), (uint64_t)s_State.Args.data());
+        exitStatus = ctxt.Call<int32_t>(s_MangledMainName, (uint32_t)s_State.Args.size(), (uint64_t)s_State.Args.data());
     }
 
     if (s_State.ShowExitStatus)

@@ -1,10 +1,7 @@
 #ifndef FALCON_COMMON_ENDIAN_HPP
 #define FALCON_COMMON_ENDIAN_HPP
 
-#include <algorithm>
-#include <array>
-
-#include <cstdint>
+#include "common/Common.hpp"
 
 namespace Falcon
 {
@@ -32,7 +29,7 @@ namespace Falcon
         }
 
         template <typename Type>
-        Type SystemToLittle(Type value)
+        Type SystemToLittle(Type & value)
         {
             if (GetSystemEndian() == Endian::Big)
             {

@@ -1,9 +1,7 @@
 #ifndef FALCON_FALI_OBJECT_SPACE_HPP
 #define FALCON_FALI_OBJECT_SPACE_HPP
 
-#include <algorithm>
-#include <memory>
-#include <vector>
+#include "common/Common.hpp"
 
 #ifndef FALI_OBJECT_SPACE_SIZE
 #define FALI_OBJECT_SPACE_SIZE 65536

@@ -9,7 +9,7 @@ namespace Falcon
         {
         }
 
-        ASTNode * Combiner::combine(ASTNode * ast1, ASTNode * ast2)
+        ASTNode * Combiner::Combine(ASTNode * ast1, ASTNode * ast2)
         {
             if (auto module1 = dynamic_cast<ModuleNode *>(ast1))
             {
@@ -76,7 +76,7 @@ namespace Falcon
             return ast1;
         }
 
-        ASTNode * Combiner::combine()
+        ASTNode * Combiner::Combine()
         {
             if (m_ASTs.size() == 0)
             {
@@ -92,7 +92,7 @@ namespace Falcon
 
                 for (uint64_t i = 1; i < m_ASTs.size(); i++)
                 {
-                    current = combine(current, m_ASTs[i]);
+                    current = Combine(current, m_ASTs[i]);
                 }
 
                 return current;

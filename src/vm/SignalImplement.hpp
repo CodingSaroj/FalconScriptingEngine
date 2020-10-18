@@ -1,8 +1,7 @@
 #ifndef FALCON_VM_SIGNAL_IMPLEMENT_HPP
 #define FALCON_VM_SIGNAL_IMPLEMENT_HPP
 
-#include <csignal>
-#include <climits>
+#include "common/Common.hpp"
 
 #include "Signal.hpp"
 

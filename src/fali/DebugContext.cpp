@@ -1,10 +1,3 @@
-#include <iostream>
-
-#include <csignal>
-#include <cstdio>
-#include <cstdlib>
-#include <cstdint>
-
 #include "DebugContext.hpp"
 
 namespace Falcon
@@ -14,133 +7,127 @@ namespace Falcon
         DebugContext::DebugContext(uint8_t * code, DebugData debugData, Debugger::DebuggerFunctions debuggerFunctions, const std::string & debuggerName, Debugger::PrintVarFunction printVarFunction)
             : m_Debugger(code, debugData, debuggerFunctions, debuggerName, printVarFunction)
         {
-            addExternalFunction("initGlobalMemory",
-                (std::function<void(uint64_t)>) [&](uint64_t size)
-                                                {
-                                                    m_GlobalMemory.Size = size + 24;
+            FILE ** stdfiles = (FILE **)m_Debugger.GetGlobalData(0);
+            stdfiles[0] = stdin;
+            stdfiles[1] = stdout;
+            stdfiles[2] = stderr;
 
-                                                    m_GlobalMemory.Data = new uint8_t[m_GlobalMemory.Size];
+            AddExternalFunction("malloc", std::function<uint64_t(uint64_t)>(
+                [&](uint64_t size)->uint64_t
+                {
+                    return (uint64_t)malloc(size);
+                }
+            ));
 
-                                                    auto data = (uint64_t *)m_GlobalMemory.Data;
-                                                    data[0] = (uint64_t)stdin;
-                                                    data[1] = (uint64_t)stdout;
-                                                    data[2] = (uint64_t)stderr;
-                                                });
+            AddExternalFunction("free", std::function<void(uint64_t)>(
+                [&](uint64_t Address)
+                {
+                    free((void *)Address);
+                }
+            ));
 
-            addExternalFunction("getGlobalAddress",
-                (std::function<uint64_t(uint64_t)>) [&](uint64_t offset)->uint64_t
-                                                    {
-                                                        if (offset >= m_GlobalMemory.Size)
-                                                        {
-                                                            return 0;
-                                                        }
+            AddExternalFunction("realloc", std::function<uint64_t(uint64_t, uint64_t)>(
+                [&](uint64_t Address, uint64_t size)->uint64_t
+                {
+                    return (uint64_t)realloc((void *)Address, size);
+                }
+            ));
 
-                                                        return (uint64_t)(m_GlobalMemory.Data + offset);
-                                                    });
+            AddExternalFunction("fopen", std::function<uint64_t(uint64_t, uint64_t)>(
+                [&](uint64_t filename, uint64_t openmode)->uint64_t
+                {
+                    return (uint64_t)fopen((const char *)filename, (const char *)openmode);
+                }
+            ));
 
-            addExternalFunction("malloc",
-                (std::function<uint64_t(uint64_t)>) [&](uint64_t size)->uint64_t
-                                                    {
-                                                        return (uint64_t)malloc(size);
-                                                    });
+            AddExternalFunction("fclose", std::function<void(uint64_t)>(
+                [&](uint64_t file)
+                {
+                    fclose((FILE *)file);
+                }
+            ));
 
-            addExternalFunction("free",
-                (std::function<void(uint64_t)>) [&](uint64_t address)
-                                                {
-                                                    free((void *)address);
-                                                });
+            AddExternalFunction("fwrite", std::function<uint64_t(uint64_t, uint64_t, uint64_t, uint64_t)>(
+                [&](uint64_t data, uint64_t size, uint64_t count, uint64_t file)->uint64_t
+                {
+                    return fwrite((void *)data, size, count, (FILE *)file);
+                }
+            ));
 
-            addExternalFunction("realloc",
-                (std::function<uint64_t(uint64_t, uint64_t)>)   [&](uint64_t address, uint64_t size)->uint64_t
-                                                                {
-                                                                    return (uint64_t)realloc((void *)address, size);
-                                                                });
+            AddExternalFunction("fread", std::function<uint64_t(uint64_t, uint64_t, uint64_t, uint64_t)>(
+                [&](uint64_t data, uint64_t size, uint64_t count, uint64_t file)->uint64_t
+                {
+                    return fread((void *)data, size, count, (FILE *)file);
+                }
+            ));
 
-            addExternalFunction("fopen",
-                (std::function<uint64_t(uint64_t, uint64_t)>)   [&](uint64_t filename, uint64_t openmode)->uint64_t
-                                                                {
-                                                                    return (uint64_t)fopen((const char *)filename, (const char *)openmode);
-                                                                });
+            AddExternalFunction("memcpy", std::function<uint64_t(uint64_t, uint64_t, uint64_t)>(
+                [&](uint64_t dest, uint64_t src, uint64_t size)->uint64_t
+                {
+                    return (uint64_t)memcpy((void *)dest, (void *)src, size);
+                }
+            ));
 
-            addExternalFunction("fclose",
-                (std::function<void(uint64_t)>) [&](uint64_t file)
-                                                {
-                                                    fclose((FILE *)file);
-                                                });
-
-            addExternalFunction("fwrite",
-                (std::function<uint64_t(uint64_t, uint64_t, uint64_t, uint64_t)>)   [&](uint64_t data, uint64_t size, uint64_t count, uint64_t file)->uint64_t
-                                                                                    {
-                                                                                        return fwrite((void *)data, size, count, (FILE *)file);
-                                                                                    });
-            addExternalFunction("fread",
-                (std::function<uint64_t(uint64_t, uint64_t, uint64_t, uint64_t)>)   [&](uint64_t data, uint64_t size, uint64_t count, uint64_t file)->uint64_t
-                                                                                    {
-                                                                                        return fread((void *)data, size, count, (FILE *)file);
-                                                                                    });
-
-            addExternalFunction("memcpy",
-                (std::function<uint64_t(uint64_t, uint64_t, uint64_t)>) [&](uint64_t dest, uint64_t src, uint64_t size)->uint64_t
-                                                                        {
-                                                                            return (uint64_t)memcpy((void *)dest, (void *)src, size);
-                                                                        });
-
-            addExternalFunction("memmove",
-                (std::function<uint64_t(uint64_t, uint64_t, uint64_t)>) [&](uint64_t dest, uint64_t src, uint64_t size)->uint64_t
-                                                                        {
-                                                                            return (uint64_t)memmove((void *)dest, (void *)src, size);
-                                                                        });
+            AddExternalFunction("memmove", std::function<uint64_t(uint64_t, uint64_t, uint64_t)>(
+                [&](uint64_t dest, uint64_t src, uint64_t size)->uint64_t
+                {
+                    return (uint64_t)memmove((void *)dest, (void *)src, size);
+                }
+            ));
             
-            addExternalFunction("memset",
-                (std::function<uint64_t(uint64_t, uint8_t, uint64_t)>) [&](uint64_t dest, uint8_t byte, uint64_t size)->uint64_t
-                                                                        {
-                                                                            return (uint64_t)memset((void *)dest, byte, size);
-                                                                        });
+            AddExternalFunction("memset", std::function<uint64_t(uint64_t, uint8_t, uint64_t)>(
+                [&](uint64_t dest, uint8_t byte, uint64_t size)->uint64_t
+                {
+                    return (uint64_t)memset((void *)dest, byte, size);
+                }
+            ));
 
-            addExternalFunction("raise",
-                (std::function<uint32_t(uint8_t)>)  [&](uint8_t sig)->uint32_t
-                                                    {
-                                                        return raise(sig);
-                                                    });
+            AddExternalFunction("raise", std::function<uint32_t(uint8_t)>(
+                [&](uint8_t sig)->uint32_t
+                {
+                    return raise(sig);
+                }
+            ));
 
-            addExternalFunction("exit",
-                (std::function<void(uint8_t)>)  [&](uint8_t status)
-                                                {
-                                                    exit(status);
-                                                });
+            AddExternalFunction("exit", std::function<void(uint8_t)>(
+                [&](uint8_t status)
+                {
+                    exit(status);
+                }
+            ));
 
             for (auto & function : Function::GetIterable())
             {
                 if (!function.second.Base)
                 {
-                    function.second.Base = new Function((Function::FunctionType)[&](std::vector<void *> args)->void *
-                    {
-                        if (args.size() != function.second.ParameterTypes.size())
+                    function.second.Base = new Function(Function::FunctionType(
+                        [&](std::vector<void *> args)->void *
                         {
-                            std::cout<<"Function `"<<function.first<<"` requires "<<function.second.ParameterTypes.size()<<" arguments, "<<args.size()<<" provided.\n";
-                            exit(2);
-                        }
+                            FLCN_ASSERT(args.size() != function.second.ParameterTypes.size(), "FALI",
+                                "Function '{}' requires {} arguments, {} provided.", function.first, function.second.ParameterTypes.size(), args.size()
+                            );
                     
-                        uint64_t argsSize = 0;
-                        
-                        for (int i = 0; i < function.second.ParameterTypes.size(); i++)
-                        {
-                            argsSize += Object::GetObjectData(function.second.ParameterTypes[i]).Size;
+                            uint64_t argsSize = 0;
+                            
+                            for (int i = 0; i < function.second.ParameterTypes.size(); i++)
+                            {
+                                argsSize += Object::GetObjectData(function.second.ParameterTypes[i]).Size;
 
-                            m_Debugger.push((uint8_t *)args[i], Object::GetObjectData(function.second.ParameterTypes[i]).Size);
+                                m_Debugger.Push((uint8_t *)args[i], Object::GetObjectData(function.second.ParameterTypes[i]).Size);
+                            }
+
+                            m_Debugger.Run(function.second.Name, argsSize);
+
+                            return (void *)m_Debugger.Pop(Object::GetObjectData(function.second.ReturnType).Size);
                         }
-
-                        m_Debugger.run(function.second.Name, argsSize);
-
-                        return (void *)m_Debugger.pop(Object::GetObjectData(function.second.ReturnType).Size);
-                    });
+                    ));
                 }
             }
         }
 
-        void DebugContext::shell()
+        void DebugContext::Shell()
         {
-            m_Debugger.shell();
+            m_Debugger.Shell();
         }
     }
 }

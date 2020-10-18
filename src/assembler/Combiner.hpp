@@ -1,7 +1,7 @@
 #ifndef FALCON_ASM_COMBINER_HPP
 #define FALCON_ASM_COMBINER_HPP
 
-#include <vector>
+#include "common/Common.hpp"
 
 #include "assembler/AST.hpp"
 
@@ -14,12 +14,12 @@ namespace Falcon
         public:
             Combiner(std::vector<ASTNode *> asts);
 
-            ASTNode * combine();
+            ASTNode * Combine();
 
         private:
             std::vector<ASTNode *> m_ASTs;
 
-            ASTNode * combine(ASTNode * ast1, ASTNode * ast2);
+            ASTNode * Combine(ASTNode * ast1, ASTNode * ast2);
         };
     }
 }

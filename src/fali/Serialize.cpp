@@ -4,230 +4,260 @@ namespace Falcon
 {
     namespace FALI
     {
-        static std::unordered_map<OperatorNode::OpType, std::string> opNames
-        {
-            {OperatorNode::AR_ADD,               "+"},
-            {OperatorNode::AR_SUBTRACT,          "-"},
-            {OperatorNode::AR_MULTIPLY,          "*"},
-            {OperatorNode::AR_DIVIDE,            "/"},
-            {OperatorNode::AR_MODULUS,           "%"},
-            {OperatorNode::BIT_LEFT_SHIFT,       "<<"},
-            {OperatorNode::BIT_RIGHT_SHIFT,      ">>"},
-            {OperatorNode::BIT_AND,              "&"},
-            {OperatorNode::BIT_OR,               "|"},
-            {OperatorNode::BIT_XOR,              "^"},
-            {OperatorNode::CMP_GREATER,          ">"},
-            {OperatorNode::CMP_GREATER_OR_EQUAL, ">="},
-            {OperatorNode::CMP_LESS,             "<"},
-            {OperatorNode::CMP_LESS_OR_EQUAL,    "<="},
-            {OperatorNode::CMP_IS_EQUAL,         "=="},
-            {OperatorNode::CMP_NOT_EQUAL,        "!="},
-            {OperatorNode::LOGICAL_AND,          "&&"},
-            {OperatorNode::LOGICAL_OR,           "||"},
-            {OperatorNode::DECLARE,              "decl"},
-            {OperatorNode::ASSIGNMENT,           "="},
-            {OperatorNode::BIT_COMPLEMENT,       "~"},
-            {OperatorNode::LOGICAL_NOT,          "!"}
-        };
-
-        void Serialize(ASTNode * ast, const std::string & padding)
+        void Serialize(ASTNode * ast, std::string padding)
         {
             if (!ast)
             {
                 return;
             }
-
+            
             if (auto literal = dynamic_cast<LiteralNode *>(ast))
             {
-                std::cout<<padding<<"Literal: ";
+                std::cout<<Format("{}Literal: ", padding);
 
-                switch (literal->Type)
+                if (literal->Boolean)
                 {
-                    case LiteralNode::BOOL:
-                    {
-                        std::cout<<(literal->Bool ? "true" : "false");
-                        break;
-                    }
-
-
-                    case LiteralNode::UINT8:
-                    {
-                        std::cout<<literal->U8;
-                        break;
-                    }
-
-                    case LiteralNode::UINT16:
-                    {
-                        std::cout<<literal->U16;
-                        break;
-                    }
-
-                    case LiteralNode::UINT32:
-                    {
-                        std::cout<<literal->U32;
-                        break;
-                    }
-
-                    case LiteralNode::UINT64:
-                    {
-                        std::cout<<literal->U64;
-                        break;
-                    }
-
-                    case LiteralNode::INT8:
-                    {
-                        std::cout<<literal->I8;
-                        break;
-                    }
-
-                    case LiteralNode::INT16:
-                    {
-                        std::cout<<literal->I16;
-                        break;
-                    }
-
-                    case LiteralNode::INT32:
-                    {
-                        std::cout<<literal->I32;
-                        break;
-                    }
-                    
-                    case LiteralNode::INT64:
-                    {
-                        std::cout<<literal->I64;
-                        break;
-                    }
-
-                    case LiteralNode::FLOAT32:
-                    {
-                        std::cout<<literal->F32;
-                        break;
-                    }
-
-                    case LiteralNode::FLOAT64:
-                    {
-                        std::cout<<literal->F64;
-                        break;
-                    }
+                    std::cout<<Format("{}\n", *literal->Boolean ? "true" : "false");
                 }
-
-                std::cout<<"\n";
-            }
-            else if (auto type = dynamic_cast<TypeNode *>(ast))
-            {
-                std::cout<<padding<<"Type: "<<type->TypeName<<"\n";
+                else if (literal->Whole)
+                {
+                    std::cout<<Format("{}\n", literal->Whole.value());
+                }
+                else if (literal->Integer)
+                {
+                    std::cout<<Format("{}\n", literal->Integer.value());
+                }
+                else if (literal->Real)
+                {
+                    std::cout<<Format("{}\n", literal->Real.value());
+                }
             }
             else if (auto var = dynamic_cast<VariableNode *>(ast))
             {
-                std::cout<<padding<<"Variable: ";
-
-                if (var->Name == "" && var->Type.TypeName == "")
+                if (var->Name.empty())
                 {
-                    std::cout<<"$"<<"\n";
+                    std::cout<<Format("{}Type: {}\n", padding, var->Type);
                 }
                 else
                 {
-                    std::cout<<var->Type.TypeName<<" "<<var->Name<<"\n";
-                } 
+                    std::cout<<Format("{}Variable: {} {}\n", padding, var->Type, var->Name);
+                }
+            }
+            else if (auto value = dynamic_cast<ValueNode *>(ast))
+            {
+                if (value->Literal)
+                {
+                    Serialize(&value->Literal.value(), padding);
+                }
+                else if (value->Variable)
+                {
+                    Serialize(&value->Variable.value(), padding);
+                }
+                else if (value->Operator)
+                {
+                    Serialize(value->Operator.value(), padding);
+                }
             }
             else if (auto op = dynamic_cast<OperatorNode *>(ast))
             {
-                std::cout<<padding<<"Operator: "<<opNames[op->Type]<<"\n";
+                std::cout<<Format("{}Operator {}:\n", padding, op->Type);
 
-                Serialize(op->Left, padding + "    ");
-                Serialize(op->Right, padding + "    ");
+                if (op->Left)
+                {
+                    Serialize(&op->Left.value(), padding + "    ");
+                }
+
+                if (op->Right)
+                {
+                    Serialize(&op->Right.value(), padding + "    ");
+                }
+            }
+            else if (auto statement = dynamic_cast<StatementNode *>(ast))
+            {
+                if (statement->Operator)
+                {
+                    std::cout<<Format("{}Statement Operator:\n", padding);
+
+                    Serialize(&statement->Operator.value(), padding + "    ");
+                }
+                else if (statement->IfBlock)
+                {
+                    std::cout<<Format("{}Statement if:\n", padding);
+
+                    Serialize(&statement->IfBlock->Condition, padding + "    ");
+
+                    for (auto & statement : statement->IfBlock->Statements)
+                    {
+                        Serialize(&statement, padding + "    ");
+                    }
+                }
+                else if (statement->ElseBlock)
+                {
+                    std::cout<<Format("{}Statement else:\n", padding);
+
+                    for (auto & statement : statement->ElseBlock->Statements)
+                    {
+                        Serialize(&statement, padding + "    ");
+                    }
+                }
+                else if (statement->WhileBlock)
+                {
+                    std::cout<<Format("{}Statement while:\n", padding);
+
+                    Serialize(&statement->WhileBlock->Condition, padding + "    ");
+
+                    for (auto & statement : statement->WhileBlock->Statements)
+                    {
+                        Serialize(&statement, padding + "    ");
+                    }
+                }
             }
             else if (auto function = dynamic_cast<FunctionNode *>(ast))
             {
-                std::cout<<padding<<"Function: "<<function->ReturnType.TypeName<<" "<<function->Name<<"(";
+                std::cout<<Format("{}Function {} {}(", padding, function->ReturnType, function->Name);
 
-                for (auto paramType : function->ParameterTypes)
+                for (auto & param : function->Params)
                 {
-                    std::cout<<paramType.TypeName<<", ";
+                    std::cout<<Format("{} {}, ", param.first, param.second);
                 }
 
-                std::cout<<")\n";
-
-                for (auto op : function->Statements)
+                if (function->Params.size())
                 {
-                    Serialize(&op, padding + "    ");
-                }
-            }
-            else if (auto module = dynamic_cast<ModuleNode *>(ast))
-            {
-                std::cout<<padding<<"Module:\n";
-
-                for (auto func : module->Functions)
-                {
-                    Serialize(&func, padding + "    ");
-                }
-            }
-        }
-
-        void Serialize(IRNode * ir, const std::string & padding)
-        {
-            if (!ir)
-            {
-                return;
-            }
-
-            if (auto statement = dynamic_cast<IRStatementNode *>(ir))
-            {
-                std::cout<<padding<<"Statement: "<<opNames[statement->Operator.Type]<<"\n";
-
-                for (auto change : statement->Changes)
-                {
-                    std::cout<<padding<<"    "<<change.first<<" ";
-
-                    switch (change.second)
-                    {
-                        case IRVarChange::NONE:
-                        {
-                            std::cout<<"NONE\n";
-                            break;
-                        }
-
-                        case IRVarChange::DECLARED:
-                        {
-                            std::cout<<"DECLARED\n";
-                            break;
-                        }
-
-                        case IRVarChange::USED:
-                        {
-                            std::cout<<"USED\n";
-                            break;
-                        }
-
-                        case IRVarChange::ASSIGNED:
-                        {
-                            std::cout<<"ASSIGNED\n";
-                            break;
-                        }
-                    }
+                    std::cout<<"\b\b";
                 }
 
-                Serialize(statement->Operator.Left, padding + "    ");
-                Serialize(statement->Operator.Right, padding + "    ");
-            }
-            else if (auto func = dynamic_cast<IRFunctionNode *>(ir))
-            {
-                std::cout<<padding<<"Function:\n";
+                std::cout<<"):\n";
 
-                for (auto statement : func->Statements)
+                for (auto & statement : function->Statements)
                 {
                     Serialize(&statement, padding + "    ");
                 }
             }
-            else if (auto module = dynamic_cast<IRModuleNode *>(ir))
+            else if (auto clas = dynamic_cast<ClassNode *>(ast))
             {
-                std::cout<<padding<<"Module:\n";
+                std::cout<<Format("{}Class {}:\n", padding, clas->Name);
 
-                for (auto function : module->Functions)
+                std::cout<<Format("{}Public:\n", padding + "    ");
+
+                for (auto & var : clas->PublicMemberVariables)
+                {
+                    Serialize(&var, padding + "        ");
+                }
+
+                for (auto & function : clas->PublicMemberFunctions)
+                {
+                    Serialize(&function, padding + "        ");
+                }
+
+                std::cout<<Format("{}Protected:\n", padding + "    ");
+
+                for (auto & var : clas->ProtectedMemberVariables)
+                {
+                    Serialize(&var, padding + "        ");
+                }
+
+                for (auto & function : clas->ProtectedMemberFunctions)
+                {
+                    Serialize(&function, padding + "        ");
+                }
+
+                std::cout<<Format("{}Private:\n", padding + "    ");
+
+                for (auto & var : clas->PrivateMemberVariables)
+                {
+                    Serialize(&var, padding + "        ");
+                }
+
+                for (auto & function : clas->PrivateMemberFunctions)
+                {
+                    Serialize(&function, padding + "        ");
+                }
+            }
+            else if (auto module = dynamic_cast<ModuleNode *>(ast))
+            {
+                std::cout<<Format("{}Module:\n", padding);
+
+                for (auto & clas : module->Classes)
+                {
+                    Serialize(&clas, padding + "    ");
+                }
+
+                for (auto & function : module->Functions)
                 {
                     Serialize(&function, padding + "    ");
                 }
             }
         }
+/*
+        void Serialize(IRFunction & function)
+        {
+            std::cout<<function.ReturnType<<" "<<function.Name<<"(";
+
+            for (auto & params : function.Params)
+            {
+                std::cout<<params.first<<" "<<params.second<<", ";
+            }
+
+            if (function.Params.size())
+            {
+                std::cout<<"\b\b";
+            }
+
+            std::cout<<"):\n";
+
+            size_t statementCounter = 0;
+
+            for (auto & statement : function.Statements)
+            {
+                for (auto iter = function.Labels.begin(); iter != function.Labels.end(); ++iter)
+                {
+                    if (iter->second.first == statementCounter)
+                    {
+                        if (iter != function.Labels.begin())
+                        {
+                            std::cout<<"\n";
+                        }
+
+                        std::cout<<"."<<iter->first<<":\n";
+
+                        if (iter->second.first != iter->second.second)
+                        {
+                            break;
+                        }
+                    }
+                }
+
+                if (statement.Operation == '@')
+                {
+                    std::cout<<"    goto "<<statement.V2<<"\n";
+                }
+                else if (statement.Operation == 'i')
+                {
+                    std::cout<<"    if "<<statement.V2<<"\n";
+                }
+                else if (statement.Operation == 'e')
+                {
+                    std::cout<<"    else "<<statement.V2<<"\n";
+                }
+                else if (statement.Operation == '=')
+                {
+                    std::cout<<"    "<<statement.V1<<" := "<<statement.V2<<"\n";
+                }
+                else if (statement.Operation == 'R')
+                {
+                    std::cout<<"    ret "<<statement.V1<<"\n";
+                }
+                else if (statement.V3 == "")
+                {
+                    std::cout<<"    "<<statement.V1<<" := "<<statement.Operation<<" "<<statement.V2<<"\n";
+                }
+                else
+                {
+                    std::cout<<"    "<<statement.V1<<" := "<<statement.V2<<" "<<statement.Operation<<" "<<statement.V3<<"\n";
+                }
+
+                ++statementCounter;
+            }
+        }*/
     }
 }

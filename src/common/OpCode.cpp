@@ -77,8 +77,11 @@ namespace Falcon
             "LOAD8",  "LOAD16", "LOAD32", "LOAD64",
             "LODREF",
 
-            "PSHNUL", "POPNUL",
+            "GLOD8", "GLOD16", "GLOD32", "GLOD64",
+            "GLODREF",
 
+            "PSHNUL", "POPNUL",
+            
             "JMP",   "JMT", "JMF",  "CALL",
             "EXTRN", "RET", "FUNC", "STOP"
         };
@@ -160,6 +163,9 @@ namespace Falcon
             UN_STR,
 
             BASE, BASE, BASE,
+
+            BIN_MOV, BIN_MOV, BIN_MOV, BIN_MOV,
+            BIN_MOV,
 
             BIN_MOV, BIN_MOV, BIN_MOV, BIN_MOV,
             BIN_MOV,

@@ -1,10 +1,7 @@
 #ifndef FALCON_DEBUGGER_DATA_HPP
 #define FALCON_DEBUGGER_DATA_HPP
 
-#include <map>
-#include <string>
-#include <unordered_map>
-#include <vector>
+#include "common/Common.hpp"
 
 namespace Falcon
 {

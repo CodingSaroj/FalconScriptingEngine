@@ -1,7 +1,7 @@
 #ifndef FALCON_VM_SIGNAL_HPP
 #define FALCON_VM_SIGNAL_HPP
 
-#include <functional>
+#include "common/Common.hpp"
 
 #include "vm/VM.hpp"
 #include "vm/Debugger.hpp"

@@ -4,51 +4,74 @@ namespace Falcon
 {
     namespace Assembler
     {
+        AtomNode::AtomNode(char value)
+            : Char(value)
+        {
+        }
+
+        AtomNode::AtomNode(uint64_t value)
+            : Uint(value)
+        {
+        }
+
+        AtomNode::AtomNode(int64_t value)
+            : Int(value)
+        {
+        }
+
+        AtomNode::AtomNode(double value)
+            : Float(value)
+        {
+        }
+
         AtomNode::AtomNode(const std::string & str)
-            : Str(str)
         {
             if (std::find(RegisterType::s_Names.begin(), RegisterType::s_Names.end(), str) != RegisterType::s_Names.end())
             {
-                Type = AtomType::REGISTER;
+                Register = Token::RegisterType{str};
             }
             else if (str[0] == '@')
             {
                 if (std::find(RegisterType::s_Names.begin(), RegisterType::s_Names.end(), str.substr(1)) != RegisterType::s_Names.end())
                 {
-                    Type = AtomType::REGISTER;
+                    Register = Token::RegisterType{str};
                 }
             }
             else if (str[0] == '[' && str[str.size() - 1] == ']')
             {
                 if (std::find(RegisterType::s_Names.begin(), RegisterType::s_Names.end(), str.substr(1, str.size() - 2)) != RegisterType::s_Names.end())
                 {
-                    Type = AtomType::REGISTER;
+                    Register = Token::RegisterType{str};
                 }
             }
             else
             {
-                Type = AtomType::IDENTIFIER;
+                Str = str;
             }
         }
 
-        AtomNode::AtomNode(char value)
-            : Type(AtomType::CHAR), Char(value)
+        AtomNode::UnionType AtomNode::GetUnion()
         {
-        }
+            UnionType unionData;
 
-        AtomNode::AtomNode(uint64_t value)
-            : Type(AtomType::UINT), Uint(value)
-        {
-        }
+            if (Char)
+            {
+                unionData.Char = Char.value();
+            }
+            else if (Uint)
+            {
+                unionData.Uint = Uint.value();
+            }
+            else if (Int)
+            {
+                unionData.Int = Int.value();
+            }
+            else if (Float)
+            {
+                unionData.Float = Float.value();
+            }
 
-        AtomNode::AtomNode(int64_t value)
-            : Type(AtomType::INT), Int(value)
-        {
-        }
-
-        AtomNode::AtomNode(double value)
-            : Type(AtomType::FLOAT), Float(value)
-        {
+            return unionData;
         }
 
         InstructionNode::InstructionNode(const std::string & inst)

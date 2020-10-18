@@ -4,14 +4,12 @@ namespace Falcon
 {
     namespace Assembler
     {
-        
-
         Generator::Generator(ASTNode * node, bool debug)
             : m_Node(node), m_Debug(debug)
         {
         }
 
-        std::string Generator::generateSymbolTable()
+        std::string Generator::GenerateSymbolTable()
         {
             std::string symbols;
 
@@ -28,7 +26,7 @@ namespace Falcon
             return symbols;
         }
 
-        void Generator::generateInstruction(InstructionNode * inst)
+        void Generator::GenerateInstruction(InstructionNode * inst)
         {
             OpCode::OpCode type = (OpCode::OpCode)255;
 
@@ -45,11 +43,11 @@ namespace Falcon
 
             for (int i = 0; i < inst->Args.size(); i++)
             {
-                if (inst->Args[i].Type == AtomNode::AtomType::IDENTIFIER)
+                if (inst->Args[i].Str)
                 {
                     if (type >= OpCode::JMP && type <= OpCode::JMF)
                     {
-                        m_UnresolvedSymbols.emplace_back(m_CodeSection.size(), inst->Args[i].Str);
+                        m_UnresolvedSymbols.emplace_back(m_CodeSection.size(), *inst->Args[i].Str);
 
                         for (int i = 0; i < 8; i++)
                         {
@@ -58,11 +56,11 @@ namespace Falcon
                     }
                     else
                     {
-                        m_CodeSection += inst->Args[i].Str;
+                        m_CodeSection += *inst->Args[i].Str;
                         m_CodeSection += '\0';
                     }
                 }
-                else if (inst->Args[i].Type == AtomNode::AtomType::REGISTER)
+                else if (inst->Args[i].Register)
                 {
                     RegisterType::RegisterType type = (RegisterType::RegisterType)255;
                     uint8_t & typeU8 = *(uint8_t *)&type;
@@ -70,19 +68,19 @@ namespace Falcon
                     bool at = false, ref = false;
                     std::string bare;
 
-                    if (inst->Args[i].Str[0] == '@')
+                    if (inst->Args[i].Register->Name[0] == '@')
                     {
                         at = true;
-                        bare = inst->Args[i].Str.substr(1);
+                        bare = inst->Args[i].Register->Name.substr(1);
                     }
-                    else if (inst->Args[i].Str[0] == '[' && inst->Args[i].Str[inst->Args[i].Str.size() - 1] == ']')
+                    else if (inst->Args[i].Register->Name[0] == '[' && inst->Args[i].Register->Name[inst->Args[i].Register->Name.size() - 1] == ']')
                     {
                         ref = true;
-                        bare = inst->Args[i].Str.substr(1, inst->Args[i].Str.size() - 2);
+                        bare = inst->Args[i].Register->Name.substr(1, inst->Args[i].Register->Name.size() - 2);
                     }
                     else
                     {
-                        bare = inst->Args[i].Str;
+                        bare = inst->Args[i].Register->Name;
                     }
 
                     for (int j = 0; j < RegisterType::s_Names.size(); j++)
@@ -94,40 +92,59 @@ namespace Falcon
                         }
                     }
 
-                    if (at) { typeU8 |= 0b00000100; }
-                    if (ref) { typeU8 |= 0b00001000; }
+                    if (at)
+                    {
+                        typeU8 |= 0b00010000;
+                    }
+
+                    if (ref)
+                    {
+                        typeU8 |= 0b00100000;
+                    }
 
                     m_CodeSection += type;
                 }
                 else
                 {
+                    AtomNode::UnionType data = inst->Args[i].GetUnion();
+
                     if (type == OpCode::MOV8)
                     {
-                        m_CodeSection += inst->Args[i].Char;
+                        m_CodeSection += data.Char;
                     }
                     else if (type == OpCode::MOV16)
                     {
-                        Endian::SystemToLittle(inst->Args[i]);
+                        Endian::SystemToLittle(*(uint16_t *)&data.Uint);
                         
-                        m_CodeSection.append((char *)&inst->Args[i].Uint, 2);
+                        m_CodeSection.append((char *)&data.Uint, 2);
                     }
-                    else if (type == OpCode::MOV32 || (type >= OpCode::LOAD8 && type <= OpCode::LODREF) || type == OpCode::CALL || type == OpCode::RET || type == OpCode::POPNUL)
+                    else if (type == OpCode::MOV32
+                            || (type >= OpCode::LOAD8 && type <= OpCode::GLODREF)
+                            || type == OpCode::CALL
+                            || type == OpCode::RET
+                            || type == OpCode::POPNUL)
                     {
-                        Endian::SystemToLittle(inst->Args[i]);
+                        if (inst->Args[i].Float)
+                        {
+                            // Decrease float precision to 32-bit.
+                            *(float *)&data.Float = data.Float;
+                        }
 
-                        m_CodeSection.append((char *)&inst->Args[i].Uint, 4);
+                        Endian::SystemToLittle(*(uint32_t *)&data.Uint);
+
+                        m_CodeSection.append((char *)&data.Uint, 4);
                     }
                     else if (type == OpCode::MOV64 || type == OpCode::JMP || type == OpCode::JMT || type == OpCode::JMF)
                     {
-                        Endian::SystemToLittle(inst->Args[i]);
+                        Endian::SystemToLittle(*(uint64_t *)&data.Uint);
 
-                        m_CodeSection.append((char *)&inst->Args[i].Uint, 8);
+                        m_CodeSection.append((char *)&data.Uint, 8);
                     }
                 }
             }
         }
 
-        void Generator::generateRoutine(RoutineNode * routine)
+        void Generator::GenerateRoutine(RoutineNode * routine)
         {
             m_CodeSection += (char)OpCode::FUNC;
 
@@ -137,14 +154,14 @@ namespace Falcon
 
                 for (auto & inst : label.Instructions)
                 {
-                    generateInstruction(&inst);
+                    GenerateInstruction(&inst);
                 }
             }
 
             m_CodeSection += OpCode::FUNC;
         }
 
-        void Generator::generateCodeSection(CodeSectionNode * code)
+        void Generator::GenerateCodeSection(CodeSectionNode * code)
         {
             m_CodeSection += "CODE";
 
@@ -161,7 +178,7 @@ namespace Falcon
             {
                 m_Symbols[routine.Name] = m_CodeSection.size() - 12;
 
-                generateRoutine(&routine);
+                GenerateRoutine(&routine);
             }
 
             for (auto sym : m_UnresolvedSymbols)
@@ -179,7 +196,7 @@ namespace Falcon
                 }
             }
 
-            m_CodeSection.insert(codeSectionStart, generateSymbolTable());
+            m_CodeSection.insert(codeSectionStart, GenerateSymbolTable());
             
             uint64_t codeSectionSize = (m_CodeSection.size() - codeSectionStart) + 1;
 
@@ -193,7 +210,7 @@ namespace Falcon
             m_CodeSection += '\377';
         }
 
-        void Generator::generateDebugRoutine(DebugRoutineNode * routine)
+        void Generator::GenerateDebugRoutine(DebugRoutineNode * routine)
         {
             m_DebugSection += routine->Name;
             m_DebugSection += '\0';
@@ -247,7 +264,7 @@ namespace Falcon
             m_DebugSection += 'E';
         }
 
-        void Generator::generateDebugSection(DebugSectionNode * dbg)
+        void Generator::GenerateDebugSection(DebugSectionNode * dbg)
         {
             m_DebugSection += "DEBG";
 
@@ -262,7 +279,7 @@ namespace Falcon
 
             for (auto & routine : dbg->Routines)
             {
-                generateDebugRoutine(&routine);
+                GenerateDebugRoutine(&routine);
             }
 
             uint64_t debugSectionSize = m_DebugSection.size() - debugSectionStart;
@@ -275,7 +292,7 @@ namespace Falcon
             }
         }
         
-        void Generator::generateReflectionAttribute(ReflectionAttributeNode * attrib)
+        void Generator::GenerateReflectionAttribute(ReflectionAttributeNode * attrib)
         {
             m_ReflectionSection += 'T';
 
@@ -291,7 +308,7 @@ namespace Falcon
             m_ReflectionSection += 'E';
         }
 
-        void Generator::generateReflectionFunction(ReflectionFunctionNode * function)
+        void Generator::GenerateReflectionFunction(ReflectionFunctionNode * function)
         {
             m_ReflectionSection += 'F';
 
@@ -310,7 +327,7 @@ namespace Falcon
             m_ReflectionSection += 'E';
         }
 
-        void Generator::generateReflectionStructure(ReflectionStructureNode * structure)
+        void Generator::GenerateReflectionStructure(ReflectionStructureNode * structure)
         {
             m_ReflectionSection += 'S';
 
@@ -329,7 +346,7 @@ namespace Falcon
             m_ReflectionSection += 'E';
         }
 
-        void Generator::generateReflectionAlias(ReflectionAliasNode * alias)
+        void Generator::GenerateReflectionAlias(ReflectionAliasNode * alias)
         {
             m_ReflectionSection += 'A';
 
@@ -342,7 +359,7 @@ namespace Falcon
             m_ReflectionSection += 'E';
         }
 
-        void Generator::generateReflectionSection(ReflectionSectionNode * refl)
+        void Generator::GenerateReflectionSection(ReflectionSectionNode * refl)
         {
             m_ReflectionSection += "REFL";
 
@@ -357,22 +374,22 @@ namespace Falcon
 
             for (auto & attrib : refl->Attributes)
             {
-                generateReflectionAttribute(&attrib);
+                GenerateReflectionAttribute(&attrib);
             }
 
             for (auto & function : refl->Functions)
             {
-                generateReflectionFunction(&function);
+                GenerateReflectionFunction(&function);
             }
 
             for (auto & structure : refl->Structures)
             {
-                generateReflectionStructure(&structure);
+                GenerateReflectionStructure(&structure);
             }
             
             for (auto & alias : refl->Aliases)
             {
-                generateReflectionAlias(&alias);
+                GenerateReflectionAlias(&alias);
             }
 
             uint64_t reflectionSectionSize = m_ReflectionSection.size() - reflectionSectionStart;
@@ -385,24 +402,27 @@ namespace Falcon
             }
         }
        
-        void Generator::generateModule(ModuleNode * module)
+        void Generator::GenerateModule(ModuleNode * module)
         {
-            generateCodeSection(&module->CodeSection);
+            GenerateCodeSection(&module->CodeSection);
             m_Bytecode += m_CodeSection;
 
             if (m_Debug)
             {
-                generateDebugSection(&module->DebugSection);
+                GenerateDebugSection(&module->DebugSection);
                 m_Bytecode += m_DebugSection;
             }
 
-            generateReflectionSection(&module->ReflectionSection);
+            GenerateReflectionSection(&module->ReflectionSection);
             m_Bytecode += m_ReflectionSection;
         }
 
-        std::string Generator::generate()
+        std::string Generator::Generate()
         {
-            if (auto module = dynamic_cast<ModuleNode *>(m_Node)) { generateModule(module); }
+            if (auto module = dynamic_cast<ModuleNode *>(m_Node))
+            {
+                GenerateModule(module);
+            }
 
             return "FALI" + m_Bytecode;
         }

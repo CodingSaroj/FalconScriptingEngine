@@ -1,8 +1,7 @@
 #ifndef FALCON_FALI_MANGLE_HPP
 #define FALCON_FALI_MANGLE_HPP
 
-#include <string>
-#include <vector>
+#include "common/Common.hpp"
 
 namespace Falcon
 {

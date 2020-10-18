@@ -1,8 +1,4 @@
-#include <algorithm>
-#include <array>
-#include <fstream>
-#include <iostream>
-#include <iterator>
+#include "common/Common.hpp"
 
 #include "vm/Debugger.hpp"
 #include "vm/Signal.hpp"
@@ -19,7 +15,8 @@ static struct
     std::string InputName = "a.fali";
 } s_State;
 
-void printHelp()
+
+void PrintHelp()
 {
     std::cout<<"Usage: fldb [COMMAND_LINE_OPTIONS] [FILE]\n\n";
     std::cout<<"COMMAND_LINE_OPTIONS:\n";
@@ -28,11 +25,11 @@ void printHelp()
     std::cout<<"    FALI file to be debugged.\n";
 }
 
-void parseCmdArgs(int argc, char * argv[])
+void ParseCmdArgs(int argc, char * argv[])
 {
     if (argc == 1)
     {
-        printHelp();
+        PrintHelp();
         exit(2);
     }
 
@@ -42,7 +39,7 @@ void parseCmdArgs(int argc, char * argv[])
 
         if (str == "-h" || str == "--help")
         {
-            printHelp();
+            PrintHelp();
             exit(2);
         }
         else
@@ -52,7 +49,7 @@ void parseCmdArgs(int argc, char * argv[])
     }
 }
 
-static std::string printVar(const std::string & type, void * data, const std::string & padding = "")
+static std::string PrintVar(const std::string & type, void * data, const std::string & padding = "")
 {
     std::string output;
     
@@ -117,7 +114,7 @@ static std::string printVar(const std::string & type, void * data, const std::st
     {
         if (Falcon::FALI::Object::GetObjectData(type).MemberOffsets.count("base") == 1)
         {
-            output = printVar(Falcon::FALI::Object::GetObjectData(type).MemberOffsets["base"].first, data);
+            output = PrintVar(Falcon::FALI::Object::GetObjectData(type).MemberOffsets["base"].first, data);
         }
         else
         {
@@ -125,7 +122,7 @@ static std::string printVar(const std::string & type, void * data, const std::st
 
             for (auto member : Falcon::FALI::Object::GetMemberIterable(type))
             {
-                output += padding + "    " + member.first + " = " + printVar(member.second.first, ((uint8_t *)data) + member.second.second, padding + "    ") + "\n";
+                output += padding + "    " + member.first + " = " + PrintVar(member.second.first, ((uint8_t *)data) + member.second.second, padding + "    ") + "\n";
             }
             
             output += padding + "}";
@@ -150,7 +147,7 @@ static std::string printVar(const std::string & type, void * data, const std::st
 
         for (uint64_t i = 0; i < size; i++)
         {
-            output += padding + "    [" + std::to_string(i) + "] = " + printVar(rawType, ((uint8_t *)data) + (i * Falcon::FALI::Object::GetObjectData(rawType).Size), padding + "    ") + "\n";
+            output += padding + "    [" + std::to_string(i) + "] = " + PrintVar(rawType, ((uint8_t *)data) + (i * Falcon::FALI::Object::GetObjectData(rawType).Size), padding + "    ") + "\n";
         }
         
         output += padding + "]";
@@ -165,7 +162,7 @@ static std::string printVar(const std::string & type, void * data, const std::st
 
 int main(int argc, char * argv[])
 {
-    parseCmdArgs(argc, argv);
+    ParseCmdArgs(argc, argv);
 
     Falcon::FALI::Reader reader(s_State.InputName);
 
@@ -176,13 +173,13 @@ int main(int argc, char * argv[])
         "fldb",
         [](const std::string & type, void * data)->std::string
         {
-            return printVar(type, data);
+            return PrintVar(type, data);
         }
     );
 
-    Falcon::Signal::SetTargetVM(&ctxt.getDebugger(), true);
+    Falcon::Signal::SetTargetVM(&ctxt.GetDebugger(), true);
 
     Falcon::ImplementSignals();
 
-    ctxt.shell();
+    ctxt.Shell();
 }

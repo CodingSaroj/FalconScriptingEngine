@@ -1,10 +1,7 @@
 #ifndef FALCON_ASM_GENERATOR_HPP
 #define FALCON_ASM_GENERATOR_HPP
 
-#include <unordered_map>
-
-#include <cstring>
-
+#include "common/Common.hpp"
 #include "common/Endian.hpp"
 
 #include "assembler/Parser.hpp"
@@ -18,7 +15,7 @@ namespace Falcon
         public:
             Generator(ASTNode * node, bool debug = false);
 
-            std::string generate();
+            std::string Generate();
 
         private:
             ASTNode * m_Node;
@@ -35,22 +32,22 @@ namespace Falcon
             std::string m_DebugSection;
             std::string m_ReflectionSection;
 
-            std::string generateSymbolTable();
+            std::string GenerateSymbolTable();
 
-            void generateInstruction(InstructionNode * inst);
-            void generateRoutine(RoutineNode * routine);
-            void generateCodeSection(CodeSectionNode * code);
+            void GenerateInstruction(InstructionNode * inst);
+            void GenerateRoutine(RoutineNode * routine);
+            void GenerateCodeSection(CodeSectionNode * code);
             
-            void generateDebugRoutine(DebugRoutineNode * routine);
-            void generateDebugSection(DebugSectionNode * dbg);
+            void GenerateDebugRoutine(DebugRoutineNode * routine);
+            void GenerateDebugSection(DebugSectionNode * dbg);
 
-            void generateReflectionAttribute(ReflectionAttributeNode * attrib);
-            void generateReflectionFunction(ReflectionFunctionNode * function);
-            void generateReflectionStructure(ReflectionStructureNode * structure);
-            void generateReflectionAlias(ReflectionAliasNode * alias);
-            void generateReflectionSection(ReflectionSectionNode * refl);
+            void GenerateReflectionAttribute(ReflectionAttributeNode * attrib);
+            void GenerateReflectionFunction(ReflectionFunctionNode * function);
+            void GenerateReflectionStructure(ReflectionStructureNode * structure);
+            void GenerateReflectionAlias(ReflectionAliasNode * alias);
+            void GenerateReflectionSection(ReflectionSectionNode * refl);
 
-            void generateModule(ModuleNode * module);
+            void GenerateModule(ModuleNode * module);
         };
     }
 }

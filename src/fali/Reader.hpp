@@ -1,15 +1,7 @@
 #ifndef FALCON_FALI_READER_HPP
 #define FALCON_FALI_READER_HPP
 
-#include <fstream>
-#include <iostream>
-#include <iterator>
-#include <sstream>
-#include <string>
-#include <vector>
-
-#include <cstring>
-
+#include "common/Common.hpp"
 #include "common/Endian.hpp"
 
 #include "vm/DebugData.hpp"
@@ -33,9 +25,9 @@ namespace Falcon
             uint8_t * m_Code;
             DebugData m_DebugData;
 
-            void readCodeSection(uint8_t * start, uint64_t size);
-            void readDebugSection(uint8_t * start, uint64_t size);
-            void readReflectionSection(uint8_t * start, uint64_t size);
+            void ReadCodeSection(uint8_t * start, uint64_t size);
+            void ReadDebugSection(uint8_t * start, uint64_t size);
+            void ReadReflectionSection(uint8_t * start, uint64_t size);
         };
     }
 }

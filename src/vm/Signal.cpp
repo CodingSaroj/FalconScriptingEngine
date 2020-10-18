@@ -13,11 +13,11 @@ namespace Falcon
         {
             if (debugger)
             {
-                s_Handlers = std::move(((Debugger *)s_TargetVM)->getSignalHandlers());
+                s_Handlers = std::move(((Debugger *)s_TargetVM)->GetSignalHandlers());
             }
             else
             {
-                s_Handlers = std::move(s_TargetVM->getSignalHandlers());
+                s_Handlers = std::move(s_TargetVM->GetSignalHandlers());
             }
         } 
     }
@@ -29,7 +29,7 @@ namespace Falcon
             return;
         }
 
-        if (s_TargetVM->isRunning() && s_Handlers.count(signal))
+        if (s_TargetVM->IsRunning() && s_Handlers.count(signal))
         {
             s_Handlers[signal](signal);
         }

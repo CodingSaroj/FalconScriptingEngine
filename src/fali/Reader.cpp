@@ -44,7 +44,7 @@ namespace Falcon
 
                 offset += 8;
 
-                readCodeSection(&fileData[offset], codeSectionSize);
+                ReadCodeSection(&fileData[offset], codeSectionSize);
 
                 offset += codeSectionSize;
             }
@@ -59,7 +59,7 @@ namespace Falcon
                 
                 offset += 8;
 
-                readDebugSection(&fileData[offset], debugSectionSize);
+                ReadDebugSection(&fileData[offset], debugSectionSize);
 
                 offset += debugSectionSize;
             }
@@ -74,19 +74,19 @@ namespace Falcon
 
                 offset += 8;
 
-                readReflectionSection(&fileData[offset], reflSectionSize);
+                ReadReflectionSection(&fileData[offset], reflSectionSize);
 
                 offset += reflSectionSize;
             }
         }
 
-        void Reader::readCodeSection(uint8_t * start, uint64_t size)
+        void Reader::ReadCodeSection(uint8_t * start, uint64_t size)
         {
             m_Code = new uint8_t[size];
             memcpy(m_Code, start, size);
         }
 
-        void Reader::readDebugSection(uint8_t * start, uint64_t size)
+        void Reader::ReadDebugSection(uint8_t * start, uint64_t size)
         {
             uint64_t offset = 0;
 
@@ -170,7 +170,7 @@ namespace Falcon
             }
         }
 
-        void Reader::readReflectionSection(uint8_t * start, uint64_t size)
+        void Reader::ReadReflectionSection(uint8_t * start, uint64_t size)
         {
             uint64_t offset = 0;
 

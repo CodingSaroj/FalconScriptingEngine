@@ -1,12 +1,7 @@
 #ifndef FALCON_VM_DEBUGGER_HPP
 #define FALCON_VM_DEBUGGER_HPP
 
-#include <iostream>
-#include <iomanip>
-#include <map>
-
-#include <csignal>
-
+#include "common/Common.hpp"
 #include "common/CLIColors.hpp"
 
 #include "vm/DebugData.hpp"
@@ -36,14 +31,14 @@ namespace Falcon
 
         Debugger(uint8_t * code, const DebugData & debugData, DebuggerFunctions functions, const std::string & debuggerName = "", PrintVarFunction printVarFunction = nullptr);
 
-        void setBreakpoint(uint64_t ip);
-        void clearBreakpoint(uint64_t ip);
+        void SetBreakpoint(uint64_t ip);
+        void ClearBreakpoint(uint64_t ip);
 
-        void shell();
+        void Shell();
 
-        std::unordered_map<int, std::function<void(int)>> getSignalHandlers();
+        std::unordered_map<int, std::function<void(int)>> GetSignalHandlers();
 
-        void run(const std::string & function = "main", uint64_t argsSize = 0);
+        void Run(const std::string & function, uint64_t argsSize = 0);
 
     private:
         DebugData m_DebugData;
@@ -72,9 +67,9 @@ namespace Falcon
         DebuggerFunctions m_DebuggerFunctions;
         PrintVarFunction m_PrintVarFunction;
 
-        void disassemble();
+        void Disassemble();
 
-        void updateDebuggerState();
+        void UpdateDebuggerState();
     };
 }
 

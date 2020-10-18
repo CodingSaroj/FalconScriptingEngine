@@ -1,11 +1,8 @@
 #ifndef FALCON_FALI_OBJECT_HPP
 #define FALCON_FALI_OBJECT_HPP
 
-#include <iostream>
-#include <unordered_map>
-#include <vector>
-
-#include <cstring>
+#include "common/Common.hpp"
+#include "common/Logger.hpp"
 
 #include "fali/ObjectSpace.hpp"
 #include "fali/Mangle.hpp"
@@ -71,32 +68,26 @@ namespace Falcon
             Object(const std::string & type, const std::string & constructor, std::vector<void *> args);
             ~Object();
             
-            constexpr uint8_t * & self()
+            constexpr uint8_t * & Self()
             {
                 return m_Data;
             }
             
-            Object callStatic(const std::string & retType, const std::string & function, std::vector<void *> args);
-            Object callMember(const std::string & retType, const std::string & function, std::vector<void *> args);
+            Object CallStatic(const std::string & retType, const std::string & function, std::vector<void *> args);
+            Object CallMember(const std::string & retType, const std::string & function, std::vector<void *> args);
 
             template <typename T>
-            T & get(const std::string & member)
+            T & Get(const std::string & member)
             {
                 return *(T *)(m_Data + m_ObjectData->MemberOffsets[member].second);
             }
 
             template <typename T>
-            T & safeGet(const std::string & member, const std::string & type)
+            T & SafeGet(const std::string & member, const std::string & type)
             {
-                if (m_ObjectData->MemberOffsets[member].first == type)
-                {
-                    return *(T *)(m_Data + m_ObjectData->MemberOffsets[member].second);
-                }
-                else
-                {
-                    std::cout<<"TypeMismatch: Variable `"<<member<<"` is of type `"<<m_ObjectData->MemberOffsets[member].first<<"` not `"<<type<<"`.\n";
-                    exit(2);
-                }
+                FLCN_ASSERT(m_ObjectData->MemberOffsets[member].first == type, "FALI", "TypeMismatch: Variable '{}' is of type '{}' not '{}'.", member, m_ObjectData->MemberOffsets[member].first, type);
+
+                return *(T *)(m_Data + m_ObjectData->MemberOffsets[member].second);
             }
             
             static void New(const std::string & name, bool alias = false);

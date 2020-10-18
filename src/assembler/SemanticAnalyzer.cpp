@@ -77,8 +77,10 @@ namespace Falcon
             {0, 4}, {0, 4}, {0, 4}, {0, 4},
             {0, 4},
 
-            {4, 3},
-            {4, 3},
+            {0, 4}, {0, 4}, {0, 4}, {0, 4},
+            {0, 4},
+
+            {4, 3}, {4, 3},
 
             {5, 3}, {5, 3}, {5, 3}, {4, 9},
             {9, 3}, {4, 3}, {3, 3}, {3, 3}
@@ -89,25 +91,23 @@ namespace Falcon
         {
         }
 
-        bool SemanticAnalyzer::findInCodeSection(const std::string & name)
+        bool SemanticAnalyzer::FindInCodeSection(const std::string & name)
         {
-            return std::find_if(m_Code->Routines.begin(), m_Code->Routines.end(),
-                    [&name](const RoutineNode & routine)->bool
-                    {
-                        return routine.Name == name;
-                    }) != m_Code->Routines.end();
+            return std::find_if(m_Code->Routines.begin(), m_Code->Routines.end(), [&name](const RoutineNode & routine)->bool
+            {
+                return routine.Name == name;
+            }) != m_Code->Routines.end();
         }
         
-        bool SemanticAnalyzer::findInRoutine(const std::string & name)
+        bool SemanticAnalyzer::FindInRoutine(const std::string & name)
         {
-            return std::find_if(m_Routine->Labels.begin(), m_Routine->Labels.end(),
-                    [&name](const LabelNode & label)->bool
-                    {
-                        return label.Name == name;
-                    }) != m_Routine->Labels.end();
+            return std::find_if(m_Routine->Labels.begin(), m_Routine->Labels.end(), [&name](const LabelNode & label)->bool
+            {
+                return label.Name == name;
+            }) != m_Routine->Labels.end();
         }
 
-        void SemanticAnalyzer::analyzeInstruction(InstructionNode * inst)
+        void SemanticAnalyzer::AnalyzeInstruction(InstructionNode * inst)
         {
             OpCode::OpCode type = (OpCode::OpCode)255;
 
@@ -123,160 +123,116 @@ namespace Falcon
 
             if (fmt[0] == 3)
             {
-                if (inst->Args.size() != 0)
-                {
-                    Log(LogLevel::ERR, "Instruction `" + inst->Inst + "` expects 0 arguments.", inst->Line, inst->Character);
-                    exit(2);
-                }
+                FLCN_REL_ASSERT(inst->Args.empty(), "Assembler::SemanticAnalyzer", "{}: Instruction `{}` expects 0 argument.", inst->Line, inst->Inst);
             }
             else if (inst->Args.size() != 0)
             {
                 if (fmt[0] == 0)
                 {
-                    if (inst->Args[0].Type != AtomNode::AtomType::REGISTER)
-                    {
-                        Log(LogLevel::ERR, "Instruction `" + inst->Inst + "` expects register as its 1st argument.", inst->Line, inst->Character);
-                        exit(2);
-                    }
+                    FLCN_REL_ASSERT(inst->Args[0].Register, "Assembler::SemanticAnalyzer", "{}: Instruction `{}` expects register as its 1st argument.", inst->Line, inst->Inst);
                 }
                 else if (fmt[0] == 1 || fmt[0] == 2)
                 {
-                    if (inst->Args[0].Type != AtomNode::AtomType::CHAR && inst->Args[0].Type != AtomNode::AtomType::UINT && inst->Args[0].Type != AtomNode::AtomType::INT)
-                    {
-                        Log(LogLevel::ERR, "Instruction `" + inst->Inst + "` expects char|uint|int as its 1st argument.", inst->Line, inst->Character);
-                        exit(2);
-                    }
+                    FLCN_REL_ASSERT(inst->Args[0].Char || inst->Args[0].Uint || inst->Args[0].Int, "Assembler::SemanticAnalyzer", "{}: Instruction `{}` expects char|uint|int as its 1st argument.", inst->Line, inst->Inst);
                 }
                 else if (fmt[0] == 4 || fmt[0] == 8)
                 {
-                    if (inst->Args[0].Type == AtomNode::AtomType::REGISTER || inst->Args[0].Type == AtomNode::AtomType::IDENTIFIER)
-                    {
-                        Log(LogLevel::ERR, "Instruction `" + inst->Inst + "` expects char|uint|int|float as its 1st argument.", inst->Line, inst->Character);
-                        exit(2);
-                    }
+                    FLCN_REL_ASSERT(!inst->Args[0].Register || !inst->Args[0].Str, "Assembler::SemanticAnalyzer", "{}: Instruction `{}` expects char|uint|int|float as its 1st argument.", inst->Line, inst->Inst);
                 }
                 else if (fmt[0] == 9)
                 {
-                    if (inst->Args[0].Type != AtomNode::AtomType::IDENTIFIER)
-                    {
-                        Log(LogLevel::ERR, "Instruction `" + inst->Inst + "` expects identifier as its 2nd argument.", inst->Line, inst->Character);
-                        exit(2);
-                    }
-
-                    if (type == OpCode::CALL)
-                    {
-                        if (!findInCodeSection(inst->Args[0].Str))
-                        {
-                            Log(LogLevel::ERR, "Invalid routine name `" + inst->Args[0].Str + "` in instruction `CALL`.", inst->Line, inst->Character);
-                            exit(2);
-                        }
-                    }
+                    FLCN_REL_ASSERT(inst->Args[0].Str, "Assembler::SemanticAnalyzer", "{}: Instruction `{}` expects identifier as its 1st argument.", inst->Line, inst->Inst);
                 }
                 else if (fmt[0] == 5)
                 {
-                    if (inst->Args[0].Type == AtomNode::AtomType::REGISTER)
+                    FLCN_REL_ASSERT(!inst->Args[0].Register, "Assembler::SemanticAnalyzer", "{}: Instruction `{}` expects char|uint|int|float|identifier as its 1st argument.", inst->Line, inst->Inst);
+
+                    if (inst->Args[0].Str)
                     {
-                        Log(LogLevel::ERR, "Instruction `" + inst->Inst + "` expects char|uint|int|float|identifier as its 2nd argument.", inst->Line, inst->Character);
-                        exit(2);
-                    }
-                    else if (inst->Args[0].Type == AtomNode::AtomType::IDENTIFIER)
-                    {
-                        if (!findInRoutine(inst->Args[0].Str))
-                        {
-                            Log(LogLevel::ERR, "Invalid label name `" + inst->Args[0].Str + "` in instruction `" + inst->Inst + "`.", inst->Line, inst->Character);
-                            exit(2);
-                        }
+                        FLCN_REL_ASSERT(FindInRoutine(*inst->Args[0].Str), "Assembler::SemanticAnalyzer", "{}: Label `{}` not found in routine `{}`.", inst->Line, *inst->Args[0].Str, m_Routine->Name);
                     }
                 }
             }
             else
             {
-                Log(LogLevel::ERR, "Instruction `" + inst->Inst + "` expects 1 or 2 arguments.", inst->Line, inst->Character);
-                exit(2);
+                if (fmt[1] == 3)
+                {
+                    FLCN_REL_ASSERT(false, "Assembler::SemanticAnalyzer", "{}: Instruction `{}` expects 1 arguments.", inst->Line, inst->Inst);
+                }
+                else
+                {
+                    FLCN_REL_ASSERT(false, "Assembler::SemanticAnalyzer", "{}: Instruction `{}` expects 2 arguments.", inst->Line, inst->Inst);
+                }
             }
 
             if (fmt[1] == 3)
             {
-                if (inst->Args.size() == 2)
+                if (fmt[0] == 3)
                 {
-                    Log(LogLevel::ERR, "Instruction `" + inst->Inst + "` expects 1 argument.", inst->Line, inst->Character);
-                    exit(2); 
+                    FLCN_REL_ASSERT(inst->Args.size() == 0, "Assembler::SemanticAnalyzer", "{}: Instruction `{}` expects 1 argument.", inst->Line, inst->Inst);
+                }
+                else
+                {
+                    FLCN_REL_ASSERT(inst->Args.size() == 1, "Assembler::SemanticAnalyzer", "{}: Instruction `{}` expects 2 arguments.", inst->Line, inst->Inst);
                 }
             }
             else if (inst->Args.size() == 2)
             {
                 if (fmt[1] == 0)
                 {
-                    if (inst->Args[1].Type != AtomNode::AtomType::REGISTER)
-                    {
-                        Log(LogLevel::ERR, "Instruction `" + inst->Inst + "` expects register as its 2nd argument.", inst->Line, inst->Character);
-                        exit(2);
-                    }
+                    FLCN_REL_ASSERT(inst->Args[0].Register, "Assembler::SemanticAnalyzer", "{}: Instruction `{}` expects register as its 2nd argument.", inst->Line, inst->Inst);
                 }
                 else if (fmt[1] == 1 || fmt[1] == 2)
                 {
-                    if (inst->Args[1].Type != AtomNode::AtomType::CHAR && inst->Args[1].Type != AtomNode::AtomType::UINT && inst->Args[1].Type != AtomNode::AtomType::INT)
-                    {
-                        Log(LogLevel::ERR, "Instruction `" + inst->Inst + "` expects char|uint|int as its 2nd argument.", inst->Line, inst->Character);
-                        exit(2);
-                    }
+                    FLCN_REL_ASSERT(inst->Args[1].Char || inst->Args[1].Uint || inst->Args[1].Int, "Assembler::SemanticAnalyzer", "{}: Instruction `{}` expects char|uint|int as its 2nd argument.", inst->Line, inst->Inst);
                 }
-                else if (fmt[1] == 4 || fmt[1] == 8)
+                else if (fmt[1] == 4 || fmt[0] == 8)
                 {
-                    if (inst->Args[1].Type == AtomNode::AtomType::REGISTER || inst->Args[1].Type == AtomNode::AtomType::IDENTIFIER)
-                    {
-                        Log(LogLevel::ERR, "Instruction `" + inst->Inst + "` expects char|uint|int|float as its 2nd argument.", inst->Line, inst->Character);
-                        exit(2);
-                    }
+                    FLCN_REL_ASSERT(!inst->Args[1].Register || !inst->Args[1].Str, "Assembler::SemanticAnalyzer", "{}: Instruction `{}` expects char|uint|int|float as its 2nd argument.", inst->Line, inst->Inst);
                 }
-                else if (fmt[1] == 9)
+                else if (fmt[0] == 9)
                 {
-                    if (inst->Args[1].Type != AtomNode::AtomType::IDENTIFIER)
-                    {
-                        Log(LogLevel::ERR, "Instruction `" + inst->Inst + "` expects identifier as its 2nd argument.", inst->Line, inst->Character);
-                        exit(2);
-                    }
-                    
+                    FLCN_REL_ASSERT(inst->Args[0].Str, "Assembler::SemanticAnalyzer", "{}: Instruction `{}` expects identifier as its 2nd argument.", inst->Line, inst->Inst);
+
                     if (type == OpCode::CALL)
                     {
-                        if (!findInCodeSection(inst->Args[1].Str))
-                        {
-                            Log(LogLevel::ERR, "Invalid routine name `" + inst->Args[0].Str + "` in instruction `CALL`.", inst->Line, inst->Character);
-                            exit(2);
-                        }
+                        FLCN_REL_ASSERT(FindInCodeSection(*inst->Args[0].Str), "Assembler::SemanticAnalyzer", "{}: Routine `{}` not found in code section.", inst->Line, *inst->Args[0].Str);
                     }
                 }
             }
             else
             {
-                Log(LogLevel::ERR, "Instruction `" + inst->Inst + "` expects 2 arguments.", inst->Line, inst->Character);
-                exit(2);
+                FLCN_REL_ASSERT(false, "Assembler::SemanticAnalyzer", "{}: Instruction `{}` expects 2 arguments.", inst->Line, inst->Inst);
             }
         }
 
-        void SemanticAnalyzer::analyzeRoutine()
+        void SemanticAnalyzer::AnalyzeRoutine()
         {
             for (auto & label : m_Routine->Labels)
             {
                 for (auto & inst : label.Instructions)
                 {
-                    analyzeInstruction(&inst);
+                    AnalyzeInstruction(&inst);
                 }
             }
         }
 
-        void SemanticAnalyzer::analyzeCodeSection()
+        void SemanticAnalyzer::AnalyzeCodeSection()
         {
             for (auto & routine : m_Code->Routines)
             {
                 m_Routine = &routine;
-                analyzeRoutine();
+                AnalyzeRoutine();
             }
         }
 
-        ASTNode * SemanticAnalyzer::analyze()
+        ASTNode * SemanticAnalyzer::Analyze()
         {
-            if (auto module = dynamic_cast<ModuleNode *>(m_Node)) { m_Code = &module->CodeSection; analyzeCodeSection(); }
+            if (auto module = dynamic_cast<ModuleNode *>(m_Node)) 
+            {
+                m_Code = &module->CodeSection;
+                AnalyzeCodeSection();
+            }
 
             return m_Node;
         }

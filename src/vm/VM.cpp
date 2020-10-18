@@ -264,6 +264,13 @@ namespace Falcon
 
         m_Operators[OpCode::LODREF] = &VM::lodref;
 
+        m_Operators[OpCode::GLOD8] = &VM::glod8;
+        m_Operators[OpCode::GLOD16] = &VM::glod16;
+        m_Operators[OpCode::GLOD32] = &VM::glod32;
+        m_Operators[OpCode::GLOD64] = &VM::glod64;
+
+        m_Operators[OpCode::GLODREF] = &VM::glodref;
+
         m_Operators[OpCode::PSHNUL] = &VM::pshnul;
         m_Operators[OpCode::POPNUL] = &VM::popnul;
 
@@ -277,15 +284,10 @@ namespace Falcon
         m_Operators[OpCode::FUNC] = &VM::stop;
         m_Operators[OpCode::STOP] = &VM::stop;
 
-        collectSymbols();
+        CollectSymbols();
     }
 
-    void VM::stop()
-    {
-        m_Running = false;
-    }
-
-    void VM::collectSymbols()
+    void VM::CollectSymbols()
     {
         OpCode::OpCode op = (OpCode::OpCode)m_Code[m_IP];
 
@@ -311,7 +313,7 @@ namespace Falcon
         m_Code += m_IP;
     }
 
-    void VM::dumpState()
+    void VM::DumpState()
     {
         std::cout<<(Common::Colors::Yellow | Common::Colors::Bold)<<"State Dump"<<Common::Colors::White<<":\n";
         std::cout<<"    Instruction              : "<<Disassembler::DisassembleInstruction(&m_Code[m_InstructionStart])<<"\n";
@@ -319,8 +321,8 @@ namespace Falcon
         std::cout<<"    Instruction Pointer (IP) : 0x"<<std::setw(16)<<m_IP<<"\n";
         std::cout<<"    Stack Pointer (SP)       : 0x"<<std::setw(16)<<m_SP<<"\n";
         std::cout<<"    Frame Pointer (FP)       : 0x"<<std::setw(16)<<m_FP<<"\n\n";
-        
-        for (uint16_t i = 0; i < 4; i++)
+
+        for (uint16_t i = 0; i < 16; i++)
         {
             auto reg = m_Registers[i];
 
@@ -347,1273 +349,1278 @@ namespace Falcon
         std::cout<<std::dec;
     }
 
+    void VM::stop()
+    {
+        m_Running = false;
+    }
+
     void VM::uadd8()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.u8 = r0.u8 + r1.u8;
     }
 
     void VM::uadd16()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.u16 = r0.u16 + r1.u16;
     }
     
     void VM::uadd32()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.u32 = r0.u32 + r1.u32;
     }
     
     void VM::uadd64()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.u64 = r0.u64 + r1.u64;
     }
 
     void VM::usub8()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.u8 = r0.u8 - r1.u8;
     }
 
     void VM::usub16()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.u16 = r0.u16 - r1.u16;
     }
     
     void VM::usub32()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.u32 = r0.u32 - r1.u32;
     }
     
     void VM::usub64()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.u64 = r0.u64 - r1.u64;
     }
 
     void VM::umul8()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.u8 = r0.u8 * r1.u8;
     }
 
     void VM::umul16()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.u16 = r0.u16 * r1.u16;
     }
     
     void VM::umul32()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.u32 = r0.u32 * r1.u32;
     }
     
     void VM::umul64()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.u64 = r0.u64 * r1.u64;
     }
 
     void VM::udiv8()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.u8 = r0.u8 / r1.u8;
     }
 
     void VM::udiv16()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.u16 = r0.u16 / r1.u16;
     }
     
     void VM::udiv32()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.u32 = r0.u32 / r1.u32;
     }
     
     void VM::udiv64()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.u64 = r0.u64 / r1.u64;
     }
 
     void VM::umod8()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.u8 = r0.u8 % r1.u8;
     }
 
     void VM::umod16()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.u16 = r0.u16 % r1.u16;
     }
     
     void VM::umod32()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.u32 = r0.u32 % r1.u32;
     }
     
     void VM::umod64()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.u64 = r0.u64 % r1.u64;
     }
 
     void VM::uinc8()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.u8 = ++ r0.u8;
     }
 
     void VM::uinc16()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.u16 = ++ r0.u16;
     }
     
     void VM::uinc32()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.u32 = ++ r0.u32;
     }
     
     void VM::uinc64()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.u64 = ++ r0.u64;
     }
 
     void VM::udec8()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.u8 = -- r0.u8;
     }
 
     void VM::udec16()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.u16 = -- r0.u16;
     }
     
     void VM::udec32()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.u32 = -- r0.u32;
     }
     
     void VM::udec64()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.u64 = -- r0.u64;
     }
 
     void VM::ulst8()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.u8 = r0.u8 << r1.u8;
     }
 
     void VM::ulst16()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.u16 = r0.u16 << r1.u16;
     }
     
     void VM::ulst32()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.u32 = r0.u32 << r1.u32;
     }
     
     void VM::ulst64()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.u64 = r0.u64 << r1.u64;
     }
 
     void VM::urst8()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.u8 = r0.u8 >> r1.u8;
     }
 
     void VM::urst16()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.u16 = r0.u16 >> r1.u16;
     }
     
     void VM::urst32()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.u32 = r0.u32 >> r1.u32;
     }
     
     void VM::urst64()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.u64 = r0.u64 >> r1.u64;
     }
 
     void VM::ubnd8()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.u8 = r0.u8 & r1.u8;
     }
 
     void VM::ubnd16()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.u16 = r0.u16 & r1.u16;
     }
     
     void VM::ubnd32()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.u32 = r0.u32 & r1.u32;
     }
     
     void VM::ubnd64()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.u64 = r0.u64 & r1.u64;
     }
 
     void VM::ubor8()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.u8 = r0.u8 | r1.u8;
     }
 
     void VM::ubor16()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.u16 = r0.u16 | r1.u16;
     }
     
     void VM::ubor32()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.u32 = r0.u32 | r1.u32;
     }
     
     void VM::ubor64()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.u64 = r0.u64 | r1.u64;
     }
 
     void VM::uxor8()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.u8 = r0.u8 ^ r1.u8;
     }
 
     void VM::uxor16()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.u16 = r0.u16 ^ r1.u16;
     }
     
     void VM::uxor32()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.u32 = r0.u32 ^ r1.u32;
     }
     
     void VM::uxor64()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.u64 = r0.u64 ^ r1.u64;
     }
 
     void VM::ucml8()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.u8 = ~ r0.u8;
     }
 
     void VM::ucml16()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.u16 = ~ r0.u16;
     }
     
     void VM::ucml32()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.u32 = ~ r0.u32;
     }
     
     void VM::ucml64()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.u64 = ~ r0.u64;
     }
 
     void VM::ugrt8()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         m_Cmp[1] = m_Cmp[0];
         m_Cmp[0] = r0.u8 > r1.u8;
     }
 
     void VM::ugrt16()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         m_Cmp[1] = m_Cmp[0];
         m_Cmp[0] = r0.u16 > r1.u16;
     }
     
     void VM::ugrt32()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         m_Cmp[1] = m_Cmp[0];
         m_Cmp[0] = r0.u32 > r1.u32;
     }
     
     void VM::ugrt64()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         m_Cmp[1] = m_Cmp[0];
         m_Cmp[0] = r0.u64 > r1.u64;
     }
 
     void VM::ules8()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         m_Cmp[1] = m_Cmp[0];
         m_Cmp[0] = r0.u8 < r1.u8;
     }
 
     void VM::ules16()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         m_Cmp[1] = m_Cmp[0];
         m_Cmp[0] = r0.u16 < r1.u16;
     }
     
     void VM::ules32()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         m_Cmp[1] = m_Cmp[0];
         m_Cmp[0] = r0.u32 < r1.u32;
     }
     
     void VM::ules64()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         m_Cmp[1] = m_Cmp[0];
         m_Cmp[0] = r0.u64 < r1.u64;
     }
 
     void VM::ugre8()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         m_Cmp[1] = m_Cmp[0];
         m_Cmp[0] = r0.u8 >= r1.u8;
     }
 
     void VM::ugre16()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         m_Cmp[1] = m_Cmp[0];
         m_Cmp[0] = r0.u16 >= r1.u16;
     }
     
     void VM::ugre32()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         m_Cmp[1] = m_Cmp[0];
         m_Cmp[0] = r0.u32 >= r1.u32;
     }
     
     void VM::ugre64()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         m_Cmp[1] = m_Cmp[0];
         m_Cmp[0] = r0.u64 >= r1.u64;
     }
 
     void VM::ulse8()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         m_Cmp[1] = m_Cmp[0];
         m_Cmp[0] = r0.u8 <= r1.u8;
     }
 
     void VM::ulse16()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         m_Cmp[1] = m_Cmp[0];
         m_Cmp[0] = r0.u16 <= r1.u16;
     }
     
     void VM::ulse32()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         m_Cmp[1] = m_Cmp[0];
         m_Cmp[0] = r0.u32 <= r1.u32;
     }
     
     void VM::ulse64()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         m_Cmp[1] = m_Cmp[0];
         m_Cmp[0] = r0.u64 <= r1.u64;
     }
 
     void VM::uise8()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         m_Cmp[1] = m_Cmp[0];
         m_Cmp[0] = r0.u8 == r1.u8;
     }
 
     void VM::uise16()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         m_Cmp[1] = m_Cmp[0];
         m_Cmp[0] = r0.u16 == r1.u16;
     }
     
     void VM::uise32()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         m_Cmp[1] = m_Cmp[0];
         m_Cmp[0] = r0.u32 == r1.u32;
     }
     
     void VM::uise64()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         m_Cmp[1] = m_Cmp[0];
         m_Cmp[0] = r0.u64 == r1.u64;
     }
 
     void VM::uneq8()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         m_Cmp[1] = m_Cmp[0];
         m_Cmp[0] = r0.u8 != r1.u8;
     }
 
     void VM::uneq16()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         m_Cmp[1] = m_Cmp[0];
         m_Cmp[0] = r0.u16 != r1.u16;
     }
     
     void VM::uneq32()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         m_Cmp[1] = m_Cmp[0];
         m_Cmp[0] = r0.u32 != r1.u32;
     }
     
     void VM::uneq64()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         m_Cmp[1] = m_Cmp[0];
         m_Cmp[0] = r0.u64 != r1.u64;
     }
 
     void VM::iadd8()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.i8 = r0.i8 + r1.i8;
     }
 
     void VM::iadd16()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.i16 = r0.i16 + r1.i16;
     }
     
     void VM::iadd32()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.i32 = r0.i32 + r1.i32;
     }
     
     void VM::iadd64()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.i64 = r0.i64 + r1.i64;
     }
 
     void VM::isub8()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.i8 = r0.i8 - r1.i8;
     }
 
     void VM::isub16()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.i16 = r0.i16 - r1.i16;
     }
     
     void VM::isub32()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.i32 = r0.i32 - r1.i32;
     }
     
     void VM::isub64()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.i64 = r0.i64 - r1.i64;
     }
 
     void VM::imul8()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.i8 = r0.i8 * r1.i8;
     }
 
     void VM::imul16()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.i16 = r0.i16 * r1.i16;
     }
     
     void VM::imul32()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.i32 = r0.i32 * r1.i32;
     }
     
     void VM::imul64()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.i64 = r0.i64 * r1.i64;
     }
 
     void VM::idiv8()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.i8 = r0.i8 / r1.i8;
     }
 
     void VM::idiv16()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.i16 = r0.i16 / r1.i16;
     }
     
     void VM::idiv32()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.i32 = r0.i32 / r1.i32;
     }
     
     void VM::idiv64()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.i64 = r0.i64 / r1.i64;
     }
 
     void VM::imod8()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.i8 = r0.i8 % r1.i8;
     }
 
     void VM::imod16()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.i16 = r0.i16 % r1.i16;
     }
     
     void VM::imod32()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.i32 = r0.i32 % r1.i32;
     }
     
     void VM::imod64()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.i64 = r0.i64 % r1.i64;
     }
 
     void VM::iinc8()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.i8 = ++ r0.i8;
     }
 
     void VM::iinc16()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.i16 = ++ r0.i16;
     }
     
     void VM::iinc32()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.i32 = ++ r0.i32;
     }
     
     void VM::iinc64()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.i64 = ++ r0.i64;
     }
 
     void VM::idec8()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.i8 = -- r0.i8;
     }
 
     void VM::idec16()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.i16 = -- r0.i16;
     }
     
     void VM::idec32()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.i32 = -- r0.i32;
     }
     
     void VM::idec64()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.i64 = -- r0.i64;
     }
 
     void VM::ilst8()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.i8 = r0.i8 << r1.i8;
     }
 
     void VM::ilst16()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.i16 = r0.i16 << r1.i16;
     }
     
     void VM::ilst32()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.i32 = r0.i32 << r1.i32;
     }
     
     void VM::ilst64()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.i64 = r0.i64 << r1.i64;
     }
 
     void VM::irst8()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.i8 = r0.i8 >> r1.i8;
     }
 
     void VM::irst16()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.i16 = r0.i16 >> r1.i16;
     }
     
     void VM::irst32()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.i32 = r0.i32 >> r1.i32;
     }
     
     void VM::irst64()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.i64 = r0.i64 >> r1.i64;
     }
 
     void VM::ibnd8()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.i8 = r0.i8 & r1.i8;
     }
 
     void VM::ibnd16()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.i16 = r0.i16 & r1.i16;
     }
     
     void VM::ibnd32()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.i32 = r0.i32 & r1.i32;
     }
     
     void VM::ibnd64()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.i64 = r0.i64 & r1.i64;
     }
 
     void VM::ibor8()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.i8 = r0.i8 | r1.i8;
     }
 
     void VM::ibor16()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.i16 = r0.i16 | r1.i16;
     }
     
     void VM::ibor32()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.i32 = r0.i32 | r1.i32;
     }
     
     void VM::ibor64()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.i64 = r0.i64 | r1.i64;
     }
 
     void VM::ixor8()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.i8 = r0.i8 ^ r1.i8;
     }
 
     void VM::ixor16()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.i16 = r0.i16 ^ r1.i16;
     }
     
     void VM::ixor32()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.i32 = r0.i32 ^ r1.i32;
     }
     
     void VM::ixor64()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.i64 = r0.i64 ^ r1.i64;
     }
 
     void VM::icml8()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.i8 = ~ r0.i8;
     }
 
     void VM::icml16()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.i16 = ~ r0.i16;
     }
     
     void VM::icml32()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.i32 = ~ r0.i32;
     }
     
     void VM::icml64()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.i64 = ~ r0.i64;
     }
 
     void VM::igrt8()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         m_Cmp[1] = m_Cmp[0];
         m_Cmp[0] = r0.i8 > r1.i8;
     }
 
     void VM::igrt16()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         m_Cmp[1] = m_Cmp[0];
         m_Cmp[0] = r0.i16 > r1.i16;
     }
     
     void VM::igrt32()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         m_Cmp[1] = m_Cmp[0];
         m_Cmp[0] = r0.i32 > r1.i32;
     }
     
     void VM::igrt64()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         m_Cmp[1] = m_Cmp[0];
         m_Cmp[0] = r0.i64 > r1.i64;
     }
 
     void VM::iles8()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         m_Cmp[1] = m_Cmp[0];
         m_Cmp[0] = r0.i8 < r1.i8;
     }
 
     void VM::iles16()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         m_Cmp[1] = m_Cmp[0];
         m_Cmp[0] = r0.i16 < r1.i16;
     }
     
     void VM::iles32()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         m_Cmp[1] = m_Cmp[0];
         m_Cmp[0] = r0.i32 < r1.i32;
     }
     
     void VM::iles64()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         m_Cmp[1] = m_Cmp[0];
         m_Cmp[0] = r0.i64 < r1.i64;
     }
 
     void VM::igre8()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         m_Cmp[1] = m_Cmp[0];
         m_Cmp[0] = r0.i8 >= r1.i8;
     }
 
     void VM::igre16()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         m_Cmp[1] = m_Cmp[0];
         m_Cmp[0] = r0.i16 >= r1.i16;
     }
     
     void VM::igre32()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         m_Cmp[1] = m_Cmp[0];
         m_Cmp[0] = r0.i32 >= r1.i32;
     }
     
     void VM::igre64()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         m_Cmp[1] = m_Cmp[0];
         m_Cmp[0] = r0.i64 >= r1.i64;
     }
 
     void VM::ilse8()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         m_Cmp[1] = m_Cmp[0];
         m_Cmp[0] = r0.i8 <= r1.i8;
     }
 
     void VM::ilse16()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         m_Cmp[1] = m_Cmp[0];
         m_Cmp[0] = r0.i16 <= r1.i16;
     }
     
     void VM::ilse32()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         m_Cmp[1] = m_Cmp[0];
         m_Cmp[0] = r0.i32 <= r1.i32;
     }
     
     void VM::ilse64()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         m_Cmp[1] = m_Cmp[0];
         m_Cmp[0] = r0.i64 <= r1.i64;
     }
 
     void VM::iise8()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         m_Cmp[1] = m_Cmp[0];
         m_Cmp[0] = r0.i8 == r1.i8;
     }
 
     void VM::iise16()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         m_Cmp[1] = m_Cmp[0];
         m_Cmp[0] = r0.i16 == r1.i16;
     }
     
     void VM::iise32()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         m_Cmp[1] = m_Cmp[0];
         m_Cmp[0] = r0.i32 == r1.i32;
     }
     
     void VM::iise64()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         m_Cmp[1] = m_Cmp[0];
         m_Cmp[0] = r0.i64 == r1.i64;
     }
 
     void VM::ineq8()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         m_Cmp[1] = m_Cmp[0];
         m_Cmp[0] = r0.i8 != r1.i8;
     }
 
     void VM::ineq16()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         m_Cmp[1] = m_Cmp[0];
         m_Cmp[0] = r0.i16 != r1.i16;
     }
     
     void VM::ineq32()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         m_Cmp[1] = m_Cmp[0];
         m_Cmp[0] = r0.i32 != r1.i32;
     }
     
     void VM::ineq64()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         m_Cmp[1] = m_Cmp[0];
         m_Cmp[0] = r0.i64 != r1.i64;
     } 
 
     void VM::fadd32()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.f32 = r0.f32 + r1.f32;
     }
     
     void VM::fadd64()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.f64 = r0.f64 + r1.f64;
     }
 
     void VM::fsub32()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.f32 = r0.f32 - r1.f32;
     }
     
     void VM::fsub64()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.f64 = r0.f64 - r1.f64;
     }
 
     void VM::fmul32()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.f32 = r0.f32 * r1.f32;
     }
     
     void VM::fmul64()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.f64 = r0.f64 * r1.f64;
     }
 
     void VM::fdiv32()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.f32 = r0.f32 / r1.f32;
     }
     
     void VM::fdiv64()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.f64 = r0.f64 / r1.f64;
     }
     
     void VM::finc32()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.f32 = ++ r0.f32;
     }
     
     void VM::finc64()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.f64 = ++ r0.f64;
     }
 
     void VM::fdec32()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.f32 = -- r0.f32;
     }
     
     void VM::fdec64()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         r0.f64 = -- r0.f64;
     }
 
     void VM::fgrt32()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         m_Cmp[1] = m_Cmp[0];
         m_Cmp[0] = r0.f32 > r1.f32;
     }
     
     void VM::fgrt64()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         m_Cmp[1] = m_Cmp[0];
         m_Cmp[0] = r0.f64 > r1.f64;
     }
 
     void VM::fles32()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         m_Cmp[1] = m_Cmp[0];
         m_Cmp[0] = r0.f32 < r1.f32;
     }
     
     void VM::fles64()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         m_Cmp[1] = m_Cmp[0];
         m_Cmp[0] = r0.f64 < r1.f64;
     }
 
     void VM::fgre32()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         m_Cmp[1] = m_Cmp[0];
         m_Cmp[0] = r0.f32 >= r1.f32;
     }
     
     void VM::fgre64()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         m_Cmp[1] = m_Cmp[0];
         m_Cmp[0] = r0.f64 >= r1.f64;
     }
 
     void VM::flse32()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         m_Cmp[1] = m_Cmp[0];
         m_Cmp[0] = r0.f32 <= r1.f32;
     }
     
     void VM::flse64()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         m_Cmp[1] = m_Cmp[0];
         m_Cmp[0] = r0.f64 <= r1.f64;
     }
 
     void VM::fise32()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         m_Cmp[1] = m_Cmp[0];
         m_Cmp[0] = r0.f32 == r1.f32;
     }
     
     void VM::fise64()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         m_Cmp[1] = m_Cmp[0];
         m_Cmp[0] = r0.f64 == r1.f64;
     }
 
     void VM::fneq32()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         m_Cmp[1] = m_Cmp[0];
         m_Cmp[0] = r0.f32 != r1.f32;
     }
     
     void VM::fneq64()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         m_Cmp[1] = m_Cmp[0];
         m_Cmp[0] = r0.f64 != r1.f64;
     }
 
     void VM::mov8()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         uint8_t bytes[1];
         
         memcpy((uint8_t *)bytes, &m_Code[m_IP + 1], 1);
@@ -1624,7 +1631,7 @@ namespace Falcon
 
     void VM::mov16()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         uint8_t bytes[2];
         
         memcpy((uint8_t *)bytes, &m_Code[m_IP + 1], 2);
@@ -1637,7 +1644,7 @@ namespace Falcon
     
     void VM::mov32()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         uint8_t bytes[4];
         
         memcpy((uint8_t *)bytes, &m_Code[m_IP + 1], 4);
@@ -1650,7 +1657,7 @@ namespace Falcon
     
     void VM::mov64()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         uint8_t bytes[8];
         
         memcpy((uint8_t *)bytes, &m_Code[m_IP + 1], 8);
@@ -1663,82 +1670,82 @@ namespace Falcon
 
     void VM::mvr8()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
 
         r0.u8 = r1.u8;
     }
 
     void VM::mvr16()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
 
         r0.u16 = r1.u16;
     }
     
     void VM::mvr32()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
 
         r0.u32 = r1.u32;
     }
     
     void VM::mvr64()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        Register & r1 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r1 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
 
         r0.u64 = r1.u64;
     }
 
     void VM::psh8()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        push((uint8_t *)&r0.u8, 1);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Push((uint8_t *)&r0.u8, 1);
     }
     
     void VM::psh16()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        push((uint8_t *)&r0.u16, 2);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Push((uint8_t *)&r0.u16, 2);
     }
     
     void VM::psh32()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        push((uint8_t *)&r0.u32, 4);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Push((uint8_t *)&r0.u32, 4);
     }
     
     void VM::psh64()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        push((uint8_t *)&r0.u64, 8);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Push((uint8_t *)&r0.u64, 8);
     }
 
     void VM::pop8()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        r0.u8 = *(uint8_t *)pop(1);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        r0.u8 = *(uint8_t *)Pop(1);
     }
     
     void VM::pop16()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        r0.u16 = *(uint16_t *)pop(2);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        r0.u16 = *(uint16_t *)Pop(2);
     }
     
     void VM::pop32()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        r0.u32 = *(uint32_t *)pop(4);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        r0.u32 = *(uint32_t *)Pop(4);
     }
     
     void VM::pop64()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
-        r0.u64 = *(uint64_t *)pop(8);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        r0.u64 = *(uint64_t *)Pop(8);
     }
     
     void VM::pshstr()
@@ -1747,10 +1754,10 @@ namespace Falcon
 
         while ((c = (char)m_Code[++m_IP]) != '\0')
         {
-            push((uint8_t *)&c, 1);
+            Push((uint8_t *)&c, 1);
         }
 
-        push((uint8_t *)&c, 1);
+        Push((uint8_t *)&c, 1);
     }
 
     void VM::lnd()
@@ -1770,15 +1777,15 @@ namespace Falcon
     
     void VM::load8()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         
-        memcpy((uint8_t *)&r0, &m_Stack[m_FP + *(uint32_t *)&m_Code[++m_IP]], 1);
+        r0.u8 = m_Stack[m_FP + *(uint32_t *)&m_Code[++m_IP]];
         m_IP += 3;
     }
 
     void VM::load16()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         uint32_t offset = *(uint32_t *)&m_Code[++m_IP];
 
         Endian::LittleToSystem(offset);
@@ -1790,7 +1797,7 @@ namespace Falcon
 
     void VM::load32()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         uint32_t offset = *(uint32_t *)&m_Code[++m_IP];
 
         Endian::LittleToSystem(offset);
@@ -1802,7 +1809,7 @@ namespace Falcon
 
     void VM::load64()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         uint32_t offset = *(uint32_t *)&m_Code[++m_IP];
 
         Endian::LittleToSystem(offset);
@@ -1814,12 +1821,71 @@ namespace Falcon
 
     void VM::lodref()
     {
-        Register & r0 = getRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
         uint32_t offset = *(uint32_t *)&m_Code[++m_IP];
 
         Endian::LittleToSystem(offset);
 
         uint64_t address = (uint64_t)&m_Stack[m_FP + offset];
+
+        m_IP += 3;
+
+        memcpy((uint8_t *)&r0, &address, 8);
+    }
+
+    void VM::glod8()
+    {
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        uint32_t offset = *(uint32_t *)&m_Code[++m_IP];
+
+        Endian::LittleToSystem(offset);
+
+        r0.u8 = m_GlobalSpace[offset];
+        m_IP += 3;
+    }
+
+    void VM::glod16()
+    {
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        uint32_t offset = *(uint32_t *)&m_Code[++m_IP];
+
+        Endian::LittleToSystem(offset);
+
+        memcpy(&r0.u16, &m_GlobalSpace[offset], 2);
+        m_IP += 3;
+
+    }
+    
+    void VM::glod32()
+    {
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        uint32_t offset = *(uint32_t *)&m_Code[++m_IP];
+
+        Endian::LittleToSystem(offset);
+
+        memcpy(&r0.u32, &m_GlobalSpace[offset], 4);
+        m_IP += 3;
+    }
+
+    void VM::glod64()
+    {
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        uint32_t offset = *(uint32_t *)&m_Code[++m_IP];
+
+        Endian::LittleToSystem(offset);
+
+        memcpy(&r0.u64, &m_GlobalSpace[offset], 8);
+        m_IP += 3;
+    }
+
+    void VM::glodref()
+    {
+        Register & r0 = GetRegister((RegisterType::RegisterType)m_Code[++m_IP]);
+        uint32_t offset = *(uint32_t *)&m_Code[++m_IP];
+
+        Endian::LittleToSystem(offset);
+
+        uint64_t address = (uint64_t)&m_GlobalSpace[m_FP + offset];
 
         m_IP += 3;
 
@@ -1840,7 +1906,7 @@ namespace Falcon
     void VM::popnul()
     {
         uint32_t size = *(uint32_t *)&m_Code[++m_IP];
-        pop(size);
+        Pop(size);
 
         m_IP += 3;
     }
@@ -1888,7 +1954,7 @@ namespace Falcon
 
         uint8_t * args = new uint8_t[argsSize];
 
-        memcpy(args, pop(argsSize), argsSize);
+        memcpy(args, Pop(argsSize), argsSize);
 
         std::string name;
 
@@ -1899,13 +1965,13 @@ namespace Falcon
 
         uint64_t returnIP = m_IP;
 
-        push((uint8_t *)&m_SP, 8);
-        push((uint8_t *)&returnIP, 8);
-        push((uint8_t *)&m_FP, 8);
+        Push((uint8_t *)&m_SP, 8);
+        Push((uint8_t *)&returnIP, 8);
+        Push((uint8_t *)&m_FP, 8);
 
         m_FP = m_SP;
 
-        push(args, argsSize);
+        Push(args, argsSize);
 
         delete[] args;
 
@@ -1936,15 +2002,15 @@ namespace Falcon
         
         Endian::LittleToSystem(retSize);
 
-        uint8_t * retData = pop(retSize);
+        uint8_t * retData = Pop(retSize);
 
         m_SP = m_FP;
 
-        m_FP = *(uint64_t *)pop(8);
-        m_IP = *(uint64_t *)pop(8);
-        m_SP = *(uint64_t *)pop(8);
+        m_FP = *(uint64_t *)Pop(8);
+        m_IP = *(uint64_t *)Pop(8);
+        m_SP = *(uint64_t *)Pop(8);
 
-        push(retData, retSize);
+        Push(retData, retSize);
 
         if (m_FP == 0)
         {
@@ -1952,20 +2018,25 @@ namespace Falcon
         }
     }
     
-    void VM::push(uint8_t * data, uint64_t size)
+    void VM::Push(uint8_t * data, uint64_t size)
     {
         memcpy(&m_Stack[m_SP], data, size);
         m_SP += size;
     }
 
-    uint8_t * VM::pop(uint64_t size)
+    uint8_t * VM::Pop(uint64_t size)
     {
         m_SP -= size;
 
         return &m_Stack[m_SP];
     }
 
-    std::unordered_map<int, std::function<void(int)>> VM::getSignalHandlers()
+    uint8_t * VM::GetGlobalData(uint64_t offset)
+    {
+        return &m_GlobalSpace[offset];
+    }
+
+    std::unordered_map<int, std::function<void(int)>> VM::GetSignalHandlers()
     {
         return
         {
@@ -1974,7 +2045,7 @@ namespace Falcon
                 [this](int signal)
                 {
                     std::cout<<(Common::Colors::Red | Common::Colors::Bold)<<"Runtime Error:"<<Common::Colors::White<<" Aborted.\n";
-                    dumpState();
+                    DumpState();
                     exit(SIGABRT);
                 }
             },
@@ -1983,7 +2054,7 @@ namespace Falcon
                 [this](int signal)
                 {
                     std::cout<<(Common::Colors::Red | Common::Colors::Bold)<<"Runtime Error:"<<Common::Colors::White<<" Illegal CPU Instruction.\n";
-                    dumpState();
+                    DumpState();
                     exit(SIGILL);
                 }
             },
@@ -2000,7 +2071,7 @@ namespace Falcon
                 [this](int signal)
                 {
                     std::cout<<(Common::Colors::Red | Common::Colors::Bold)<<"Runtime Error:"<<Common::Colors::White<<" Floating point exception.\n";
-                    dumpState();
+                    DumpState();
                     exit(SIGFPE);
                 }
             },
@@ -2009,7 +2080,7 @@ namespace Falcon
                 [this](int signal)
                 {
                     std::cout<<(Common::Colors::Red | Common::Colors::Bold)<<"Runtime Error:"<<Common::Colors::White<<" Segmentation fault.\n";
-                    dumpState();
+                    DumpState();
                     exit(SIGSEGV);
                 }
             },
@@ -2024,7 +2095,7 @@ namespace Falcon
         };
     }
 
-    void VM::externalFunction(const std::string & name, std::function<void(VM&)> function)
+    void VM::ExternalFunction(const std::string & name, std::function<void(VM&)> function)
     {
         if (m_ExternalFunctions.count(name) == 0)
         {
@@ -2032,23 +2103,23 @@ namespace Falcon
         }
     }
 
-    void VM::run(std::string function, uint64_t argsSize)
+    void VM::Run(const std::string & function, uint64_t argsSize)
     {
         m_IP = m_Functions[function] + 1;
 
         uint8_t * args = new uint8_t[argsSize];
 
-        memcpy(args, pop(argsSize), argsSize);
+        memcpy(args, Pop(argsSize), argsSize);
 
         uint64_t returnIP = 0;
 
-        push((uint8_t *)&m_SP, 8);
-        push((uint8_t *)&returnIP, 8);
-        push((uint8_t *)&m_FP, 8);
+        Push((uint8_t *)&m_SP, 8);
+        Push((uint8_t *)&returnIP, 8);
+        Push((uint8_t *)&m_FP, 8);
 
         m_FP = m_SP;
 
-        push(args, argsSize);
+        Push(args, argsSize);
 
         delete[] args;
 

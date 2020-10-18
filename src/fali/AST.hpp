@@ -1,11 +1,9 @@
 #ifndef FALCON_FALI_AST_HPP
 #define FALCON_FALI_AST_HPP
 
-#include <string>
-#include <unordered_map>
-#include <vector>
+#include "common/Common.hpp"
 
-#include <cstdint>
+#include "fali/Types.hpp"
 
 namespace Falcon
 {
@@ -13,124 +11,132 @@ namespace Falcon
     {
         struct ASTNode
         {
+            uint64_t LineNumber;
+
             virtual ~ASTNode() = default;
         };
-
+        
         struct LiteralNode : public ASTNode
         {
-            enum LiteralType
-            {
-                BOOL,
-                UINT8,
-                UINT16,
-                UINT32,
-                UINT64,
-                INT8,
-                INT16,
-                INT32,
-                INT64,
-                FLOAT32,
-                FLOAT64
-            } Type;
+            std::optional<bool>     Boolean;
+            std::optional<uint64_t> Whole;
+            std::optional<int64_t>  Integer;
+            std::optional<double>   Real;
 
-            union
-            {
-                bool Bool;
-                uint8_t U8;
-                uint16_t U16;
-                uint32_t U32;
-                uint64_t U64;
-                int8_t I8;
-                int16_t I16;
-                int32_t I32;
-                int64_t I64;
-                float F32;
-                double F64;
-            };
-
-            LiteralNode(bool b);
-            LiteralNode(uint8_t u8);
-            LiteralNode(uint16_t u16);
-            LiteralNode(uint32_t u32);
-            LiteralNode(uint64_t u64);
-            LiteralNode(int8_t i8);
-            LiteralNode(int16_t i16);
-            LiteralNode(int32_t i32);
-            LiteralNode(int64_t i64);
-            LiteralNode(float f32);
-            LiteralNode(double f64);
-        };
-
-        struct TypeNode : public ASTNode
-        {
-            std::string TypeName;
-
-            TypeNode(const std::string & typeName);
+            LiteralNode(bool b, uint64_t line = 0);
+            LiteralNode(uint64_t u64, uint64_t line = 0);
+            LiteralNode(int64_t i64, uint64_t line = 0);
+            LiteralNode(double f64, uint64_t line = 0);
         };
 
         struct VariableNode : public ASTNode
         {
             std::string Name;
-            TypeNode    Type;
+            DataType    Type;
 
-            VariableNode(const std::string & name, const std::string & type);
+            VariableNode() = default;
+            VariableNode(const std::string & name, const DataType & type, uint64_t line = 0);
+            VariableNode(const std::string & name, const std::string & type, const TypeFlag & flags = 0, uint64_t line = 0);
+        };
+
+        struct OperatorNode;
+
+        struct ValueNode : public ASTNode
+        {
+            std::optional<LiteralNode> Literal;
+            std::optional<VariableNode> Variable;
+            std::optional<OperatorNode *> Operator;
+
+            ValueNode() = default;
+            explicit ValueNode(LiteralNode literal, uint64_t line = 0);
+            explicit ValueNode(VariableNode variable, uint64_t line = 0);
+            explicit ValueNode(OperatorNode * op, uint64_t line = 0);
         };
 
         struct OperatorNode : public ASTNode
         {
-            enum OpType
-            {
-                // Binary Operators
-                AR_ADD,
-                AR_SUBTRACT,
-                AR_MULTIPLY,
-                AR_DIVIDE,
-                AR_MODULUS,
-                BIT_LEFT_SHIFT,
-                BIT_RIGHT_SHIFT,
-                BIT_AND,
-                BIT_OR,
-                BIT_XOR,
-                CMP_GREATER,
-                CMP_GREATER_OR_EQUAL,
-                CMP_LESS,
-                CMP_LESS_OR_EQUAL,
-                CMP_IS_EQUAL,
-                CMP_NOT_EQUAL,
-                LOGICAL_AND,
-                LOGICAL_OR,
-                DECLARE,
-                ASSIGNMENT,
-                
-                // Unary Operators
-                BIT_COMPLEMENT,
-                LOGICAL_NOT,
-            } Type;
+            bool Binary;
+
+            char Type;
             
-            ASTNode * Left;
-            ASTNode * Right;
+            std::optional<ValueNode> Left;
+            std::optional<ValueNode> Right;
 
-            OperatorNode(OpType type, ASTNode * Left, ASTNode * Right);
+            explicit OperatorNode(char type, uint64_t line = 0);
+            OperatorNode(char type, ValueNode Left, uint64_t line = 0);
+            OperatorNode(char type, ValueNode Left, ValueNode Right, uint64_t line = 0);
+        };
 
-            constexpr bool IsBinary() { return Left && Right; }
-            constexpr bool IsUnary() { return Left && !Right; } 
+        struct StatementNode;
+
+        struct IfNode : public ASTNode
+        {
+            OperatorNode Condition;
+            std::vector<StatementNode> Statements;
+
+            explicit IfNode(OperatorNode condition, uint64_t line = 0);
+        };
+
+        struct ElseNode : public ASTNode
+        {
+            std::vector<StatementNode> Statements;
+        };
+
+        struct WhileNode : public ASTNode
+        {
+            OperatorNode Condition;
+            std::vector<StatementNode> Statements;
+
+            explicit WhileNode(OperatorNode condition, uint64_t line = 0);
+        };
+
+        struct StatementNode : public ASTNode
+        {
+            std::optional<OperatorNode> Operator;
+            std::optional<IfNode>       IfBlock;
+            std::optional<ElseNode>     ElseBlock;
+            std::optional<WhileNode>    WhileBlock;
+
+            explicit StatementNode(OperatorNode operatorNode, uint64_t line = 0);
+            explicit StatementNode(IfNode ifBlock, uint64_t line = 0);
+            explicit StatementNode(ElseNode elseBlock, uint64_t line = 0);
+            explicit StatementNode(WhileNode whileBlock, uint64_t line = 0);
         };
 
         struct FunctionNode : public ASTNode
         {
-            TypeNode    ReturnType;
+            DataType    ReturnType;
             std::string Name;
-            std::vector<TypeNode> ParameterTypes;
+            std::vector<std::pair<DataType, std::string>> Params;
             
-            std::unordered_map<std::string, VariableNode> LocalVariables;
-            std::vector<OperatorNode> Statements;
+            std::map<std::string, VariableNode> LocalVariables;
+            std::vector<StatementNode> Statements;
 
-            FunctionNode(const std::string & retType, const std::string & name, std::vector<TypeNode> ParameterTypes);
+            FunctionNode(const DataType & retType, const std::string & name, const std::vector<std::pair<DataType, std::string>> & params, uint64_t line = 0);
+            FunctionNode(const std::string & retType, const std::string & name, const std::vector<std::pair<DataType, std::string>> & params, const TypeFlag & retTypeFlags = 0, uint64_t line = 0);
+
+            std::string GetSignature();
+        };
+
+        struct ClassNode : public ASTNode
+        {
+            std::string Name;
+
+            std::vector<VariableNode> PublicMemberVariables;
+            std::vector<VariableNode> ProtectedMemberVariables;
+            std::vector<VariableNode> PrivateMemberVariables;
+
+            std::vector<FunctionNode> PublicMemberFunctions;
+            std::vector<FunctionNode> ProtectedMemberFunctions;
+            std::vector<FunctionNode> PrivateMemberFunctions;
+
+            ClassNode(const std::string & name, uint64_t line = 0);
         };
 
         struct ModuleNode : public ASTNode
         {
-            std::vector<FunctionNode> Functions;
+            std::vector<ClassNode>      Classes;
+            std::vector<FunctionNode>   Functions;
         };
     }
 }

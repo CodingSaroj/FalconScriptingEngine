@@ -1,10 +1,7 @@
 #ifndef FALCON_OPCODE_HPP
 #define FALCON_OPCODE_HPP
 
-#include <string>
-#include <vector>
-
-#include <cstdint>
+#include "common/Common.hpp"
 
 namespace Falcon
 {
@@ -82,6 +79,9 @@ namespace Falcon
 
             LOAD8,  LOAD16, LOAD32, LOAD64,
             LODREF,
+
+            GLOD8, GLOD16, GLOD32, GLOD64,
+            GLODREF,
 
             PSHNUL, POPNUL,
 

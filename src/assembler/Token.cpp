@@ -4,33 +4,53 @@ namespace Falcon
 {
     namespace Assembler
     {
-        Token::Token(TokenType type)
-            : Type(type)
+        Token::Token(uint64_t line, SectionType sect)
+            : LineNumber(line), Section(sect)
         {
         }
 
-        Token::Token(TokenType type, std::string value)
-            : Type(type), Str(value)
+        Token::Token(uint64_t line, const InstructionType & inst)
+            : LineNumber(line), Instruction(inst)
+        {
+        }
+
+        Token::Token(uint64_t line, const RegisterType & reg)
+            : LineNumber(line), Register(reg)
         {
         }
         
-        Token::Token(TokenType type, char value)
-            : Type(type), Char(value)
+        Token::Token(uint64_t line, char value)
+            : LineNumber(line), Char(value)
         {
         }
 
-        Token::Token(TokenType type, uint64_t value)
-            : Type(type), Uint(value)
+        Token::Token(uint64_t line, uint64_t value)
+            : LineNumber(line), Uint(value)
         {
         }
 
-        Token::Token(TokenType type, int64_t value)
-            : Type(type), Int(value)
+        Token::Token(uint64_t line, int64_t value)
+            : LineNumber(line), Int(value)
         {
         }
 
-        Token::Token(TokenType type, double value)
-            : Type(type), Float(value)
+        Token::Token(uint64_t line, double value)
+            : LineNumber(line), Float(value)
+        {
+        }
+
+        Token::Token(uint64_t line, const std::string & value)
+            : LineNumber(line), Str(value)
+        {
+        }
+
+        Token::Token(uint64_t line, ArbitaroryType arbitarory)
+            : LineNumber(line), Arbitarory(arbitarory)
+        {
+        }
+
+        Token::Token(uint64_t line, NewLineType newline)
+            : LineNumber(line), NewLine(newline)
         {
         }
     }

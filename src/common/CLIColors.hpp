@@ -1,12 +1,7 @@
 #ifndef FALCON_COMMON_CLI_COLORS_HPP
 #define FALCON_COMMON_CLI_COLORS_HPP
 
-#include <bitset>
-#include <iostream>
-
-#ifdef _WIN32
-    #include <Windows.h>
-#endif
+#include "common/Common.hpp"
 
 namespace Falcon
 {

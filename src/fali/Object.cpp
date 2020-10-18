@@ -59,7 +59,7 @@ namespace Falcon
         Object::Object(const std::string & type, const std::string & constructor, std::vector<void *> args)
             : m_Temparory(false), m_ObjectType(type), m_ObjectData(&s_ObjectTypes[type]), m_Data((uint8_t *)ObjectSpace::New(s_ObjectTypes[type].Size))
         {
-            memcpy(m_Data, Function::Get(constructor).call(args), m_ObjectData->Size);
+            memcpy(m_Data, Function::Get(constructor).Call(args), m_ObjectData->Size);
         }
 
         Object::~Object()
@@ -70,7 +70,7 @@ namespace Falcon
             }
         }
         
-        Object Object::callStatic(const std::string & retType, const std::string & function, std::vector<void *> args)
+        Object Object::CallStatic(const std::string & retType, const std::string & function, std::vector<void *> args)
         {
             std::vector<std::string> names;
             names.reserve(args.size());
@@ -78,19 +78,19 @@ namespace Falcon
             for (auto & arg : args)
             {
                 names.emplace_back(((Object *)arg)->m_ObjectType);
-                arg = ((Object *)arg)->self();
+                arg = ((Object *)arg)->Self();
             }
 
             Function & func = Function::Get(MangleFunction(function, names));
             
-            return Object(retType, func.call(args));
+            return Object(retType, func.Call(args));
         }
 
-        Object Object::callMember(const std::string & retType, const std::string & function, std::vector<void *> args)
+        Object Object::CallMember(const std::string & retType, const std::string & function, std::vector<void *> args)
         {
             args.emplace(args.begin(), (void *)this);
 
-            return callStatic(retType, function, args);
+            return CallStatic(retType, function, args);
         }
     }
 }

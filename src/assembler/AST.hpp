@@ -1,13 +1,10 @@
 #ifndef FALCON_ASM_AST_HPP
 #define FALCON_ASM_AST_HPP
 
-#include <algorithm>
-#include <string>
-#include <vector>
-
-#include <cstdint>
-
+#include "common/Common.hpp"
 #include "common/Register.hpp"
+
+#include "assembler/Token.hpp"
 
 namespace Falcon
 {
@@ -16,38 +13,34 @@ namespace Falcon
         struct ASTNode
         {
             uint64_t Line;
-            uint64_t Character;
 
             virtual ~ASTNode() = default;
         };
 
         struct AtomNode : public ASTNode
         {
-            enum struct AtomType
+            union UnionType
             {
-                IDENTIFIER,
-                REGISTER,
-                CHAR,
-                UINT,
-                INT,
-                FLOAT
-            } Type;
-
-            union
-            {
-                char     Char;
-                uint64_t Uint;
-                int64_t  Int;
-                double   Float;
+                char        Char;
+                uint64_t    Uint;
+                int64_t     Int;
+                double      Float;
             };
 
-            std::string Str;
+            std::optional<char>                 Char;
+            std::optional<uint64_t>             Uint;
+            std::optional<int64_t>              Int;
+            std::optional<double>               Float;
+            std::optional<std::string>          Str;
+            std::optional<Token::RegisterType>  Register;
 
-            AtomNode(const std::string & str);
             AtomNode(char data);
             AtomNode(uint64_t data);
             AtomNode(int64_t data);
             AtomNode(double data);
+            AtomNode(const std::string & str);
+
+            UnionType GetUnion();
         };
 
         struct InstructionNode : public ASTNode

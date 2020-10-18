@@ -1,12 +1,7 @@
 #ifndef FALCON_FALI_FUNCTION_HPP
 #define FALCON_FALI_FUNCTION_HPP
 
-#include <functional>
-#include <string>
-#include <unordered_map>
-#include <vector>
-
-#include <cstdint>
+#include "common/Common.hpp"
 
 namespace Falcon
 {
@@ -47,7 +42,7 @@ namespace Falcon
 
             Function(FunctionType function);
 
-            void * call(std::vector<void *> args);
+            void * Call(std::vector<void *> args);
             
             static void AddFunction(const std::string & retType, const std::string & name, std::vector<std::string> paramTypes);
             static void AddFunction(const std::string & retType, const std::string & name, std::vector<std::string> paramTypes, Function base);
@@ -57,7 +52,8 @@ namespace Falcon
             static inline bool IsValid(const std::string & name) { return s_Functions.count(name) != 0; }
 
             static inline Function & Get(const std::string & name) { return *s_Functions[name].Base; }
-            static inline Iterable   GetIterable() { return Iterable(); }
+            static inline Iterable GetIterable() { return Iterable(); }
+
         private:
             static std::unordered_map<std::string, FunctionData> s_Functions;
 

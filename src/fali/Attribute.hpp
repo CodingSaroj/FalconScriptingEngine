@@ -1,10 +1,7 @@
 #ifndef FALCON_FALI_ATTRIBUTE_HPP
 #define FALCON_FALI_ATTRIBUTE_HPP
 
-#include <algorithm>
-#include <string>
-#include <unordered_map>
-#include <vector>
+#include "common/Common.hpp"
 
 namespace Falcon
 {

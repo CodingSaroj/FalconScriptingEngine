@@ -1,39 +1,43 @@
+; This program prints "Hello World" to the stdout.
+
+; All sections are mandatory even if they are empty.
+
+; code section
 sect code:
     main#uint32#ptr#:
     .main#uint32#ptr#:
-        mov8 r1 0x0
-        psh64 r1
-        extrn initGlobalMemory
-        
-        pshstr "Hello\tWorld!\n\n\\\d\q"
-        lodref r1 0x0C
-        psh64 r1
+        pshstr "Hello World!\n" ; push the string to the stack
+        lodref r1 0x0C          ; get pointer to the string
+        psh64 r1                ; push the pointer
 
         mov8 r2 0x01
-        psh64 r2
+        psh64 r2    ; push count
 
-        mov8 r2 0x11
-        psh64 r2
+        mov8 r2 0x0D
+        psh64 r2    ; push size (bytes)
 
-        mov8 r2 0x08
-        psh64 r2
-        extrn getGlobalAddress
-        pop64 r2
-        psh64 @r2
+        glod64 r2 0x08  ; get the stdout handle
+        psh64 r2        ; push the handle
  
-        extrn fwrite
+        extrn fwrite    ; call fwrite
 
-        popnul 0x04
-        ret 0x04
+        popnul 0x04 ; pop last 4 bytes of return value of fwrite
+        ret 0x04    ; return 4 bytes
 
+
+; debug section is only generated when -dbg or --debug is passed to fasm
 sect debug:
     main#uint32#ptr#:
+        ; signature and function limits
         meta "int32 main(uint32 argc, ptr argv)" 0x01 0x14
 
+        ; local variables
         local "argc" "uint32" 0x00
         local "argv" "ptr" 0x04
 
-        ;map 0x01 0x03 "    return fwrite("Hello World!\n", 1, 14, stdout);"
+        ; line data
+        map 0x01 0x03 "    return fwrite(\dHello World!\\n\d, 1, 13, stdout);"
     
+; reflection section
 sect reflection:
-    function int32 main ( uint32 , ptr )
+    function int32 main(uint32, ptr)

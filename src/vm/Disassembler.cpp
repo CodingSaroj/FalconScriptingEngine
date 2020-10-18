@@ -6,11 +6,11 @@ namespace Falcon
     {
         std::string regStr;
 
-        if (reg & 0b00001000)
+        if (reg & 0b00100000)
         {
             regStr = "[" + RegisterType::s_Names[reg & 0b00000011] + "]";
         }
-        else if (reg & 0b00000100)
+        else if (reg & 0b00010000)
         {
             regStr = "@" + RegisterType::s_Names[reg & 0b00000011];
         }
@@ -102,7 +102,7 @@ namespace Falcon
 
                 disassembly += " " + std::to_string(num);
             }
-            else if (op == OpCode::MOV32 || (op >= OpCode::LOAD8 && op <= OpCode::LODREF))
+            else if (op == OpCode::MOV32 || (op >= OpCode::LOAD8 && op <= OpCode::GLODREF))
             {
                 uint32_t num = *(uint32_t *)&code[++ip];
                 ip += 3;

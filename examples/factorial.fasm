@@ -1,44 +1,54 @@
+; This program calculates the factorial of the number of command-line arguments
+; passed to the program.
+
+; All sections are mandatory even if they are empty.
+
+; code section
 sect code:
     factorial#uint64#:
     .factorial#uint64#_start:
         mov64 r1 0x1
-        psh64 r1
-        psh64 r1
-        lodref r1 0x10
-        lodref r2 0x08
-        lodref r3 0x00
+        psh64 r1        ; push result
+        psh64 r1        ; push i
+
+        lodref r1 0x10  ; load i
+        lodref r2 0x08  ; load result
+        lodref r3 0x00  ; load value
 
     .factorial#uint64#_cmp:
-        ulse64 @r1 @r3
-        jmt factorial#uint64#_loop
-        popnul 0x08
-        ret 0x08
+        ulse64 @r1 @r3              ; i <= value
+        jmt factorial#uint64#_loop  ; got to loop
+        popnul 0x08                 ; pop i
+        ret 0x08                    ; return result (8 bytes)
 
     .factorial#uint64#_loop:
-        umul64 @r2 @r1
-        uinc64 @r1
-        jmp factorial#uint64#_cmp
+        umul64 @r2 @r1  ; result *= i
+        uinc64 @r1      ; i++
+        jmp factorial#uint64#_cmp   ; compare again
 
     main#uint32#ptr#:
     .main#uint32#ptr#:
-        load32 r1 0x00
-        psh64 r1
-        call 0x08 factorial#uint64#
+        load32 r1 0x00  ; load argc
+        psh64 r1        ; push argc as arg0 (value) of factorial
+        call 0x08 factorial#uint64# ; call factorial
 
-        popnul 0x04
+        popnul 0x04 ; pop last 4 bytes (factorial returns 8 bytes, main returns 4)
+        ret 0x04    ; return 4 bytes from stack
 
-        ret 0x04
-
+; debug section is only generated when -dbg or --debug is passed to fasm
 sect debug:
     factorial#uint64#:
+        ; signature and function limits
         meta "uint64 factorial(uint64 value)" 0x01 0x0D
 
+        ; local variables
         local "value" "uint64" 0x00
         local "result" "uint64" 0x08
         local "i" "uint64" 0x10
 
+        ; line data
         map 0x01 0x03 "    uint64 result = 1;"
-        map 0x07 0x04 "    for (uint64 i = 1; i < value; i++)"
+        map 0x07 0x04 "    for (uint64 i = 1; i <= value; i++)"
         map 0x09 0x08 "    return result;"
         map 0x0B 0x06 "        result *= i;"
         map 0x0C 0x04 "    for (uint64 i = 1; i < value; i++)"
@@ -51,7 +61,9 @@ sect debug:
 
         map 0x10 0x0D "    return factorial(argc);"
 
+; reflection section
 sect reflection:
-    function uint64 factorial ( uint64 )
-    function int32 factorial ( uint32 , ptr )
+    ; signatures used for reflection
+    function uint64 factorial(uint64)
+    function int32 factorial(uint32, ptr)
 

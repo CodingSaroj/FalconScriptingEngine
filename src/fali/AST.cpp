@@ -4,80 +4,161 @@ namespace Falcon
 {
     namespace FALI
     {
-        LiteralNode::LiteralNode(bool b)
-            : Type(BOOL), Bool(b)
+        LiteralNode::LiteralNode(bool b, uint64_t line)
+            : Boolean(b)
         {
+            LineNumber = line;
         }
 
-
-        LiteralNode::LiteralNode(uint8_t u8)
-            : Type(UINT8), U8(u8)
+        LiteralNode::LiteralNode(uint64_t whole, uint64_t line)
+            : Whole(whole)
         {
+            LineNumber = line;
         }
 
-        LiteralNode::LiteralNode(uint16_t u16)
-            : Type(UINT16), U16(u16)
+        LiteralNode::LiteralNode(int64_t integer, uint64_t line)
+            : Integer(integer)
         {
+            LineNumber = line;
         }
 
-        LiteralNode::LiteralNode(uint32_t u32)
-            : Type(UINT32), U32(u32)
+        LiteralNode::LiteralNode(double real, uint64_t line)
+            : Real(real)
         {
+            LineNumber = line;
         }
 
-        LiteralNode::LiteralNode(uint64_t u64)
-            : Type(UINT64), U64(u64)
-        {
-        }
-
-        LiteralNode::LiteralNode(int8_t i8)
-            : Type(INT8), I8(i8)
-        {
-        }
-
-        LiteralNode::LiteralNode(int16_t i16)
-            : Type(INT16), I16(i16)
-        {
-        }
-
-        LiteralNode::LiteralNode(int32_t i32)
-            : Type(INT32), I32(i32)
-        {
-        }
-
-        LiteralNode::LiteralNode(int64_t i64)
-            : Type(INT64), I64(i64)
-        {
-        }
-
-        LiteralNode::LiteralNode(float f32)
-            : Type(FLOAT32), F32(f32)
-        {
-        }
-        
-        LiteralNode::LiteralNode(double f64)
-            : Type(FLOAT64), F64(f64)
-        {
-        }
-        
-        TypeNode::TypeNode(const std::string & typeName)
-            : TypeName(typeName)
-        {
-        }
-
-        VariableNode::VariableNode(const std::string & name, const std::string & type)
+        VariableNode::VariableNode(const std::string & name, const DataType & type, uint64_t line)
             : Name(name), Type(type)
         {
-        }
-        
-        OperatorNode::OperatorNode(OpType type, ASTNode * left, ASTNode * right)
-            : Type(type), Left(left), Right(right)
-        {
+            LineNumber = line;
         }
 
-        FunctionNode::FunctionNode(const std::string & retType, const std::string & name, std::vector<TypeNode> paramTypes)
-            : ReturnType(retType), Name(name), ParameterTypes(paramTypes)
+        VariableNode::VariableNode(const std::string & name, const std::string & type, const TypeFlag & flags, uint64_t line)
+            : Name(name), Type{type, flags}
         {
+            LineNumber = line;
+        }
+
+        ValueNode::ValueNode(LiteralNode literal, uint64_t line)
+            : Literal(literal)
+        {
+            LineNumber = line;
+        }
+
+        ValueNode::ValueNode(VariableNode variable, uint64_t line)
+            : Variable(variable)
+        {
+            LineNumber = line;
+        }
+
+        ValueNode::ValueNode(OperatorNode * op, uint64_t line)
+            : Operator(op)
+        {
+            LineNumber = line;
+        }
+
+        OperatorNode::OperatorNode(char type, uint64_t line)
+            : Binary(false), Type(type)
+        {
+            LineNumber = line;
+        }
+
+        OperatorNode::OperatorNode(char type, ValueNode left, uint64_t line)
+            : Binary(false), Type(type), Left(left)
+        {
+            LineNumber = line;
+        }
+       
+        OperatorNode::OperatorNode(char type, ValueNode left, ValueNode right, uint64_t line)
+            : Binary(true), Type(type), Left(left), Right(right)
+        {
+            LineNumber = line;
+        }
+
+        IfNode::IfNode(OperatorNode condition, uint64_t line)
+            : Condition(condition)
+        {
+            LineNumber = line;
+        }
+
+        WhileNode::WhileNode(OperatorNode condition, uint64_t line)
+            : Condition(condition)
+        {
+            LineNumber = line;
+        }
+
+        StatementNode::StatementNode(OperatorNode operatorNode, uint64_t line)
+            : Operator(operatorNode)
+        {
+            LineNumber = line;
+        }
+
+        StatementNode::StatementNode(IfNode ifBlock, uint64_t line)
+            : IfBlock(ifBlock)
+        {
+            LineNumber = line;
+        }
+
+        StatementNode::StatementNode(ElseNode elseBlock, uint64_t line)
+            : ElseBlock(elseBlock)
+        {
+            LineNumber = line;
+        }
+
+        StatementNode::StatementNode(WhileNode whileBlock, uint64_t line)
+            : WhileBlock(whileBlock)
+        {
+            LineNumber = line;
+        }
+
+        FunctionNode::FunctionNode(const DataType & retType, const std::string & name, const std::vector<std::pair<DataType, std::string>> & params, uint64_t line)
+            : ReturnType(retType), Name(name), Params(params)
+        {
+            LineNumber = line;
+
+            for (auto & param : Params)
+            {
+                LocalVariables[param.second] = FALI::VariableNode(param.second, param.first.Name, param.first.Flags);
+            }
+        }
+
+        FunctionNode::FunctionNode(const std::string & retType, const std::string & name, const std::vector<std::pair<DataType, std::string>> & params, const TypeFlag & retTypeFlags, uint64_t line)
+            : ReturnType{retType, retTypeFlags}, Name(name), Params(params)
+        {
+            LineNumber = line;
+
+            for (auto & param : Params)
+            {
+                LocalVariables[param.second] = FALI::VariableNode(param.second, param.first.Name, param.first.Flags);
+            }
+        }
+
+        std::string FunctionNode::GetSignature()
+        {
+            std::string signature(Name);
+
+            signature += '(';
+
+            for (auto iter = Params.begin(); iter != Params.end(); ++iter)
+            {
+                signature += iter->first.Str();
+
+                if (iter != Params.end() - 1)
+                {
+                    signature += ", ";
+                }
+            }
+
+            signature += ')';
+
+            return std::move(signature);
+        }
+
+        ClassNode::ClassNode(const std::string & name, uint64_t line)
+            : Name(name)
+        {
+            LineNumber = line;
         }
     }
 }

@@ -1,5 +1,9 @@
 #include "CLIColors.hpp"
 
+#ifdef _WIN32
+    #include <Windows.h>
+#endif
+
 namespace Falcon
 {
     namespace Common

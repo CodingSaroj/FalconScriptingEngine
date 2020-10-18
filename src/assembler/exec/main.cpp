@@ -1,6 +1,4 @@
-#include <fstream>
-#include <iostream>
-#include <iterator>
+#include "common/Common.hpp"
 
 #include "assembler/SemanticAnalyzer.hpp"
 #include "assembler/Combiner.hpp"
@@ -19,7 +17,7 @@ static struct
     std::string TargetName = "a.fali";
 } s_State;
 
-void printHelp()
+void PrintHelp()
 {
     std::cout<<"Usage: fasm [COMMAND_LINE_OPTIONS] [FILE(s)]\n\n";
     std::cout<<"COMMAND_LINE_OPTIONS:\n";
@@ -30,11 +28,11 @@ void printHelp()
     std::cout<<"    Add FILE to input files. No input file sets input file as a.fasm.\n";
 }
 
-void parseCmdArgs(int argc, char * argv[])
+void ParseCmdArgs(int argc, char * argv[])
 {
     if (argc == 1)
     {
-        printHelp();
+        PrintHelp();
         exit(2);
     }
 
@@ -44,7 +42,7 @@ void parseCmdArgs(int argc, char * argv[])
 
         if (str == "-h" || str == "--help")
         {
-            printHelp();
+            PrintHelp();
             exit(2);
         }
         else if (str == "-dbg" || str == "--debug")
@@ -66,7 +64,7 @@ void parseCmdArgs(int argc, char * argv[])
             if (i == argc - 1)
             {
                 std::cout<<"Command line option `-o` should have filename after it.\n";
-                printHelp();
+                PrintHelp();
                 exit(2);
             }
 
@@ -77,7 +75,7 @@ void parseCmdArgs(int argc, char * argv[])
             if (str.size() == 6)
             {
                 std::cout<<"Command line option `--out=` should have filename after it.\n";
-                printHelp();
+                PrintHelp();
                 exit(2);
             }
 
@@ -88,7 +86,7 @@ void parseCmdArgs(int argc, char * argv[])
             if (str[0] == '-')
             {
                 std::cout<<"Invalid command line option `"<<str<<"`.\n";
-                printHelp();
+                PrintHelp();
                 exit(2);
             }
 
@@ -104,7 +102,7 @@ void parseCmdArgs(int argc, char * argv[])
 
 int main(int argc, char * argv[])
 {
-    parseCmdArgs(argc, argv);
+    ParseCmdArgs(argc, argv);
     
     std::vector<Falcon::Assembler::ASTNode *> asts;
 
@@ -133,9 +131,9 @@ int main(int argc, char * argv[])
             {
                 Falcon::Assembler::Lexer lexer(inStr);
 
-                Falcon::Assembler::Token token((Falcon::Assembler::TokenType)'\0');
+                Falcon::Assembler::Token token;
 
-                while ((token = lexer.lex()).Type != (Falcon::Assembler::TokenType)'\0')
+                while ((token = lexer.Lex()).Valid())
                 {
                     Falcon::Assembler::Serialize(token);
                 }
@@ -144,9 +142,9 @@ int main(int argc, char * argv[])
 
         Falcon::Assembler::Lexer lexer(inStr);
 
-        Falcon::Assembler::Parser parser(std::bind(&Falcon::Assembler::Lexer::lex, &lexer), std::bind(&Falcon::Assembler::Lexer::peek, &lexer));
+        Falcon::Assembler::Parser parser(std::bind(&Falcon::Assembler::Lexer::Lex, &lexer), std::bind(&Falcon::Assembler::Lexer::Peek, &lexer));
 
-        asts.emplace_back(parser.parse());
+        asts.emplace_back(parser.Parse());
     }
 
     Falcon::Assembler::Combiner combiner(asts);
@@ -156,17 +154,17 @@ int main(int argc, char * argv[])
         {
             Falcon::Assembler::Combiner combiner(asts);
 
-            Falcon::Assembler::Serialize(combiner.combine());
+            Falcon::Assembler::Serialize(combiner.Combine());
         }
     #endif
 
-    Falcon::Assembler::SemanticAnalyzer semanticAnalyzer(combiner.combine());
+    Falcon::Assembler::SemanticAnalyzer semanticAnalyzer(combiner.Combine());
 
-    Falcon::Assembler::Generator generator(semanticAnalyzer.analyze(), s_State.Debug);
+    Falcon::Assembler::Generator generator(semanticAnalyzer.Analyze(), s_State.Debug);
 
     std::ofstream out(s_State.TargetName);
 
-    out<<generator.generate();
+    out<<generator.Generate();
 
     out.close();
 }

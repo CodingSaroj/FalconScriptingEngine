@@ -4,282 +4,197 @@ namespace Falcon
 {
     namespace Assembler
     {
-        static const std::string identChars("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_@#$%");
-        static const std::string operators("@[]");
-        static const std::string whiteSpaces(" \n\t");
-        static const std::string octDigits("01234567");
-        static const std::string decDigits("0123456789");
-        static const std::string hexDigits("0123456789abcdefABCDEF");
-       
         template<typename T>
-        constexpr bool findInVector(std::vector<T> & vec, const T & data) { return std::find(vec.begin(), vec.end(), data) != vec.end(); }
+        constexpr bool FindInVector(const std::vector<T> & vec, const T & data) { return std::find(vec.begin(), vec.end(), data) != vec.end(); }
 
         Lexer::Lexer(const std::string & text)
-            : m_Text(text), m_Cursor(0), m_CurrentChar(text[0])
+            : m_Cursor(0)
         {
-        }
+            std::vector<std::string> lines;
 
-        Token Lexer::lexNumber(bool sign)
-        {
-            std::string number;
-            bool isFloat                = false;
-            enum { OCT, DEC, HEX } base = DEC;
+            std::string current;
 
-            if (sign) { number += '-'; }
-
-            if (m_CurrentChar == '0')
+            for (char c : text)
             {
-                if (this->advance() == 'x' || this->advance() == 'X') { base = HEX; }
-                else { base = OCT; }
-
-                this->advance();
-            }
-
-            while (m_CurrentChar != '\0' && whiteSpaces.find(m_CurrentChar) == std::string::npos)
-            {
-                if (m_CurrentChar == '.')
+                if (c == '\n')
                 {
-                    isFloat = true;
-                }
-                else if (base == OCT)
-                {
-                    if (octDigits.find(m_CurrentChar) == std::string::npos) { break; }
-                }
-                else if (base == DEC)
-                {
-                    if (decDigits.find(m_CurrentChar) == std::string::npos) { break; }
-                }
-                else if (base == HEX)
-                {
-                    if (hexDigits.find(m_CurrentChar) == std::string::npos) { break; }
-                }
-
-                number += m_CurrentChar;
-
-                this->advance();
-            }
-
-            if (m_CurrentChar)
-            {
-                m_Cursor -= 2;
-                this->advance();
-            }
-
-            if (isFloat) { return Token(TokenType::FLOAT, (double)std::strtod(number.c_str(), NULL)); }
-
-            if (base == OCT) { return Token(TokenType::UINT, (uint64_t)std::strtoul(number.c_str(), NULL, 8)); }
-            
-            else if (base == DEC) { return sign ? Token(TokenType::INT, (int64_t)std::strtol(number.c_str(), NULL, 10)) : Token(TokenType::UINT, (uint64_t)std::strtoul(number.c_str(), NULL, 10)); }
-            
-            else { return Token(TokenType::UINT, (uint64_t)std::strtoul(number.c_str(), NULL, 16)); }
-        }
-
-        Token Lexer::lexChar()
-        {
-            char value = this->advance();
-
-            if (this->advance() != '\'')
-            {
-                Log(LogLevel::ERR, "Expected a `'`.");
-                exit(2);
-            }
-
-            return Token(TokenType::CHAR, value);
-        }
-
-        Token Lexer::lexStr()
-        {
-            std::string str;
-
-            if (m_CurrentChar == '\"')
-            {
-                this->advance();
-
-                while (m_CurrentChar != '\0' && m_CurrentChar != '\"')
-                {
-                    str += m_CurrentChar;
-
-                    this->advance();
-                }
-
-                this->advance();
-            }
-            else
-            {
-                while (m_CurrentChar != '\0' && whiteSpaces.find(m_CurrentChar) == std::string::npos)
-                {
-                    //If m_CurrentChar isn't a valid identifier character, operator or a digit.
-                    if (identChars.find(m_CurrentChar) == std::string::npos && operators.find(m_CurrentChar) == std::string::npos && decDigits.find(m_CurrentChar) == std::string::npos)
-                    {
-                        break;
-                    }
-                
-                    str += m_CurrentChar;
-
-                    this->advance();
-                }
-            }
-
-            //If this isn't the end.
-            if (m_CurrentChar)
-            {
-                //Step back.
-                m_Cursor -= 2;
-                this->advance();
-            }
-
-            auto toUpper =  [](std::string str)->std::string
-                            {
-                                for (char & c : str) { c = std::toupper(c); }
-
-                                return str;
-                            };
-
-            if (findInVector(RegisterType::s_Names, toUpper(str)))
-            {
-                return Token(TokenType::REGISTER, toUpper(str));
-            }
-            else if (str[0] == '@')
-            {
-                if (findInVector(RegisterType::s_Names, toUpper(str.substr(1))))
-                {
-                    return Token(TokenType::REGISTER, toUpper(str));
-                }
-            }
-            else if (str[0] == '[' && str[str.size() - 1] == ']')
-            {
-                if (findInVector(RegisterType::s_Names, toUpper(str.substr(1, str.size() - 2))))
-                {
-                    return Token(TokenType::REGISTER, toUpper(str));
-                }
-            }
-            else if (findInVector(OpCode::s_Names, toUpper(str)))
-            {
-                return Token(TokenType::INSTRUCTION, toUpper(str));
-            }
-            else if (toUpper(str) == "SECT")
-            {
-                return Token(TokenType::SECTION);
-            }
-            else if (toUpper(str) == "META")
-            {
-                return Token(TokenType::IDENTIFIER, toUpper(str));
-            }
-            else if (toUpper(str) == "MAP")
-            {
-                return Token(TokenType::IDENTIFIER, toUpper(str));
-            }
-            else if (toUpper(str) == "LOCAL")
-            {
-                return Token(TokenType::IDENTIFIER, toUpper(str));
-            }
-            else if (toUpper(str) == "ATTRIBUTE")
-            {
-                return Token(TokenType::IDENTIFIER, toUpper(str));
-            }
-            else if (toUpper(str) == "FUNCTION")
-            {
-                return Token(TokenType::IDENTIFIER, toUpper(str));
-            }
-            else if (toUpper(str) == "STRUCT")
-            {
-                return Token(TokenType::IDENTIFIER, toUpper(str));
-            }
-            else if (toUpper(str) == "ALIAS")
-            {
-                return Token(TokenType::IDENTIFIER, toUpper(str));
-            }
-            
-            return Token(TokenType::IDENTIFIER, str);
-        }
-
-        Token Lexer::lex()
-        {
-            Token token((TokenType)0);
-
-            bool newline = false;
-
-            //Checkpoint for skipping Tokens.
-            CheckToken:
-
-            if (m_Text[m_Cursor] == '\0')
-            {
-            }
-            else if (whiteSpaces.find(m_CurrentChar) != std::string::npos)
-            {
-                if (m_CurrentChar == '\n')
-                {
-                    token = Token(TokenType::NEWLINE);
-                    newline = true;
-                    Context::Line++;
-                    Context::Character = 0;
+                    lines.emplace_back(current);
+                    current.clear();
                 }
                 else
                 {
-                    //Skip the whitespace.
-                    this->advance();
-                    goto CheckToken;
+                    current += c;
                 }
             }
-            else if (m_CurrentChar == '-' && decDigits.find(m_Text[m_Cursor + 1]) != std::string::npos)
-            {
-                //Consume the '-' sign.
-                this->advance();
 
-                //Retrieve the negative number Token.
-                token = this->lexNumber(true);
-            }
-            else if (decDigits.find(m_CurrentChar) != std::string::npos)
+            std::vector<std::pair<std::string, std::string>> regexes
             {
-                token = this->lexNumber();
-            }
-            else if (m_CurrentChar == '\"' || identChars.find(m_CurrentChar) != std::string::npos || operators.find(m_CurrentChar) != std::string::npos)
+                {R"(;.*)"                                   , "comment"},
+                {R"(0b[01]+)"                               , "binary"},
+                {R"(0[0-3][0-7][0-7])"                      , "octal"},
+                {R"(0)"                                     , "octal zero"},
+                {R"([1-9][0-9]*)"                           , "decimal"},
+                {R"(0x[0-9a-fA-F]+)"                        , "hexadecimal"},
+                {R"([\+-][0-9]+\.[0-9]+)"                   , "float"},
+                {R"([\+-][0-9]+\.[0-9]+e[\+-][0-9]+)"       , "float exponent"},
+                {R"('.')"                                   , "char"},
+                {R"("[^"]*")"                               , "string"},
+                {R"([a-zA-Z_@#$%][a-zA-Z0-9_@#$%]*)"        , "identifier"},
+                {R"([(){}.,:])"                             , "arbitarory"}
+            };
+
+            std::string finalRegexStr;
+
+            for (auto & regex : regexes)
             {
-                token = this->lexStr();
+                finalRegexStr += "(" + regex.first + ")|";
             }
-            else if (m_CurrentChar == '\'')
+
+            finalRegexStr.pop_back();
+
+            std::regex finalRegex;
+
+            try
             {
-                token = this->lexChar();
+                finalRegex = std::regex(finalRegexStr, std::regex_constants::extended);
             }
-            else if (m_CurrentChar == ';')
+            catch (std::regex_error err)
             {
-                while (m_CurrentChar != '\n')
+                FLCN_ASSERT(false, "Assembler::Lexer", "Regex Error: {}", err.what());
+            }
+
+            for (size_t i = 1; i <= lines.size(); i++)
+            {
+                auto begin = std::sregex_iterator(lines[i - 1].begin(), lines[i - 1].end(), finalRegex);
+                auto end = std::sregex_iterator();
+                
+                for (auto iter = begin; iter != end; ++iter)
                 {
-                    this->advance();
-                }
+                    size_t matchIndex = 0;
 
-                token = Token(TokenType::NEWLINE);
-                Context::Line++;
-                Context::Character = 0;
+                    for (; matchIndex < iter->size(); matchIndex++)
+                    {
+                        if (!iter->str(matchIndex + 1).empty())
+                        {
+                            break;
+                        }
+                    }
+
+                    std::string match = iter->str(matchIndex + 1);
+                    std::string matchType = regexes[matchIndex].second;
+
+                    if (matchType == "binary")
+                    {
+                        m_Tokens.emplace_back(i, strtoul(match.c_str() + 2, nullptr, 2));
+                    }
+                    else if (matchType == "octal")
+                    {
+                        m_Tokens.emplace_back(i, strtoul(match.c_str() + 1, nullptr, 8));
+                    }
+                    else if (matchType == "octal zero")
+                    {
+                        m_Tokens.emplace_back(i, (uint64_t)0);
+                    }
+                    else if (matchType == "decimal")
+                    {
+                        m_Tokens.emplace_back(i, strtol(match.c_str(), nullptr, 10));
+                    }
+                    else if (matchType == "hexadecimal")
+                    {
+                        m_Tokens.emplace_back(i, strtoul(match.c_str(), nullptr, 16));
+                    }
+                    else if (matchType == "float")
+                    {
+                        m_Tokens.emplace_back(i, strtod(match.c_str(), nullptr));
+                    }
+                    else if (matchType == "float exponent")
+                    {
+                        m_Tokens.emplace_back(i, strtod(match.c_str(), nullptr));
+                    }
+                    else if (matchType == "char")
+                    {
+                        m_Tokens.emplace_back(i, match[1]);
+                    }
+                    else if (matchType == "string")
+                    {
+                        m_Tokens.emplace_back(i, match.substr(1, match.size() - 2));
+                    }
+                    else if (matchType == "identifier")
+                    {
+                        auto toUpper =  [](std::string str)->std::string
+                        {
+                            for (char & c : str) { c = std::toupper(c); }
+
+                            return str;
+                        };
+
+                        if (FindInVector(RegisterType::s_Names, toUpper(match)))
+                        {
+                            m_Tokens.emplace_back(i, Token::RegisterType{toUpper(match)});
+                        }
+                        else if (match[0] == '@')
+                        {
+                            if (FindInVector(RegisterType::s_Names, toUpper(match.substr(1))))
+                            {
+                                m_Tokens.emplace_back(i, Token::RegisterType{toUpper(match)});
+                            }
+                        }
+                        else if (match[0] == '[' && match.back() == ']')
+                        {
+                            if (FindInVector(RegisterType::s_Names, toUpper(match.substr(1, match.size() - 2))))
+                            {
+                                m_Tokens.emplace_back(i, Token::RegisterType{toUpper(match)});
+                            }
+                        }
+                        else if (FindInVector(OpCode::s_Names, toUpper(match)))
+                        {
+                            m_Tokens.emplace_back(i, Token::InstructionType{toUpper(match)});
+                        }
+                        else if (toUpper(match) == "SECT")
+                        {
+                            m_Tokens.emplace_back(i, Token::SectionType{});
+                        }
+                        else if (FindInVector<std::string>({"META", "MAP", "LOCAL", "ATTRIBUTE", "FUNCTION", "STRUCT", "ALIAS"}, toUpper(match)))
+                        {
+                            m_Tokens.emplace_back(i, toUpper(match));
+                        }
+                        else
+                        {
+                            m_Tokens.emplace_back(i, match);
+                        }
+                    }
+                    else if (matchType == "arbitarory")
+                    {
+                        m_Tokens.emplace_back(i, Token::ArbitaroryType{match[0]});
+                    }
+                }
+                
+                m_Tokens.emplace_back(i, Token::NewLineType{});
+            }
+        }
+
+        Token Lexer::Lex()
+        {            
+            if (m_Cursor == m_Tokens.size())
+            {
+                return Token();
             }
             else
             {
-                //Return arbitrary token.
-                token = Token((TokenType)m_CurrentChar);
+                return m_Tokens[m_Cursor++];
             }
-
-            this->advance();
-
-            return token;
         }
 
-        Token Lexer::peek()
+        Token Lexer::Peek()
         {
-            //Backup cursor, line and character
-            uint64_t tmp = m_Cursor;
-            uint64_t line = Context::Line;
-            uint64_t character = Context::Character;
-
-            //Get the Token
-            Token token = lex();
-
-            //Restore the cursor, line and character
-            m_Cursor = tmp - 1;
-            Context::Line = line;
-            Context::Character = character;
-            this->advance();
-
-            return token;
+            if (m_Cursor == m_Tokens.size())
+            {
+                return Token();
+            }
+            else
+            {
+                return m_Tokens[m_Cursor];
+            }
         }
     }
 }

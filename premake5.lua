@@ -15,7 +15,8 @@ workspace "Falcon"
 
     IncludeDirs =
     {
-        "%{wks.location}/src/"
+        "%{wks.location}/src/",
+        "%{wks.location}/pch/"
     }
 
     LibDirs =
@@ -26,3 +27,4 @@ workspace "Falcon"
     include "src/vm/premake5.lua"
     include "src/assembler/premake5.lua"
     include "src/fali/premake5.lua"
+    include "src/fcc/premake5.lua"

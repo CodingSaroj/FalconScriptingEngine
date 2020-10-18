@@ -1,15 +1,11 @@
 #ifndef FALCON_LEXER_HPP
 #define FALCON_LEXER_HPP
 
-#include <algorithm>
-#include <iostream>
-#include <vector> 
-
+#include "common/Common.hpp"
+#include "common/Logger.hpp"
 #include "common/OpCode.hpp"
 #include "common/Register.hpp"
 
-#include "assembler/Context.hpp"
-#include "assembler/Log.hpp"
 #include "assembler/Token.hpp"
 
 namespace Falcon
@@ -18,34 +14,15 @@ namespace Falcon
     {
         class Lexer
         {
-            public:
-                Lexer(const std::string & text);
+        public:
+            Lexer(const std::string & text);
 
-                Token lex();
-                Token peek();
+            Token Lex();
+            Token Peek();
 
-            private:
-                const std::string m_Text;
-
-                uint64_t m_Cursor;
-                char     m_CurrentChar;
-
-                Token lexNumber(bool signedInt = false);
-                Token lexChar();
-                Token lexStr();
-
-                inline char advance()
-                {
-                    if (m_Cursor + 1 < m_Text.size())
-                    {
-                        Context::Character++;
-                        return m_CurrentChar = m_Text[++m_Cursor];
-                    }
-                    else
-                    {
-                        return m_CurrentChar = '\0';
-                    }
-                }
+        private:
+            std::vector<Token> m_Tokens;
+            size_t m_Cursor;
         };
     }
 }

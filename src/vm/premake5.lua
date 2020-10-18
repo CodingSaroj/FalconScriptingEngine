@@ -5,6 +5,9 @@ project "FalconVM"
     targetdir "../../lib/%{cfg.buildcfg}/%{cfg.platform}/"
     objdir "../../obj"
 
+    pchheader "../../pch/FalconPCH.hpp"
+    pchsource "../../pch/FalconPCH.cpp"
+
     files
     {
         "../common/*.cpp",

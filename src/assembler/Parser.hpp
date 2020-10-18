@@ -1,7 +1,8 @@
 #ifndef FALCON_ASM_PARSER_HPP
 #define FALCON_ASM_PARSER_HPP
 
-#include <functional>
+#include "common/Common.hpp"
+#include "common/Logger.hpp"
 
 #include "assembler/Lexer.hpp"
 #include "assembler/AST.hpp"
@@ -12,41 +13,41 @@ namespace Falcon
     {
         class Parser
         {
-            public:
-                Parser(std::function<Token()> fetchToken, std::function<Token()> peek);
+        public:
+            Parser(std::function<Token()> fetchToken, std::function<Token()> peek);
 
-                ASTNode * parse();
+            ASTNode * Parse();
 
-            private:
-                Token m_CurrentToken;
+        private:
+            Token m_CurrentToken;
 
-                std::function<Token()> m_FetchToken;
-                std::function<Token()> m_Peek;
+            std::function<Token()> m_FetchToken;
+            std::function<Token()> m_Peek;
 
-                constexpr void skipNewlines()
-                {
-                    while (m_CurrentToken.Type == TokenType::NEWLINE) { m_CurrentToken = m_FetchToken(); }
-                }
-                
-                AtomNode        parseAtom();
-                InstructionNode parseInstruction();
-                LabelNode       parseLabel();
-                RoutineNode     parseRoutine();
-                CodeSectionNode parseCodeSection();
+            constexpr void SkipNewlines()
+            {
+                while (m_CurrentToken.NewLine) { m_CurrentToken = m_FetchToken(); }
+            }
+            
+            AtomNode        ParseAtom();
+            InstructionNode ParseInstruction();
+            LabelNode       ParseLabel();
+            RoutineNode     ParseRoutine();
+            CodeSectionNode ParseCodeSection();
 
-                DebugMetaNode     parseDebugMeta();
-                DebugLineMapNode  parseDebugLineMap();
-                DebugLocalVarNode parseDebugLocalVar();
-                DebugRoutineNode  parseDebugRoutine();
-                DebugSectionNode  parseDebugSection();
+            DebugMetaNode     ParseDebugMeta();
+            DebugLineMapNode  ParseDebugLineMap();
+            DebugLocalVarNode ParseDebugLocalVar();
+            DebugRoutineNode  ParseDebugRoutine();
+            DebugSectionNode  ParseDebugSection();
 
-                ReflectionAttributeNode parseReflectionAttribute();
-                ReflectionFunctionNode  parseReflectionFunction();
-                ReflectionStructureNode parseReflectionStructure();
-                ReflectionAliasNode     parseReflectionAlias();
-                ReflectionSectionNode   parseReflectionSection();
+            ReflectionAttributeNode ParseReflectionAttribute();
+            ReflectionFunctionNode  ParseReflectionFunction();
+            ReflectionStructureNode ParseReflectionStructure();
+            ReflectionAliasNode     ParseReflectionAlias();
+            ReflectionSectionNode   ParseReflectionSection();
 
-                ASTNode * parseModule();
+            ASTNode * ParseModule();
         };
     }
 }

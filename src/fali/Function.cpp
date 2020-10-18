@@ -11,7 +11,7 @@ namespace Falcon
         {
         }
 
-        void * Function::call(std::vector<void *> args)
+        void * Function::Call(std::vector<void *> args)
         {
             return m_Function(args);
         }
