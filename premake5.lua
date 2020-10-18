@@ -20,6 +20,7 @@ workspace "Falcon"
 
     IncludeDirs =
     {
+        ".",
         "%{wks.location}/src/",
         "%{wks.location}/pch/"
     }

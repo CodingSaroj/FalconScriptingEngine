@@ -8,6 +8,7 @@
 #define FALCON_COMMON_CHAKRA_PCH_HPP
 
 #include <algorithm>
+#include <chrono>
 #include <fstream>
 #include <functional>
 #include <iostream>
@@ -16,6 +17,7 @@
 #include <type_traits>
 
 #include <array>
+#include <bitset>
 #include <map>
 #include <optional>
 #include <set>

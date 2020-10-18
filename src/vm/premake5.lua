@@ -10,11 +10,12 @@ project "FalconVM"
     targetdir "../../lib/%{cfg.buildcfg}/%{cfg.platform}/"
     objdir "../../obj"
 
-    pchheader "FalconPCH.hpp"
-    pchsource "FalconPCH.cpp"
+    pchheader "../../pch/FalconPCH.hpp"
+    pchsource "../../pch/FalconPCH.cpp"
 
     files
     {
+        "../../pch/FalconPCH.cpp",
         "../common/*.cpp",
         "*.cpp"
     }

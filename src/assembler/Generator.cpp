@@ -4,7 +4,7 @@
  * This file is licensed under the MIT License.
  * See the "LICENSE" file at the root directory or https://mit-license.org for details.
  */
-#include "FalconPCH.hpp"
+#include "../../pch/FalconPCH.hpp"
 
 #include "Generator.hpp"
 
@@ -206,7 +206,7 @@ namespace Falcon
 
             m_CodeSection.insert(codeSectionStart, GenerateSymbolTable());
             
-            uint64_t codeSectionSize = (m_CodeSection.size() - codeSectionStart) + 1;
+            uint64_t codeSectionSize = (m_CodeSection.size() - codeSectionStart) + 2;
 
             Endian::SystemToLittle(codeSectionSize);
 

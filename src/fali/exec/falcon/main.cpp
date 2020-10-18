@@ -4,7 +4,7 @@
  * This file is licensed under the MIT License.
  * See the "LICENSE" file at the root directory or https://mit-license.org for details.
  */
-#include "FalconPCH.hpp"
+#include "../../pch/FalconPCH.hpp"
 
 #include "common/Common.hpp"
 
@@ -38,7 +38,7 @@ void PrintHelp()
     std::cout<<"FILE:\n";
     std::cout<<"    FALI file to be executed.\n";
     std::cout<<"ARGS:\n";
-    std::cout<<"    Arguments to be passed to the `main` functoin.\n";
+    std::cout<<"    Arguments to be passed to the `main` function.\n";
 }
 
 void ParseCmdArgs(int argc, char * argv[])
