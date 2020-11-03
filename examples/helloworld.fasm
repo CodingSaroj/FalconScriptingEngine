@@ -1,4 +1,5 @@
 ; This program prints "Hello World" to the stdout.
+; Args are not needed when running this program.
 
 ; All sections are mandatory even if they are empty.
 
