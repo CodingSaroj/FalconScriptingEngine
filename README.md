@@ -47,3 +47,35 @@ The libraries will be inside ```lib/<configuration>/<platform>/``` and the binar
 Refer to the ```--help``` option of the binaries for details on their usage.
 
 The API is currently undocumented.
+
+### Running the examples
+After compiling, run these commands from root directory to compile the example assemblies:
+
+On Windows:  
+```
+\path\to\fasm examples\factorial.fasm -o examples\factorial.fali
+\path\to\fasm examples\helloworld.fasm -o examples\helloworld.fali
+```
+
+On Linux:  
+```
+/path/to/fasm examples/factorial.fasm -o examples/factorial.fali
+/path/to/fasm examples/helloworld.fasm -o examples/helloworld.fali
+```
+
+Replace `/path/to/fasm` with the path to `fasm`. Refer to [Building](https://github.com/SarojKumar10/FalconScriptingEngine#Building)
+for more info on where binaries are located.
+
+Run them as follows:
+
+On Windows:  
+```
+\path\to\falcon examples\<ExampleName>.fali -e <ArgsForExample>
+```
+
+On Linux:
+```
+/path/to/falcon examples/<ExampleName>.fali -e <ArgsForExample>
+```
+
+Refer to the comment at the beginning of the corresponding example's `.fasm` file for information on what args should be passed.
