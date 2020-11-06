@@ -1,12 +1,13 @@
 # Development files
 .clangd
 
-# Build folder
+# Build folders
 bin
 lib
-obj
+build
 
 # Build files
+*.cmake
 Makefile
 *.make
 *.json

@@ -4,8 +4,6 @@
  * This file is licensed under the MIT License.
  * See the "LICENSE" file at the root directory or https://mit-license.org for details.
  */
-#include "../../pch/FalconPCH.hpp"
-
 #include "VariableTraits.hpp"
 
 namespace Falcon
@@ -29,15 +27,10 @@ namespace Falcon
 
         bool IsLoaded(const std::string & str)
         {
-            for (auto & reg : s_Registers)
+            return std::any_of(s_Registers.begin(), s_Registers.end(), [&str](const std::string & reg)->bool
             {
-                if (str == reg)
-                {
-                    return true;
-                }
-            }
-
-            return false;
+                return str == reg;
+            });
         }
 
         uint8_t LoadVariableIntoRegister(const std::string & str)

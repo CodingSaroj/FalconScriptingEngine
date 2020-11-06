@@ -46,7 +46,7 @@ namespace Falcon
 
             Function() = default;
 
-            Function(FunctionType function);
+            explicit Function(FunctionType function);
 
             void * Call(std::vector<void *> args);
             
@@ -67,8 +67,6 @@ namespace Falcon
 
             friend class Context;
         };
-
-        
     }
 }
 

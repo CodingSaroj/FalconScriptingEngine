@@ -4,8 +4,6 @@
  * This file is licensed under the MIT License.
  * See the "LICENSE" file at the root directory or https://mit-license.org for details.
  */
-#include "../../pch/FalconPCH.hpp"
-
 #include "SemanticAnalyzer.hpp"
 
 namespace Falcon
@@ -19,7 +17,7 @@ namespace Falcon
         }
 
         SemanticAnalyzer::SemanticAnalyzer(ASTNode * ast)
-            : m_Failed(false), m_AST(ast)
+            : m_Failed(false), m_AST(ast), m_CurrentClass(nullptr), m_CurrentFunction(nullptr)
         {
             CollectSemanticData();
         }
@@ -111,7 +109,7 @@ namespace Falcon
                     return true;
                 }
 
-                if (from.Flags & 0 && to.Flags == TypeFlags::REFERENCE)
+                if (from.Flags == 0 && to.Flags == TypeFlags::REFERENCE)
                 {
                     return true;
                 }
@@ -134,7 +132,7 @@ namespace Falcon
                 }
             };
 
-            if (var->Type.Name == "" || var->Type.Name == "***stack_allocated_ref***")
+            if (var->Type.Name == "" || var->Name == "***stack_allocated_ref***")
             {
                 return;
             }
@@ -219,13 +217,15 @@ namespace Falcon
 
                     functionName = std::move(getCallString(*op->Left->Operator.value()));
 
-                    if (op->Right)
+                    std::string thisName = getThis(*op->Left->Operator.value());
+
+                    if (op->Right && (op->Right->Literal || op->Right->Variable || op->Right->Operator))
                     {
-                        op->Right = ValueNode(new OperatorNode(',', ValueNode(VariableNode(getThis(*op->Left->Operator.value()), "", 0, op->LineNumber), op->LineNumber), op->Right.value(), op->LineNumber));
+                        op->Right = ValueNode(new OperatorNode(',', ValueNode(VariableNode(thisName, DeclType(&op->Left.value()).Name, TypeFlags::REFERENCE, op->LineNumber), op->LineNumber), op->Right.value(), op->LineNumber));
                     }
                     else
                     {
-                        op->Right = ValueNode(VariableNode(getThis(*op->Left->Operator.value()), "", 0, op->LineNumber), op->LineNumber);
+                        op->Right = ValueNode(VariableNode(getThis(*op->Left->Operator.value()), DeclType(&op->Left.value()).Name, TypeFlags::REFERENCE, op->LineNumber), op->LineNumber);
                     }
                 }
 

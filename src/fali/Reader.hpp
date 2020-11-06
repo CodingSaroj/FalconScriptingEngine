@@ -22,7 +22,7 @@ namespace Falcon
         class Reader
         {
         public:
-            Reader(const std::string & fileName);
+            explicit Reader(const std::string & fileName);
 
             uint8_t * GetCode();
             DebugData GetDebugData();

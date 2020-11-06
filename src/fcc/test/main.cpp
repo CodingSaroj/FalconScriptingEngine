@@ -4,8 +4,6 @@
  * This file is licensed under the MIT License.
  * See the "LICENSE" file at the root directory or https://mit-license.org for details.
  */
-#include "../../pch/FalconPCH.hpp"
-
 #include "fali/SemanticAnalyzer.hpp"
 #include "fali/Serialize.hpp"
 
@@ -72,19 +70,4 @@ int main()
     {
         std::cout<<"Semantic analysis passed!\n";
     }
-
-    //auto functions = Falcon::FALI::ASTToIR(module);
-    //
-    //for (auto & function : functions)
-    //{
-    //    Falcon::FALI::Serialize(function);
-
-    //    Falcon::FALI::Optimizations::ConstantFolding(function);
-
-    //    Falcon::FALI::Serialize(function);
-
-    //    Falcon::FALI::IRToAssembly irToASM(function);
-
-    //    std::cout<<irToASM.Generate()<<"\n";
-    //}
 }

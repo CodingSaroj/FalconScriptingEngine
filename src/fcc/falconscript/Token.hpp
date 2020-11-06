@@ -50,9 +50,9 @@ namespace Falcon
                 Token(uint64_t line, uint64_t whole);
                 Token(uint64_t line, int64_t integer);
                 Token(uint64_t line, double real);
-                Token(uint64_t line, WordType word);
-                Token(uint64_t line, OperatorType op);
-                Token(uint64_t line, PunctuatorType punctuator);
+                Token(uint64_t line, const WordType & word);
+                Token(uint64_t line, const OperatorType & op);
+                Token(uint64_t line, const PunctuatorType & punctuator);
                 Token(uint64_t line, const std::string & string);
 
                 inline bool Valid()

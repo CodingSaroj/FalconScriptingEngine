@@ -29,10 +29,10 @@ namespace Falcon
             std::optional<int64_t>  Integer;
             std::optional<double>   Real;
 
-            LiteralNode(bool b, uint64_t line = 0);
-            LiteralNode(uint64_t u64, uint64_t line = 0);
-            LiteralNode(int64_t i64, uint64_t line = 0);
-            LiteralNode(double f64, uint64_t line = 0);
+            explicit LiteralNode(bool b, uint64_t line = 0);
+            explicit LiteralNode(uint64_t u64, uint64_t line = 0);
+            explicit LiteralNode(int64_t i64, uint64_t line = 0);
+            explicit LiteralNode(double f64, uint64_t line = 0);
         };
 
         struct VariableNode : public ASTNode
@@ -54,8 +54,8 @@ namespace Falcon
             std::optional<OperatorNode *> Operator;
 
             ValueNode() = default;
-            explicit ValueNode(LiteralNode literal, uint64_t line = 0);
-            explicit ValueNode(VariableNode variable, uint64_t line = 0);
+            explicit ValueNode(const LiteralNode & literal, uint64_t line = 0);
+            explicit ValueNode(const VariableNode & variable, uint64_t line = 0);
             explicit ValueNode(OperatorNode * op, uint64_t line = 0);
         };
 
@@ -104,9 +104,9 @@ namespace Falcon
             std::optional<WhileNode>    WhileBlock;
 
             explicit StatementNode(OperatorNode operatorNode, uint64_t line = 0);
-            explicit StatementNode(IfNode ifBlock, uint64_t line = 0);
-            explicit StatementNode(ElseNode elseBlock, uint64_t line = 0);
-            explicit StatementNode(WhileNode whileBlock, uint64_t line = 0);
+            explicit StatementNode(const IfNode & ifBlock, uint64_t line = 0);
+            explicit StatementNode(const ElseNode & elseBlock, uint64_t line = 0);
+            explicit StatementNode(const WhileNode & whileBlock, uint64_t line = 0);
         };
 
         struct FunctionNode : public ASTNode
@@ -136,7 +136,7 @@ namespace Falcon
             std::vector<FunctionNode> ProtectedMemberFunctions;
             std::vector<FunctionNode> PrivateMemberFunctions;
 
-            ClassNode(const std::string & name, uint64_t line = 0);
+            explicit ClassNode(const std::string & name, uint64_t line = 0);
         };
 
         struct ModuleNode : public ASTNode

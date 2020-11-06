@@ -4,8 +4,6 @@
  * This file is licensed under the MIT License.
  * See the "LICENSE" file at the root directory or https://mit-license.org for details.
  */
-#include "../../pch/FalconPCH.hpp"
-
 #include "AST.hpp"
 
 namespace Falcon
@@ -48,13 +46,13 @@ namespace Falcon
             LineNumber = line;
         }
 
-        ValueNode::ValueNode(LiteralNode literal, uint64_t line)
+        ValueNode::ValueNode(const LiteralNode & literal, uint64_t line)
             : Literal(literal)
         {
             LineNumber = line;
         }
 
-        ValueNode::ValueNode(VariableNode variable, uint64_t line)
+        ValueNode::ValueNode(const VariableNode & variable, uint64_t line)
             : Variable(variable)
         {
             LineNumber = line;
@@ -102,19 +100,19 @@ namespace Falcon
             LineNumber = line;
         }
 
-        StatementNode::StatementNode(IfNode ifBlock, uint64_t line)
+        StatementNode::StatementNode(const IfNode & ifBlock, uint64_t line)
             : IfBlock(ifBlock)
         {
             LineNumber = line;
         }
 
-        StatementNode::StatementNode(ElseNode elseBlock, uint64_t line)
+        StatementNode::StatementNode(const ElseNode & elseBlock, uint64_t line)
             : ElseBlock(elseBlock)
         {
             LineNumber = line;
         }
 
-        StatementNode::StatementNode(WhileNode whileBlock, uint64_t line)
+        StatementNode::StatementNode(const WhileNode & whileBlock, uint64_t line)
             : WhileBlock(whileBlock)
         {
             LineNumber = line;

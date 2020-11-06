@@ -4,13 +4,11 @@
  * This file is licensed under the MIT License.
  * See the "LICENSE" file at the root directory or https://mit-license.org for details.
  */
-#include "../../pch/FalconPCH.hpp"
-
 #include "Debugger.hpp"
 
 namespace Falcon
 {
-    Debugger::Debugger(uint8_t * code, const DebugData & debugData, DebuggerFunctions functions, const std::string & debuggerName, PrintVarFunction printVarFunction)
+    Debugger::Debugger(uint8_t * code, const DebugData & debugData, const DebuggerFunctions & functions, const std::string & debuggerName, const PrintVarFunction & printVarFunction)
         : VM(code), m_DebugData(debugData), m_Next(false), m_NextI(false), m_Continue(false), m_Finish(false), m_IC(0), m_LastReturnSize(0),
           m_DebuggerFunctions(functions), m_DebuggerName(debuggerName), m_PrintVarFunction(printVarFunction)
     {
@@ -89,7 +87,7 @@ namespace Falcon
 
     void Debugger::ClearBreakpoint(uint64_t pos)
     {
-        auto iter = m_Breakpoints.end();
+        std::vector<uint64_t>::iterator iter;
 
         if ((iter = std::find(m_Breakpoints.begin(), m_Breakpoints.end(), pos)) != m_Breakpoints.end())
         {

@@ -21,7 +21,7 @@ namespace Falcon
         class Context
         {
         public:
-            Context(uint8_t * code);
+            explicit Context(uint8_t * code);
 
             template <typename ReturnType, typename... Args>
             void AddExternalFunction(const std::string & name, std::function<ReturnType(Args...)> function)

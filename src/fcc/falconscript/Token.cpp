@@ -4,8 +4,6 @@
  * This file is licensed under the MIT License.
  * See the "LICENSE" file at the root directory or https://mit-license.org for details.
  */
-#include "../../pch/FalconPCH.hpp"
-
 #include "Token.hpp"
 
 namespace Falcon
@@ -39,17 +37,17 @@ namespace Falcon
             {
             }
 
-            Token::Token(uint64_t line, WordType word)
+            Token::Token(uint64_t line, const WordType & word)
                 : LineNumber(line), Word(word)
             {
             }
 
-            Token::Token(uint64_t line, OperatorType op)
+            Token::Token(uint64_t line, const OperatorType & op)
                 : LineNumber(line), Operator(op)
             {
             }
 
-            Token::Token(uint64_t line, PunctuatorType punctuator)
+            Token::Token(uint64_t line, const PunctuatorType & punctuator)
                 : LineNumber(line), Punctuator(punctuator)
             {
             }

@@ -4,8 +4,6 @@
  * This file is licensed under the MIT License.
  * See the "LICENSE" file at the root directory or https://mit-license.org for details.
  */
-#include "../../pch/FalconPCH.hpp"
-
 #include "CLIColors.hpp"
 
 #ifdef _WIN32
@@ -18,7 +16,7 @@ namespace Falcon
     {
         namespace Colors
         {
-            std::ostream & operator<<(std::ostream & out, Format fmt)
+            std::ostream & operator<<(std::ostream & out, const Format & fmt)
             {
                 #if defined(_WIN32)
                     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);

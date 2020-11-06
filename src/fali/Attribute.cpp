@@ -4,8 +4,6 @@
  * This file is licensed under the MIT License.
  * See the "LICENSE" file at the root directory or https://mit-license.org for details.
  */
-#include "../../pch/FalconPCH.hpp"
-
 #include "Attribute.hpp"
 
 namespace Falcon
@@ -14,7 +12,7 @@ namespace Falcon
     {
         std::unordered_map<std::string, std::vector<std::string>> AttributeTable::s_Attributes;
 
-        void AttributeTable::New(const std::string & name, std::vector<std::string> attribs)
+        void AttributeTable::New(const std::string & name, const std::vector<std::string> & attribs)
         {
             s_Attributes[name] = attribs;
         }
