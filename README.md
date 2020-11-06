@@ -23,12 +23,13 @@ On Windows:
 On Linux:  
 * Run ```configure.sh <configuration>``` to generate makefiles.
 
-<configuration> can be any of the following:
-Name                  Debugging Symbols   Optimization
-* Debug             | Yes               | No
-* Release           | No                | Full
-* RelWithDebInfo    | Yes               | Full
-* MinSizeRel        | No                | Size
+`<configuration>` can be any of the following:
+|Name               | Debugging Symbols | Optimization|
+|-------------------|-------------------|-------------|
+| Debug             | Yes               | No          |
+| Release           | No                | Full        |
+| RelWithDebInfo    | Yes               | Full        |
+| MinSizeRel        | No                | Size        |
 
 #### Compiling
 On Windows:
