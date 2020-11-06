@@ -4,14 +4,12 @@
  * This file is licensed under the MIT License.
  * See the "LICENSE" file at the root directory or https://mit-license.org for details.
  */
-#include "../../pch/FalconPCH.hpp"
-
 #include "VM.hpp"
 
 namespace Falcon
 {
     VM::VM(uint8_t * code)
-        : m_Code(code), m_IP(0), m_SP(0), m_FP(0), m_InstructionStart(0)
+        : m_Code(code), m_IP(0), m_SP(0), m_FP(0), m_Cmp{false, false}, m_InstructionStart(0), m_GlobalSpace{}, m_Stack{}
     {
         memset(m_Registers, 0, sizeof(uint64_t) * 17);
 
@@ -1760,7 +1758,7 @@ namespace Falcon
     
     void VM::pshstr()
     {
-        char c = '\0';
+        char c;
 
         while ((c = (char)m_Code[++m_IP]) != '\0')
         {
@@ -2107,10 +2105,7 @@ namespace Falcon
 
     void VM::ExternalFunction(const std::string & name, std::function<void(VM&)> function)
     {
-        if (m_ExternalFunctions.count(name) == 0)
-        {
-            m_ExternalFunctions[name] = function;
-        }
+        m_ExternalFunctions[name] = function;
     }
 
     void VM::Run(const std::string & function, uint64_t argsSize)

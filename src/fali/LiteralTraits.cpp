@@ -4,8 +4,6 @@
  * This file is licensed under the MIT License.
  * See the "LICENSE" file at the root directory or https://mit-license.org for details.
  */
-#include "../../pch/FalconPCH.hpp"
-
 #include "LiteralTraits.hpp"
 
 namespace Falcon
@@ -14,18 +12,10 @@ namespace Falcon
     {
         bool IsWholeLiteral(const std::string & varName)
         {
-            bool isWhole = true;
-
-            for (char c : varName)
+            return std::any_of(varName.begin(), varName.end(), [](const char & c)->bool
             {
-                if (c < '0' && c > '9')
-                {
-                    isWhole = false;
-                    break;
-                }
-            }
-
-            return isWhole;
+                return c < '0' && c > '9';
+            });
         }
 
         bool IsIntegerLiteral(const std::string & varName)

@@ -4,8 +4,6 @@
  * This file is licensed under the MIT License.
  * See the "LICENSE" file at the root directory or https://mit-license.org for details.
  */
-#include "../../pch/FalconPCH.hpp"
-
 #include "Parser.hpp"
 
 namespace Falcon
@@ -348,10 +346,10 @@ namespace Falcon
                 if (suffixFlags != 0)
                 {
                     type.Flags |= suffixFlags;
-                    m_Cursor--;
                 }
 
                 m_Cursor = cursorBackUp;
+
                 return true;
             }
 
@@ -635,7 +633,7 @@ namespace Falcon
                             {
                                 std::string name = Current().Word->Str;
 
-                                m_CurrentFunction->LocalVariables[name] = FALI::VariableNode(std::move(name), type, Current().LineNumber);
+                                m_CurrentFunction->LocalVariables[name] = FALI::VariableNode(name, type, Current().LineNumber);
 
                                 AddValue(value, FALI::ValueNode(m_CurrentFunction->LocalVariables[name], Current().LineNumber));
                             }
@@ -995,20 +993,26 @@ namespace Falcon
 
                         params.emplace_back(FALI::DataType{clas.Name, FALI::TypeFlags::REFERENCE}, "this");
 
-                        for (auto & member : clas.PublicMemberVariables)
-                        {
-                            params.emplace_back(member.Type, "_" + member.Name);
-                        }
+                        std::transform(clas.PublicMemberVariables.begin(), clas.PublicMemberVariables.end(), params.begin(),
+                            [](const FALI::VariableNode & member)->std::pair<FALI::DataType, std::string>
+                            {
+                                return {member.Type, "_" + member.Name};
+                            }
+                        );
 
-                        for (auto & member : clas.ProtectedMemberVariables)
-                        {
-                            params.emplace_back(member.Type, "_" + member.Name);
-                        }
+                        std::transform(clas.ProtectedMemberVariables.begin(), clas.ProtectedMemberVariables.end(), params.begin(),
+                            [](const FALI::VariableNode & member)->std::pair<FALI::DataType, std::string>
+                            {
+                                return {member.Type, "_" + member.Name};
+                            }
+                        );
 
-                        for (auto & member : clas.PrivateMemberVariables)
-                        {
-                            params.emplace_back(member.Type, "_" + member.Name);
-                        }
+                        std::transform(clas.PrivateMemberVariables.begin(), clas.PrivateMemberVariables.end(), params.begin(),
+                            [](const FALI::VariableNode & member)->std::pair<FALI::DataType, std::string>
+                            {
+                                return {member.Type, "_" + member.Name};
+                            }
+                        );
 
                         FALI::FunctionNode function("void", "___constructor___", params, Current().LineNumber);
 

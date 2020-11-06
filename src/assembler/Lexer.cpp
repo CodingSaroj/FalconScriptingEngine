@@ -4,8 +4,6 @@
  * This file is licensed under the MIT License.
  * See the "LICENSE" file at the root directory or https://mit-license.org for details.
  */
-#include "../../pch/FalconPCH.hpp"
-
 #include "Lexer.hpp"
 
 namespace Falcon
@@ -66,7 +64,7 @@ namespace Falcon
             {
                 finalRegex = std::regex(finalRegexStr, std::regex_constants::extended);
             }
-            catch (std::regex_error err)
+            catch (std::regex_error & err)
             {
                 FLCN_ASSERT(false, "Assembler::Lexer", "Regex Error: {}", err.what());
             }

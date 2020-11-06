@@ -4,8 +4,6 @@
  * This file is licensed under the MIT License.
  * See the "LICENSE" file at the root directory or https://mit-license.org for details.
  */
-#include "../../pch/FalconPCH.hpp"
-
 #include "AST.hpp"
 
 namespace Falcon
@@ -118,17 +116,17 @@ namespace Falcon
         }
 
 
-        ReflectionAttributeNode::ReflectionAttributeNode(const std::string & name, std::vector<std::string> attribs)
+        ReflectionAttributeNode::ReflectionAttributeNode(const std::string & name, const std::vector<std::string> & attribs)
             : Name(name), Attributes(attribs)
         {
         }
 
-        ReflectionFunctionNode::ReflectionFunctionNode(const std::string & name, const std::string & retType, std::vector<std::string> params)
+        ReflectionFunctionNode::ReflectionFunctionNode(const std::string & name, const std::string & retType, const std::vector<std::string> & params)
             : Name(name), ReturnType(retType), Parameters(params) 
         {
         }
 
-        ReflectionStructureNode::ReflectionStructureNode(const std::string & name, std::vector<Member> members)
+        ReflectionStructureNode::ReflectionStructureNode(const std::string & name, const std::vector<Member> & members)
             : Name(name), Members(members)
         {
         }

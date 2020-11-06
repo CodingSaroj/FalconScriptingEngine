@@ -18,7 +18,7 @@ namespace Falcon
             class Format 
             {
             public:
-                inline Format(std::bitset<7> bitset)
+                inline Format(const std::bitset<7> & bitset)
                     : m_Base(bitset)
                 {
                 }
@@ -51,7 +51,7 @@ namespace Falcon
             const Format Green("0100000");
             const Format Yellow("1000000");
 
-            std::ostream & operator<<(std::ostream & out, Format fmt);
+            std::ostream & operator<<(std::ostream & out, const Format & fmt);
         }
     }
 }

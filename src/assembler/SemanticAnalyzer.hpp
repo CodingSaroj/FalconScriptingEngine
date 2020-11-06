@@ -18,7 +18,7 @@ namespace Falcon
         class SemanticAnalyzer
         {
         public:
-            SemanticAnalyzer(ASTNode * node);
+            explicit SemanticAnalyzer(ASTNode * node);
 
             ASTNode * Analyze();
 

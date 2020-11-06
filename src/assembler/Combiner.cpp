@@ -4,15 +4,13 @@
  * This file is licensed under the MIT License.
  * See the "LICENSE" file at the root directory or https://mit-license.org for details.
  */
-#include "../../pch/FalconPCH.hpp"
-
 #include "Combiner.hpp"
 
 namespace Falcon
 {
     namespace Assembler
     {
-        Combiner::Combiner(std::vector<ASTNode *> asts)
+        Combiner::Combiner(const std::vector<ASTNode *> & asts)
             : m_ASTs(asts)
         {
         }

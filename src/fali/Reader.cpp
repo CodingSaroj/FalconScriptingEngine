@@ -4,8 +4,6 @@
  * This file is licensed under the MIT License.
  * See the "LICENSE" file at the root directory or https://mit-license.org for details.
  */
-#include "../../pch/FalconPCH.hpp"
-
 #include "Reader.hpp"
 
 namespace Falcon
@@ -83,8 +81,6 @@ namespace Falcon
                 offset += 8;
 
                 ReadReflectionSection(&fileData[offset], reflSectionSize);
-
-                offset += reflSectionSize;
             }
         }
 

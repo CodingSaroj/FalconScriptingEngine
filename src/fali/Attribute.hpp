@@ -16,8 +16,7 @@ namespace Falcon
         class AttributeTable
         {
         public:
-            static void New(const std::string & name, std::vector<std::string> attribs);
-
+            static void New(const std::string & name, const std::vector<std::string> & attribs);
 
             static std::vector<std::string> & GetAttributes(const std::string & name);
             static std::string GetFunctionWithAttribute(const std::string & attrib);

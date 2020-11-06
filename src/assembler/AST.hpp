@@ -40,11 +40,11 @@ namespace Falcon
             std::optional<std::string>          Str;
             std::optional<Token::RegisterType>  Register;
 
-            AtomNode(char data);
-            AtomNode(uint64_t data);
-            AtomNode(int64_t data);
-            AtomNode(double data);
-            AtomNode(const std::string & str);
+            explicit AtomNode(char data);
+            explicit AtomNode(uint64_t data);
+            explicit AtomNode(int64_t data);
+            explicit AtomNode(double data);
+            explicit AtomNode(const std::string & str);
 
             UnionType GetUnion();
         };
@@ -54,7 +54,7 @@ namespace Falcon
             std::string             Inst;
             std::vector<AtomNode>   Args;
 
-            InstructionNode(const std::string & inst);
+            explicit InstructionNode(const std::string & inst);
         };
 
         struct LabelNode : public ASTNode
@@ -62,7 +62,7 @@ namespace Falcon
             std::string                  Name;
             std::vector<InstructionNode> Instructions;
 
-            LabelNode(const std::string & name);
+            explicit LabelNode(const std::string & name);
         };
 
         struct RoutineNode : public ASTNode
@@ -70,7 +70,7 @@ namespace Falcon
             std::string            Name;
             std::vector<LabelNode> Labels;
 
-            RoutineNode(const std::string & name);
+            explicit RoutineNode(const std::string & name);
         };
 
         struct CodeSectionNode : public ASTNode
@@ -124,7 +124,7 @@ namespace Falcon
             std::string Name;
             std::vector<std::string> Attributes;
 
-            ReflectionAttributeNode(const std::string & name, std::vector<std::string> attribs);
+            ReflectionAttributeNode(const std::string & name, const std::vector<std::string> & attribs);
         };
 
         struct ReflectionFunctionNode : public ASTNode
@@ -133,7 +133,7 @@ namespace Falcon
             std::string              ReturnType;
             std::vector<std::string> Parameters;
 
-            ReflectionFunctionNode(const std::string & name, const std::string & retType, std::vector<std::string> params);
+            ReflectionFunctionNode(const std::string & name, const std::string & retType, const std::vector<std::string> & params);
         };
 
         struct ReflectionStructureNode : public ASTNode
@@ -143,7 +143,7 @@ namespace Falcon
             std::string Name;
             std::vector<Member> Members;
 
-            ReflectionStructureNode(const std::string & name, std::vector<Member> members);
+            ReflectionStructureNode(const std::string & name, const std::vector<Member> & members);
         };
 
         struct ReflectionAliasNode : public ASTNode

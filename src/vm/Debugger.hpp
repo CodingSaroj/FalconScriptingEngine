@@ -35,7 +35,7 @@ namespace Falcon
             IdentifierDemangleFunction IdentifierDemangleFn;
         };
 
-        Debugger(uint8_t * code, const DebugData & debugData, DebuggerFunctions functions, const std::string & debuggerName = "", PrintVarFunction printVarFunction = nullptr);
+        Debugger(uint8_t * code, const DebugData & debugData, const DebuggerFunctions & functions, const std::string & debuggerName = "", const PrintVarFunction & printVarFunction = nullptr);
 
         void SetBreakpoint(uint64_t ip);
         void ClearBreakpoint(uint64_t ip);

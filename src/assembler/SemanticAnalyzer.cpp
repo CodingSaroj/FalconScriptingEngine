@@ -4,8 +4,6 @@
  * This file is licensed under the MIT License.
  * See the "LICENSE" file at the root directory or https://mit-license.org for details.
  */
-#include "../../pch/FalconPCH.hpp"
-
 #include "SemanticAnalyzer.hpp"
 
 namespace Falcon
@@ -95,7 +93,7 @@ namespace Falcon
         };
 
         SemanticAnalyzer::SemanticAnalyzer(ASTNode * node)
-            : m_Node(node)
+            : m_Node(node), m_Code(nullptr), m_Routine(nullptr)
         {
         }
 

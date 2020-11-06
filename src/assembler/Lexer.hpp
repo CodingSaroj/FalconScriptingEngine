@@ -21,7 +21,7 @@ namespace Falcon
         class Lexer
         {
         public:
-            Lexer(const std::string & text);
+            explicit Lexer(const std::string & text);
 
             Token Lex();
             Token Peek();

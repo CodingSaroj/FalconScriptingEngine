@@ -18,7 +18,7 @@ namespace Falcon
         class Combiner
         {
         public:
-            Combiner(std::vector<ASTNode *> asts);
+            explicit Combiner(const std::vector<ASTNode *> & asts);
 
             ASTNode * Combine();
 

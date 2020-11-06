@@ -4,8 +4,6 @@
  * This file is licensed under the MIT License.
  * See the "LICENSE" file at the root directory or https://mit-license.org for details.
  */
-#include "../../pch/FalconPCH.hpp"
-
 #include "Generator.hpp"
 
 namespace Falcon
@@ -200,7 +198,7 @@ namespace Falcon
 
                 for (int i = 0; i < 8; i++)
                 {
-                    m_CodeSection[location + i] = ((char *)&address)[i];
+                    m_CodeSection[location + i] = reinterpret_cast<char *>(&address)[i];
                 }
             }
 
@@ -212,7 +210,7 @@ namespace Falcon
 
             for (int i = 0; i < 8; i++)
             {
-                m_CodeSection[sizeStart + i] = ((char *)&codeSectionSize)[i];
+                m_CodeSection[sizeStart + i] = reinterpret_cast<char *>(&codeSectionSize)[i];
             }
 
             m_CodeSection += '\377';
@@ -296,7 +294,7 @@ namespace Falcon
 
             for (int i = 0; i < 8; i++)
             {
-                m_DebugSection[sizeStart + i] = ((char *)&debugSectionSize)[i];
+                m_DebugSection[sizeStart + i] = reinterpret_cast<char *>(&debugSectionSize)[i];
             }
         }
         
@@ -406,7 +404,7 @@ namespace Falcon
 
             for (int i = 0; i < 8; i++)
             {
-                m_ReflectionSection[sizeStart + i] = ((char *)&reflectionSectionSize)[i];
+                m_ReflectionSection[sizeStart + i] = reinterpret_cast<char *>(&reflectionSectionSize)[i];
             }
         }
        

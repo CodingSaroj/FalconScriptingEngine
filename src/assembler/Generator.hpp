@@ -19,7 +19,7 @@ namespace Falcon
         class Generator
         {
         public:
-            Generator(ASTNode * node, bool debug = false);
+            explicit Generator(ASTNode * node, bool debug = false);
 
             std::string Generate();
 
