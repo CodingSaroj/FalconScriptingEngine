@@ -19,7 +19,7 @@ static struct
         bool LogTokens = false, LogAST = false;
     #endif
 
-    std::vector<std::string> InputNames{"a.fasm"};
+    std::vector<std::string> InputNames{"a.flas"};
     std::string TargetName = "a.fali";
 } s_State;
 
@@ -96,7 +96,7 @@ void ParseCmdArgs(int argc, char * argv[])
                 exit(2);
             }
 
-            if (s_State.InputNames[0] == "a.fasm")
+            if (s_State.InputNames[0] == "a.flas")
             {
                 s_State.InputNames.erase(s_State.InputNames.begin());
             }

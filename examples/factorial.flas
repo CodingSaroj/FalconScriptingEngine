@@ -39,7 +39,7 @@ sect code:
         popnul 0x04 ; pop last 4 bytes (factorial returns 8 bytes, main returns 4)
         ret 0x04    ; return 4 bytes from stack
 
-; debug section is only generated when -dbg or --debug is passed to fasm
+; debug section is only generated when -dbg or --debug is passed to flas
 sect debug:
     factorial#uint64#:
         ; signature and function limits

@@ -26,7 +26,7 @@ sect code:
         ret 0x04    ; return 4 bytes
 
 
-; debug section is only generated when -dbg or --debug is passed to fasm
+; debug section is only generated when -dbg or --debug is passed to flas
 sect debug:
     main#uint32#ptr#:
         ; signature and function limits
