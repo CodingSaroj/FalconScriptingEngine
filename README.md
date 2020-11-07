@@ -28,7 +28,7 @@ On Linux:
 * Run ```./configure.sh <CMakeArgs>``` to generate makefiles.
 
 ##### CMake Args
-`-DCMAKE_BUILD_TYPE=<configuration>`: Specify configuration to build with. Default "Debug". `<configuration>` can be any of the following:
+`-DCMAKE_BUILD_TYPE=<configuration>`: Specify configuration to build with. Default "Release". `<configuration>` can be any of the following:
 |Name               | Debugging Symbols | Optimization|
 |-------------------|-------------------|-------------|
 | Debug             | Yes               | No          |
