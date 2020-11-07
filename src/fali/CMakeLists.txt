@@ -20,26 +20,28 @@ set_target_properties(FalconFALI PROPERTIES
 target_precompile_headers(FalconFALI PUBLIC "${CMAKE_SOURCE_DIR}/pch/FalconPCH.hpp")
 target_include_directories(FalconFALI PUBLIC ${INCLUDE_DIRS})
 
-project(FalconBin)
-
-add_executable(falcon "exec/falcon/main.cpp")
-
-set_target_properties(falcon PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE}/${CMAKE_SYSTEM_NAME}/${CMAKE_SYSTEM_PROCESSOR}"
-)
-
-target_include_directories(falcon PUBLIC ${INCLUDE_DIRS})
-target_link_directories(falcon PUBLIC ${LIB_DIRS})
-target_link_libraries(falcon FalconVM FalconFALI)
-
-project(FalconFLDB)
-
-add_executable(fldb "exec/debugger/main.cpp")
-
-set_target_properties(fldb PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE}/${CMAKE_SYSTEM_NAME}/${CMAKE_SYSTEM_PROCESSOR}"
-)
-
-target_include_directories(fldb PUBLIC ${INCLUDE_DIRS})
-target_link_directories(fldb PUBLIC ${LIB_DIRS})
-target_link_libraries(fldb FalconVM FalconFALI)
+if (FALCON_BUILD_VM)
+    project(FalconBin)
+    
+    add_executable(falcon "exec/falcon/main.cpp")
+    
+    set_target_properties(falcon PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE}/${CMAKE_SYSTEM_NAME}/${CMAKE_SYSTEM_PROCESSOR}"
+    )
+    
+    target_include_directories(falcon PUBLIC ${INCLUDE_DIRS})
+    target_link_directories(falcon PUBLIC ${LIB_DIRS})
+    target_link_libraries(falcon FalconVM FalconFALI)
+    
+    project(FalconFLDB)
+    
+    add_executable(fldb "exec/debugger/main.cpp")
+    
+    set_target_properties(fldb PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE}/${CMAKE_SYSTEM_NAME}/${CMAKE_SYSTEM_PROCESSOR}"
+    )
+    
+    target_include_directories(fldb PUBLIC ${INCLUDE_DIRS})
+    target_link_directories(fldb PUBLIC ${LIB_DIRS})
+    target_link_libraries(fldb FalconVM FalconFALI)
+endif()

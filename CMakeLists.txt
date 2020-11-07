@@ -12,7 +12,38 @@ set(LIB_DIRS "${CMAKE_SOURCE_DIR}/lib/${CMAKE_BUILD_TYPE}/${CMAKE_SYSTEM_NAME}_$
 
 project(Falcon)
 
-add_subdirectory(src/vm)
-add_subdirectory(src/assembler)
-add_subdirectory(src/fali)
-add_subdirectory(src/fcc)
+if (NOT DEFINED FALCON_BUILD_VM)
+    set(FALCON_BUILD_VM ON)
+endif()
+
+if (NOT DEFINED FALCON_BUILD_ASSEMBLER)
+    set(FALCON_BUILD_ASSEMBLER ON)
+endif()
+
+if (NOT DEFINED FALCON_BUILD_FALI)
+    set(FALCON_BUILD_FALI ON)
+endif()
+
+if (NOT DEFINED FALCON_BUILD_FCC)
+    set(FALCON_BUILD_FCC ON)
+endif()
+
+if(FALCON_BUILD_VM)
+    message("Configuring VM...")
+    add_subdirectory(src/vm)
+endif()
+
+if(FALCON_BUILD_ASSEMBLER)
+    message("Configuring Assembler...")
+    add_subdirectory(src/assembler)
+endif()
+
+if(FALCON_BUILD_FALI)
+    message("Configuring FALI...")
+    add_subdirectory(src/fali)
+endif()
+
+if(FALCON_BUILD_FCC)
+    message("Configuring FCC...")
+    add_subdirectory(src/fcc)
+endif()

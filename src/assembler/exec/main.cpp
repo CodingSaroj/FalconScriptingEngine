@@ -31,7 +31,7 @@ void PrintHelp()
     std::cout<<"    -o [FILE] or --output=[FILE]  : Set the output file as FILE. Default is a.fali.\n";
     std::cout<<"    -dbg or --debug               : Write debug data to the output.\n";
     std::cout<<"FILE(s):\n";
-    std::cout<<"    Add FILE to input files. No input file sets input file as a.flas.\n";
+    std::cout<<"    Add FILE to input files. Default is a.flas.\n";
 }
 
 void ParseCmdArgs(int argc, char * argv[])

@@ -1,6 +1,8 @@
-if [%1]==[] (set buildtype = "Release")
-else (set buildtype = %1)
+mkdir build
+cd build
 
-mkdir build;
-cd build;
-cmake .. -DCMAKE_BUILD_TYPE=%buildtype% -G "Visual Studio 16 2019";
+if [%FALCON_GENERATOR%]==[] (set FALCON_GENERATOR="Visual Studio 16 2019")
+
+if [%1]==[] (cmake .. -G %FALCON_GENERATOR% %*) else (cmake .. -G %FALCON_GENERATOR% -DCMAKE_BUILD_TYPE=Release)
+
+cd ..

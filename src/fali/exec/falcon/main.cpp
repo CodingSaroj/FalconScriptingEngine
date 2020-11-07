@@ -97,16 +97,27 @@ int main(int argc, char * argv[])
     {
         auto s = std::chrono::high_resolution_clock::now();
 
-        exitStatus = ctxt.Call<int32_t>(s_MangledMainName, (uint32_t)s_State.Args.size(), (uint64_t)s_State.Args.data());
+        exitStatus = ctxt.Call<int32_t>(
+            s_MangledMainName, 
+            static_cast<uint32_t>(s_State.Args.size()), // argc
+            static_cast<uint64_t>(s_State.Args.data())  // argv
+        );
 
         auto e = std::chrono::high_resolution_clock::now();
         auto d = e - s;
 
+        std::cout<<"\n";
         std::cout<<"Execution time: "<<d.count()<<"ns.\n";
     }
     else
     {
-        exitStatus = ctxt.Call<int32_t>(s_MangledMainName, (uint32_t)s_State.Args.size(), (uint64_t)s_State.Args.data());
+        exitStatus = ctxt.Call<int32_t>(
+            s_MangledMainName, 
+            static_cast<uint32_t>(s_State.Args.size()), // argc
+            static_cast<uint64_t>(s_State.Args.data())  // argv
+        );
+
+        std::cout<<"\n";
     }
 
     if (s_State.ShowExitStatus)

@@ -1,10 +1,14 @@
-if $1
-then
-    buildtype=$1;
-else
-    buildtype=Release;
-fi
-
 mkdir build &> /dev/null;
 cd build &> /dev/null;
-cmake .. -DCMAKE_BUILD_TYPE=$buildtype;
+
+if false $(($FALCON_GENERATOR))
+then
+    export FALCON_GENERATOR="Unix Makefiles";
+fi
+
+if true $(($# != 1))
+then
+    cmake .. -G "$FALCON_GENERATOR" $*;
+else
+    cmake .. -G "$FALCON_GENERATOR" -DCMAKE_BUILD_TYPE=Release;
+fi

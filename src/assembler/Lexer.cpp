@@ -64,7 +64,7 @@ namespace Falcon
             {
                 finalRegex = std::regex(finalRegexStr, std::regex_constants::extended);
             }
-            catch (std::regex_error & err)
+            catch (const std::regex_error & err)
             {
                 FLCN_ASSERT(false, "Assembler::Lexer", "Regex Error: {}", err.what());
             }
