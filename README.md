@@ -20,18 +20,26 @@
 **CMake 3.17 is required.**
 
 On Windows:  
-* Run ```configure.bat <configuration>``` to generate project files for Visual Studio 2019. 
+* Run ```set FALCON_GENERATOR="<GeneratorName>"``` to specify CMake generator. Default will be "Visual Studio 16 2019"
+* Run ```.\configure.bat <CMakeArgs>``` to generate project files for Visual Studio 2019. 
 
 On Linux:  
-* Run ```configure.sh <configuration>``` to generate makefiles.
+* Run ```export FALCON_GENERATOR="<GeneratorName>"``` to specify CMake generator. Default will be "Unix Makefiles"
+* Run ```./configure.sh <CMakeArgs>``` to generate makefiles.
 
-`<configuration>` can be any of the following:
+##### CMake Args
+`-DCMAKE_BUILD_TYPE=<configuration>`: Specify configuration to build with. Default "Debug". `<configuration>` can be any of the following:
 |Name               | Debugging Symbols | Optimization|
 |-------------------|-------------------|-------------|
 | Debug             | Yes               | No          |
 | Release           | No                | Full        |
 | RelWithDebInfo    | Yes               | Full        |
 | MinSizeRel        | No                | Size        |
+
+`-DFALCON_BUILD_VM=[ON|OFF]`: Build/Don't build FalconVM sub-project. Default ON.  
+`-DFALCON_BUILD_ASSEMBLER=[ON|OFF]`: Build/Don't build FalconASM sub-project. Default ON.  
+`-DFALCON_BUILD_FALI=[ON|OFF]`: Build/Don't build FalconFALI sub-project. Default ON.  
+`-DFALCON_BUILD_FCC=[ON|OFF]`: Build/Don't build FalconFCC sub-project. Default ON.
 
 #### Compiling
 On Windows:
