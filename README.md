@@ -17,6 +17,8 @@
 
 ### Building
 #### Configuration
+**CMake 3.17 is required.**
+
 On Windows:  
 * Run ```configure.bat <configuration>``` to generate project files for Visual Studio 2019. 
 
@@ -51,8 +53,8 @@ After compiling, run these commands from root directory to compile the example a
 
 On Windows:  
 ```
-\path\to\flas examples\factorial.flas -o examples\factorial.fali
-\path\to\flas examples\helloworld.flas -o examples\helloworld.fali
+\path\to\flas.exe examples\factorial.flas -o examples\factorial.fali
+\path\to\flas.exe examples\helloworld.flas -o examples\helloworld.fali
 ```
 
 On Linux:  
@@ -68,7 +70,7 @@ Run them as follows:
 
 On Windows:  
 ```
-\path\to\falcon examples\<ExampleName>.fali -e <ArgsForExample>
+\path\to\falcon.exe examples\<ExampleName>.fali -e <ArgsForExample>
 ```
 
 On Linux:
