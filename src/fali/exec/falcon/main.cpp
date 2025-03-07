@@ -100,7 +100,7 @@ int main(int argc, char * argv[])
         exitStatus = ctxt.Call<int32_t>(
             s_MangledMainName, 
             static_cast<uint32_t>(s_State.Args.size()), // argc
-            static_cast<uint64_t>(s_State.Args.data())  // argv
+            reinterpret_cast<uint64_t>(s_State.Args.data())  // argv
         );
 
         auto e = std::chrono::high_resolution_clock::now();
@@ -114,7 +114,7 @@ int main(int argc, char * argv[])
         exitStatus = ctxt.Call<int32_t>(
             s_MangledMainName, 
             static_cast<uint32_t>(s_State.Args.size()), // argc
-            static_cast<uint64_t>(s_State.Args.data())  // argv
+            reinterpret_cast<uint64_t>(s_State.Args.data())  // argv
         );
 
         std::cout<<"\n";
